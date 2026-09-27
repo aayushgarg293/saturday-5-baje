@@ -137,7 +137,9 @@ original "filmy" tune.
 
 ## Technical
 
-- Browser game: Vite + TypeScript + Three.js.
+- **Browser game only, for now**: Vite + TypeScript + Three.js, playable
+  from a link in Chrome and Safari. A downloadable version (desktop wrapper,
+  itch.io, Steam) may be considered later, depending on how it turns out.
 - Must run smoothly (target 60 fps) on a **MacBook Air M4**, which has
   integrated graphics. Performance is measured from the start, not at the end.
 - A dev-only capture tool (like Sakura Crossing's `__shot`) so rendered frames
