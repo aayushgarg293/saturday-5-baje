@@ -7,16 +7,24 @@ its **Done when** line is true.
 ## 0. Setup
 - [x] Game brief (`BRIEF.md`)
 - [x] Project rules (`CLAUDE.md`) and this task list
-- [ ] Check Node.js is installed
+- [x] Check Node.js is installed (Node 23.11, npm 10.9, pnpm 10.12)
 
 ## 1. Walking skeleton
 Proves the foundation before anything is pretty.
-- [ ] Vite + TypeScript + Three.js project
-- [ ] First-person player: WASD, mouse look (pointer lock), walking speed, collisions with walls
-- [ ] An empty grey street block with simple box buildings on both sides
-- [ ] The toon material factory (first version) and basic lighting
-- [ ] Dev-only `__shot` capture tool, plus a few saved camera positions
-- [ ] FPS counter (dev only)
+- [x] Vite + TypeScript + Three.js project
+- [x] First-person player: WASD, mouse look (pointer lock), walking speed, collisions with walls
+- [x] An empty grey street block with simple box buildings on both sides
+- [x] The toon material factory (first version) and basic lighting
+- [x] Dev-only `__shot` capture tool, plus a few saved camera positions
+- [x] FPS counter (dev only)
+- [x] Scripted collision checks pass (walls, both ends, both galis, sliding)
+- [x] Speed: ~1 ms per frame on the M4 (budget for 60 fps is 16.7 ms)
+- [ ] Owner plays it in Chrome and Safari
+
+Found while building (for phase 3):
+- At 4:30 pm the west-side buildings shade the whole street floor; tune
+  heights / sun angle so sunlight falls on part of it.
+- Shadow edges are jagged where they cross walls at a shallow angle.
 
 **Done when:** you can walk the length of the grey street at 60 fps on the
 MacBook Air, and frames can be captured with `__shot`.

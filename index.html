@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cyber Cafe</title>
+    <style>
+      html, body { margin: 0; height: 100%; overflow: hidden; background: #e9dcc3; }
+      canvas { display: block; }
+
+      /* "Click to walk" screen, shown until the mouse is captured */
+      #start {
+        position: fixed; inset: 0; display: grid; place-items: center;
+        background: rgba(40, 28, 20, 0.45); color: #fff8ec; cursor: pointer;
+        font: 16px/1.6 system-ui, sans-serif; text-align: center; user-select: none;
+      }
+      #start h1 { margin: 0 0 12px; font-size: 28px; letter-spacing: 0.04em; }
+      #start p { margin: 0; opacity: 0.85; }
+      #start[hidden] { display: none; }
+    </style>
+  </head>
+  <body>
+    <canvas id="view"></canvas>
+    <div id="start">
+      <div>
+        <h1>Click to walk</h1>
+        <p>W A S D to move &middot; mouse to look &middot; Shift to walk faster</p>
+        <p>Esc to release the mouse</p>
+      </div>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

@@ -8,12 +8,34 @@ Read both before starting work.
 
 ## Status
 
-Not scaffolded yet. The next step is the walking skeleton (`TASKS.md`, phase 1).
-Update this section and **Commands** when that lands.
+Phase 1 (walking skeleton) built: a grey box street you can walk in first
+person. Next: phase 2, the real street layout (`TASKS.md`).
+
+Baseline (2026-09-28, M4, Chrome, 1470×956 at pixel ratio 1.5):
+**~1.0 ms per frame, 77 draw calls** (including the shadow pass).
 
 ## Commands
 
-*(to be filled in when the project is scaffolded: dev, build, preview, test)*
+```bash
+npm install      # once, after cloning
+npm run dev      # dev server with dev tools: http://127.0.0.1:5180
+npm run build    # type-check, then production build into dist/
+npm run preview  # serve the production build: http://127.0.0.1:5181
+```
+
+Dev tools (dev server only), from the browser console:
+- `await __shot('start')`: save a frame from a saved spot (`src/dev/cameras.ts`)
+  to `.shots/start.jpg`; `await __shotAll()` for every spot.
+- `__game.step(seconds)`: advance the game without rendering.
+- `C` in the game: show your position as a ready-made `__shot` line.
+- The top-left overlay shows fps, frame time, draw calls and triangles.
+
+**A Chrome tab opened by Claude runs in the background, so the browser pauses
+its animation** (`requestAnimationFrame` never fires). `__shot` and
+`__game.step` work anyway. To measure speed from there, time
+`__game.render()` in a loop and force the GPU to finish with a 1-pixel
+`gl.readPixels`. For walking tests, set `__game.player.input.locked = true`,
+add key codes to `__game.player.input.held`, then `__game.step()`.
 
 ## Working with the owner
 
@@ -89,3 +111,4 @@ Keep each entry short.)*
 
 | Symptom | Cause and fix |
 |---|---|
+| Shopfront line ragged; walls stop you short of the kerb; a gali is blocked | A box's two ground sizes were passed in the wrong order, so buildings were long along the street instead of deep. `building()` in `street.ts` now takes `sizeX` (east–west) and `sizeZ` (north–south), never "width/depth". Caught by walking into every wall with `__game`; screenshots looked plausible. |

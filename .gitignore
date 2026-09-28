@@ -1,0 +1,6 @@
+node_modules/
+dist/
+# frames captured by the dev-only __shot tool
+.shots/
+*.log
+.DS_Store
