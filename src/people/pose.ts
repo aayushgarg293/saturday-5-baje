@@ -9,6 +9,7 @@ import type { Person } from "./body";
  *   should be and the angles are worked out, the way your own arm does it.
  *   With two bones (upper arm, forearm) there's an exact answer; the "pole"
  *   says which way the elbow points (down and out, like a real elbow).
+ * - `plant`: the same for a leg: put an ankle on a spot (sitting, walking).
  * - `lookAt`: turn the head (and a little of the neck) toward a point, within
  *   comfortable limits.
  *
@@ -26,13 +27,37 @@ const _aim = new THREE.Vector3(), _dir = new THREE.Vector3(), _pole = new THREE.
  * point toward (it's projected onto the plane of the arm).
  */
 export function reach(p: Person, side: "L" | "R", target: THREE.Vector3, pole: THREE.Vector3) {
-  const shoulder = p.bone(`shoulder${side}`), elbow = p.bone(`elbow${side}`), hand = p.bone(`hand${side}`);
-  shoulder.parent!.updateWorldMatrix(true, false);
-  shoulder.getWorldPosition(_s);
-  const upper = elbow.position.length() * worldScale(shoulder);
-  const lower = hand.position.length() * worldScale(shoulder);
+  twoBone(p.bone(`shoulder${side}`), p.bone(`elbow${side}`), p.bone(`hand${side}`), target, pole);
+}
 
-  // how far away the target is, clamped to what the arm can reach
+const _up = new THREE.Quaternion();
+
+/**
+ * Put `side`'s ankle at `target` (the same IK as an arm: hip, knee, ankle).
+ * `pole` is where the knee points: forward, for sitting or walking. The foot
+ * is then turned level with the ground (facing the way `root` faces), or it
+ * would tilt with the shin.
+ */
+export function plant(p: Person, side: "L" | "R", target: THREE.Vector3, pole: THREE.Vector3) {
+  const foot = p.bone(`foot${side}`);
+  twoBone(p.bone(`hip${side}`), p.bone(`knee${side}`), foot, target, pole);
+  p.root.getWorldQuaternion(_up);
+  foot.parent!.getWorldQuaternion(_pq);
+  foot.quaternion.copy(_pq.invert().multiply(_up));
+  foot.updateWorldMatrix(false, true);
+}
+
+/**
+ * The two-bone IK itself: turn `upper` (shoulder or hip) and `lower` (elbow or
+ * knee) so that `end` (hand or ankle) lands on `target`.
+ */
+function twoBone(upperBone: THREE.Bone, lowerBone: THREE.Bone, endBone: THREE.Bone, target: THREE.Vector3, pole: THREE.Vector3) {
+  upperBone.parent!.updateWorldMatrix(true, false);
+  upperBone.getWorldPosition(_s);
+  const upper = lowerBone.position.length() * worldScale(upperBone);
+  const lower = endBone.position.length() * worldScale(upperBone);
+
+  // how far away the target is, clamped to what the limb can reach
   _dir.subVectors(target, _s);
   const d = THREE.MathUtils.clamp(_dir.length(), Math.abs(upper - lower) + 1e-3, upper + lower - 1e-3);
   _dir.normalize();
@@ -44,9 +69,9 @@ export function reach(p: Person, side: "L" | "R", target: THREE.Vector3, pole: T
   _e.copy(_s).addScaledVector(_dir, along).addScaledVector(_pole, out);
   _t.copy(_s).addScaledVector(_dir, d);
 
-  // aim the upper arm at the elbow point, then the forearm at the hand point
-  aimBone(shoulder, _s, _e);
-  aimBone(elbow, _e, _t);
+  // aim the upper bone at the elbow point, then the lower bone at the end point
+  aimBone(upperBone, _s, _e);
+  aimBone(lowerBone, _e, _t);
 }
 
 /** Turn `bone` so its -y axis points from `from` to `to` (both world points). */

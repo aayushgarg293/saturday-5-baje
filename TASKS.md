@@ -106,9 +106,21 @@ motion; busy but walkable.
       notices you; torso twists toward the work, shoulders rock with the
       stirring, leans into the pour, weight shifts hip to hip, head tilts
 - [x] Owner judges the chaiwala: approved
-- [ ] Men talking at the chai corner, shopkeepers sitting out front
+- [x] Clothing and variety (`people/clothes.ts`, `people/recipes.ts`): safa,
+      kurta, Nehru jacket, ghagra-choli-odhni, salwar-kameez-dupatta, school
+      uniform, jeans; a role gives a seeded, varied person. `?lineup` in the
+      address shows nine of them in a row (dev only)
+- [x] Actors (`people/actor.ts`): any person doing a loop of actions, sitting
+      or standing; leg IK for sitting (`plant` in `pose.ts`)
+- [x] Three men on the chai benches: sip, talk, listen, laugh (`chaiCorner.ts`)
+- [x] Stall sellers and customers (`sellers.ts`): golgappa seller + a woman
+      eating; kachori halwai with his jhara; jalebi halwai swirling batter;
+      ice gola seller + a kid with a gola
+- [x] `people/crowd.ts` places everyone and updates far groups less often
+- [x] Owner looks at the chai corner and the stalls: "looks nice"
+- [ ] Shopkeepers sitting out front, an old woman at the temple
 - [ ] Kids playing gully cricket
-- [ ] Hawkers
+- [ ] Walkers (4–6) along the verges, stepping aside for you
 - [ ] Replace the placeholder riders on the moving vehicles (`addRider` in
       `props/vehicles.ts`) with the proper figures
 - [ ] Maybe: a second look at the cow and dog alongside the people

@@ -8,11 +8,10 @@ Read both before starting work.
 
 ## Status
 
-Phase 4 (street life) built: the five food stalls, shop goods by trade, the
-temple and its peepal tree, parked vehicles, cows and dogs with idle motion,
-and passing traffic that shuttles between two side roads (`world/life.ts`,
-`world/traffic.ts`, `world/props/`). Vehicle riders are placeholders until
-phase 5 (people). Next: phase 5 (`TASKS.md`).
+Phases 0–4 done. Phase 5 (people) in progress: the people system, the
+chaiwala, clothing and role recipes, the men on the chai benches and the
+stall sellers are built (`src/people/`, placed by `people/crowd.ts`). Next:
+shopkeepers, the temple, cricket kids, walkers, riders (`TASKS.md`).
 
 Baseline (2026-09-28, M4, Chrome, 1470×956): **~3.5 ms per frame at pixel
 ratio 1.5, ~5.3 ms at 2; 110–206 draw calls** depending on the view (shadow
@@ -157,3 +156,5 @@ Keep each entry short.)*
 | The walk check says a place is unreachable, but it isn't | Check what's *on* the probe point first: a dog was lying exactly on the spot being tested. |
 | Animals look like boxes | Flat (faceted) shading suits buildings, not bodies. Build rounded things with `Parts.build(name, { smooth: true })`. |
 | The fort looked like it was floating | It was on a pointed peak, so the ends of a wide fort hung in the air. Hill forts need a broad flat-topped hill (`ridgeProfile` in `backdrop.ts`). Check suspected floating with a narrow-field `__shot` (set `__game.camera.fov` low) and by measuring, before changing anything. |
+| A `__shot` shows people frozen, arms hanging, props at the ground | `crowd.ts` doesn't animate people far from the *player*, and `__shot` only moves the camera. Move the player there first (`__game.player.place(...)`, then `__game.step(0.5)`), then shoot. |
+| A seated man's kurta hangs down through the bench like a bucket | Kurta tails follow the hips joint, so they stay vertical when the thighs swing forward. Seated men wear shirts (`chaiCorner.ts`). |

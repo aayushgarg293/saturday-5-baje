@@ -234,8 +234,10 @@ function dupatta(kit: Kit, colour: number) {
   for (const s of [-1, 1]) {
     p.box(0.12 * k, 0.5 * k, 0.014, s * 0.12 * k * g, chest.y - 0.02 * k, 0.12 * k * g, colour, { rz: s * 0.08 });
   }
-  const back = new THREE.CylinderGeometry(0.17 * k * g, 0.19 * k * g, 0.2 * k, 14, 1, true, Math.PI / 2, Math.PI).scale(1, 1, 0.75);
-  p.add(back, 0, chest.y + 0.18 * k, 0, colour);
+  // round the back of the shoulders: a band cut from a sphere (its back half,
+  // around the middle), stretched down so it droops, rather than a straight tube
+  const back = new THREE.SphereGeometry(0.19 * k * g, 16, 6, Math.PI, Math.PI, Math.PI * 0.3, Math.PI * 0.32).scale(1.02, 1.5, 0.78);
+  p.add(back, 0, chest.y + 0.1 * k, 0, colour);
 }
 
 /**
