@@ -96,6 +96,23 @@ export function pointAt(s: number, offset: number): { x: number; z: number } {
   return { x: c.x + Math.cos(c.heading) * offset, z: c.z + Math.sin(c.heading) * offset };
 }
 
+/**
+ * The other way round: how far along the street (`s`) a world point is, and
+ * how far to the side (`offset`, left negative). Finds the nearest point on
+ * the centre line (a simple search: it's only used while building).
+ */
+export function streetCoords(x: number, z: number): { s: number; offset: number } {
+  let best = 0, bestD = Infinity;
+  table.forEach((p, i) => {
+    const d = (p.x - x) ** 2 + (p.z - z) ** 2;
+    if (d < bestD) { bestD = d; best = i; }
+  });
+  const c = table[best];
+  // positive offset is to the right: 90° clockwise from the direction of travel
+  const offset = (x - c.x) * Math.cos(c.heading) + (z - c.z) * Math.sin(c.heading);
+  return { s: best * STEP - 10, offset };
+}
+
 /** The player's yaw for looking along the street at `s` (turn = extra turn, radians, left +). */
 export function yawAlong(s: number, turn = 0): number {
   return -centreAt(s).heading + turn;

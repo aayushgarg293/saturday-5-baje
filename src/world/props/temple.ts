@@ -73,6 +73,8 @@ export function buildTemple(c: BuildContext): BuildResult {
 
   // the peepal tree beside the shrine: a trunk, a few branches, a cloud of leafy clumps
   peepal(c, 1.1, -5.2);
+  // someone praying stands before the shrine's door, facing it; the bell hangs ahead and to her right
+  c.people.push({ kind: "temple", x: sx + 0.15, y: PLATFORM, z: sz + half + 0.6, turn: Math.PI, bell: [-0.4, 1.12, 0.35] });
   return { height: 2.0, signs: [] };
 }
 

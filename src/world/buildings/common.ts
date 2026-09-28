@@ -28,6 +28,26 @@ export type BuildContext = {
   wall: number;
   /** For shops: which name it has (world/names.ts), which also decides its goods. */
   shopName?: number;
+  /** Builders add places where a person could be (a shopkeeper's stool, the temple). */
+  people: PeopleSpot[];
+};
+
+/**
+ * A place for a person, in the building's frame: where they are, which way
+ * they face (radians about the vertical, 0 = toward the street), and what
+ * kind of place it is. people/crowd.ts decides who's there.
+ */
+export type PeopleSpot = {
+  kind: "counter" | "platform" | "temple";
+  x: number;
+  /** The floor they're on. */
+  y: number;
+  z: number;
+  turn: number;
+  /** The shop's trade, for a shopkeeper. */
+  trade?: import("../names").Trade;
+  /** For the temple: the bell, relative to the spot, in the spot's own frame. */
+  bell?: [number, number, number];
 };
 
 /** Where a signboard is, so phase 3 can paint text onto it. Local frame. */

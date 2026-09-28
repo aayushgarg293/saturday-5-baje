@@ -118,8 +118,15 @@ motion; busy but walkable.
       ice gola seller + a kid with a gola
 - [x] `people/crowd.ts` places everyone and updates far groups less often
 - [x] Owner looks at the chai corner and the stalls: "looks nice"
-- [ ] Shopkeepers sitting out front, an old woman at the temple
-- [ ] Kids playing gully cricket
+- [x] Shopkeepers (`shopkeepers.ts`): shops report a spot for their keeper
+      (`PeopleSpot` in `buildings/common.ts`); five are shown, one per trade:
+      kirana reads the paper, sweets fans himself, electrical is on his mobile,
+      cycle and general sit out front (arms folded, stretching)
+- [x] An old woman at the temple (`devotee.ts`): prays, rings the bell,
+      touches the step
+- [x] Gully cricket (`cricket.ts`): batter, bowler, two fielders and one ball
+      on a shared 7 s loop; `crouch` in poses for bending the knees
+- [x] Owner looks at the shopkeepers, the temple and the cricket: "i like it"
 - [ ] Walkers (4–6) along the verges, stepping aside for you
 - [ ] Replace the placeholder riders on the moving vehicles (`addRider` in
       `props/vehicles.ts`) with the proper figures

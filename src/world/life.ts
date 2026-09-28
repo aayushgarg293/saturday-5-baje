@@ -9,7 +9,7 @@ import { type Animal, buildCow, buildDog } from "./props/animals";
 import { type Placement, StaticBatch, placeOnStreet } from "./props/batch";
 import { chaiTapri, golgappaCart, iceGolaCart, jalebiStall, kachoriStall } from "./props/stalls";
 import { type VehicleKind, buildVehicle } from "./props/vehicles";
-import type { WorldSign } from "./street";
+import type { WorldPeopleSpot, WorldSign } from "./street";
 import { type Traffic, buildTraffic } from "./traffic";
 
 /**
@@ -29,7 +29,8 @@ export type Life = {
   update(t: number, dt: number, player: THREE.Vector3): void;
 };
 
-export function buildLife(): Life {
+/** `people`: the places the buildings offer for people (world/street.ts). */
+export function buildLife(people: WorldPeopleSpot[]): Life {
   const rng = makeRng(404);
   const group = new THREE.Group();
   group.name = "life";
@@ -92,7 +93,7 @@ export function buildLife(): Life {
   for (const animal of animals) animal.group.traverse((o) => { o.castShadow = true; });
 
   // --- people (people/crowd.ts) ------------------------------------------------------
-  const crowd = buildCrowd();
+  const crowd = buildCrowd(people);
   group.add(crowd.group);
 
   // --- passing traffic ----------------------------------------------------------------

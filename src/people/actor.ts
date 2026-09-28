@@ -28,6 +28,10 @@ export type Pose = {
   /** Head nodded down (+) or tipped back (−), radians, on top of looking. */
   nod?: number;
   smile?: boolean;
+  /** Eyes closed (praying, dozing). */
+  closed?: boolean;
+  /** Knees bent, standing (0 = straight, 1 = a deep squat): the hips drop and the feet stay put. */
+  crouch?: number;
 };
 
 export type Action = { name: string; duration: number; pose: (u: number) => Pose };
@@ -73,6 +77,8 @@ function mix(a: Pose, b: Pose, k: number): Required<Pose> {
     rock: n(a.rock, b.rock),
     nod: n(a.nod, b.nod),
     smile: (k < 0.5 ? a.smile : b.smile) ?? false,
+    closed: (k < 0.5 ? a.closed : b.closed) ?? false,
+    crouch: n(a.crouch, b.crouch),
   };
 }
 
@@ -116,7 +122,7 @@ export function makeActor(spec: ActorSpec): Actor {
       } else {
         // weight shifting slowly from hip to hip; the spine leans back the other way
         const shift = Math.sin(t * 0.35 + (spec.phase ?? 0));
-        hips.position.set(shift * 0.02, 0.94 * k, 0);
+        hips.position.set(shift * 0.02, (0.94 - pose.crouch * 0.36) * k, 0);
         hips.rotation.set(0, 0, -shift * 0.03);
       }
       person.bone("spine").rotation.set(pose.lean * 0.4 + breath, pose.twist * 0.4, 0);
@@ -126,6 +132,12 @@ export function makeActor(spec: ActorSpec): Actor {
       if (spec.seat !== undefined) {
         // feet on the ground in front of the seat, knees forward
         for (const [side, x] of [["L", 0.12], ["R", -0.12]] as const) plant(person, side, world(v(x * k, 0.06 * k, 0.42 * k)), worldDir(POLE.knee));
+      } else if (pose.crouch > 0.01) {
+        // feet where they stand, knees bending forward as the hips drop
+        for (const [side, x] of [["L", 0.11], ["R", -0.11]] as const) plant(person, side, world(v(x * k, 0.06 * k, 0.04 * k)), worldDir(POLE.knee));
+      } else {
+        // straight legs: back to their rest pose (after a crouch)
+        for (const leg of ["hipL", "kneeL", "footL", "hipR", "kneeR", "footR"] as const) person.bone(leg).quaternion.identity();
       }
       reach(person, "R", world(pose.right), worldDir(POLE.R));
       reach(person, "L", world(pose.left), worldDir(POLE.L));
@@ -151,7 +163,7 @@ export function makeActor(spec: ActorSpec): Actor {
 
       blinkIn -= dt;
       if (blinkIn < -0.13) blinkIn = 2 + Math.random() * 3;
-      person.face.set(blinkIn < 0 ? "blink" : greeting > 0 || pose.smile ? "smile" : "neutral");
+      person.face.set(blinkIn < 0 || pose.closed ? "blink" : greeting > 0 || pose.smile ? "smile" : "neutral");
     },
     grip(side, out) {
       // a little past the wrist, along the forearm: the middle of the fist

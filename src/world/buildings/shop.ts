@@ -1,5 +1,6 @@
 import { BOARD_COLOURS, PAL } from "../../render/palette";
 import { PLOT_DEPTH } from "../layout";
+import { SHOP_NAMES } from "../names";
 import { dressShop } from "../props/goods";
 import {
   type BuildContext, type BuildResult, type SignSpot,
@@ -102,5 +103,15 @@ export function shopfront(
 
   // the goods, by what the shop sells
   dressShop(c, { x0: x0 + pillar, x1: x1 - pillar, face, back, floor: PLINTH_H, top: OPENING_TOP, shutter });
+
+  // where its keeper sits: behind the counter on a tall stool (see `counter`
+  // in goods.ts), or, for shops with nothing out front, on a stool on the platform
+  if (kind === "shop" && shutter === "open" && c.shopName !== undefined) {
+    const trade = SHOP_NAMES[c.shopName].trade;
+    const outside = trade === "cloth" || trade === "cycle" || trade === "general";
+    c.people.push(outside
+      ? { kind: "platform", x: x1 - pillar - 0.55, y: PLINTH_H, z: face + 0.55, turn: 0, trade }
+      : { kind: "counter", x: mid, y: PLINTH_H, z: face - 1.15, turn: 0, trade });
+  }
   return { kind, x: mid, y: board.y, z: face + 0.08, w: board.w, h: board.h, nameIndex: c.shopName };
 }

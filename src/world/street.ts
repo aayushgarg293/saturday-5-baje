@@ -3,7 +3,7 @@ import { type Box, boxAt } from "../core/colliders";
 import { type Rng, makeRng, shuffled } from "../core/rng";
 import { PAL, WALL_COLOURS } from "../render/palette";
 import { buildCafe } from "./buildings/cafe";
-import { type BuildContext, type BuildResult, type SignSpot } from "./buildings/common";
+import { type BuildContext, type BuildResult, type PeopleSpot, type SignSpot } from "./buildings/common";
 import { buildHaveli } from "./buildings/haveli";
 import { buildHouse } from "./buildings/house";
 import { buildShop } from "./buildings/shop";
@@ -12,7 +12,7 @@ import { Parts, ribbon } from "./kit";
 import { SHOP_NAMES } from "./names";
 import {
   CAFE, DRAIN, PLOT_DEPTH, ROAD_WIDTH, SIDE_ROADS, STREET_LENGTH,
-  type Plot, centreAt, planPlots, pointAt, yawAlong,
+  type Plot, centreAt, planPlots, pointAt, streetCoords, yawAlong,
 } from "./layout";
 
 /**
@@ -44,7 +44,12 @@ export type Street = {
   signs: WorldSign[];
   /** Where the player starts, and the direction they face (yaw, radians). */
   spawn: { x: number; z: number; yaw: number };
+  /** Places for people (shopkeepers, the temple), in world terms, south to north. */
+  people: WorldPeopleSpot[];
 };
+
+/** A `PeopleSpot` placed in the world: its position, and which way it faces (rotation about the vertical). */
+export type WorldPeopleSpot = Omit<PeopleSpot, "x" | "y" | "z" | "turn"> & { position: THREE.Vector3; rotationY: number };
 
 /** Seed for the random parts of the street: change it for a different street. */
 const SEED = 2006;
@@ -64,6 +69,7 @@ export function buildStreet(): Street {
   group.name = "street";
   const colliders: Box[] = [];
   const signs: WorldSign[] = [];
+  const people: WorldPeopleSpot[] = [];
   const rng = makeRng(SEED);
 
   group.add(buildGround());
@@ -79,7 +85,8 @@ export function buildStreet(): Street {
     const w = Math.hypot(b.x - a.x, b.z - a.z);
     const parts = new Parts();
     const wall = type === "cafe" ? PAL.limeWhite : rng.pick(WALL_COLOURS);
-    const result = BUILDERS[type]({ parts, w, rng: forkRng(rng), wall, shopName });
+    const spots: PeopleSpot[] = [];
+    const result = BUILDERS[type]({ parts, w, rng: forkRng(rng), wall, shopName, people: spots });
 
     const mesh = parts.build(name);
     // Turn the building so its local +z (its front) points along `normal`.
@@ -94,6 +101,9 @@ export function buildStreet(): Street {
     colliders.push(boxAt(back.x, back.z, w, PLOT_DEPTH, rot));
 
     for (const sp of result.signs) addSign(sp, mesh, rot);
+    for (const { x, y, z, turn, ...rest } of spots) {
+      people.push({ ...rest, position: new THREE.Vector3(x, y, z).applyMatrix4(mesh.matrixWorld), rotationY: rot + turn });
+    }
     return { mesh, rot, w, height: result.height };
   }
 
@@ -188,7 +198,10 @@ export function buildStreet(): Street {
     }
   }
 
-  return { group, colliders, signs, spawn: { ...pointAt(1.5, 0), yaw: yawAlong(1.5) } };
+  // south to north, so whoever picks from them can space them out along the walk
+  const along = (p: THREE.Vector3) => streetCoords(p.x, p.z).s;
+  people.sort((a, b) => along(a.position) - along(b.position));
+  return { group, colliders, signs, spawn: { ...pointAt(1.5, 0), yaw: yawAlong(1.5) }, people };
 }
 
 /** A plain boundary wall with a coping on top (the ends of the side roads' back lanes). */
