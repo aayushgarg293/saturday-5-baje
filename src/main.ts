@@ -6,6 +6,7 @@ import { PAL } from "./render/palette";
 import { Pipeline } from "./render/post";
 import { createRenderer, fitToWindow } from "./render/renderer";
 import { buildBackdrop } from "./world/backdrop";
+import { buildLife } from "./world/life";
 import { buildSigns } from "./world/signs";
 import { buildSky } from "./world/sky";
 import { buildStreet } from "./world/street";
@@ -38,11 +39,12 @@ const lights = addLights(scene);
 const street = buildStreet();
 const wires = buildWires();
 const sky = buildSky();
-scene.add(sky.group, street.group, buildSigns(street.signs), wires.group, buildBackdrop());
+const life = buildLife();
+scene.add(sky.group, street.group, life.group, buildSigns([...street.signs, ...life.signs]), wires.group, buildBackdrop());
 
 // --- the player ----------------------------------------------------------------
 const input = new Input(canvas);
-const player = new Player(camera, input, [...street.colliders, ...wires.colliders]);
+const player = new Player(camera, input, [...street.colliders, ...wires.colliders, ...life.colliders]);
 player.place(street.spawn.x, street.spawn.z, street.spawn.yaw);
 
 // Click to capture the mouse; the start screen shows whenever it's released.
@@ -53,8 +55,11 @@ input.onLockChange = (locked) => {
 
 // --- game loop ---------------------------------------------------------------------
 /** Advance the game by `dt` seconds. */
+let time = 0;
 function update(dt: number) {
+  time += dt;
   player.update(dt);
+  life.update(time, dt, player.pos);
   lights.followPlayer(player.pos);
 }
 
@@ -89,6 +94,7 @@ if (import.meta.env.DEV) {
     renderer,
     player,
     street,
+    life,
     render,
     step(seconds) {
       // fixed 1/60 s steps, like real frames, so results match normal play

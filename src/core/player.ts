@@ -53,7 +53,8 @@ export class Player {
   constructor(
     private readonly camera: THREE.PerspectiveCamera,
     private readonly input: Input,
-    private readonly colliders: readonly Box[],
+    /** Everything the player can bump into (read by dev tools too). */
+    readonly colliders: readonly Box[],
   ) {
     // Yaw first, then pitch: turn the head sideways, then tilt it. The other
     // order makes the horizon roll when you look up and turn.

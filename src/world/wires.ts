@@ -27,7 +27,7 @@ const POLES = [
   { s: 127, side: 1 },
   { s: 149, side: -1 },
   { s: 169, side: 1 },
-  { s: 193, side: -1 },
+  { s: 186, side: -1 }, // (not at 193: that is the north side road's mouth)
 ];
 /** Poles stand on the verge, between the road and the drain. */
 const POLE_OFFSET = 2.65;

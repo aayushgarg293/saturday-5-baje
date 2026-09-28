@@ -76,16 +76,33 @@ on end walls facing straight down the street.
 **Done when:** the frames look painted, and still hold 60 fps.
 
 ## 4. Street life: stalls and props
-- [ ] Chai tapri, golgappa cart, kachori and samosa, jalebi shop, ice gola cart
-- [ ] Kirana shops with hanging snack strips; the small temple with bells
-- [ ] Parked and passing vehicles: autos, scooters, bikes, cycle-rickshaws
-- [ ] Cows and stray dogs
+Owner's choices: a few moving vehicles; animals mostly still with small idle
+motion; busy but walkable.
+- [x] Chai tapri, golgappa cart, kachori and samosa, jalebi, ice gola cart
+      (`props/stalls.ts`), each with a painted board
+- [x] Shop goods by trade (`props/goods.ts`): kirana snack strips and sacks,
+      sweets case, sarees and cloth bolts, coolers and fans, tyres, shelves
+- [x] The temple (`props/temple.ts`): shrine, shikhara, garland, bell, flag,
+      peepal tree
+- [x] Parked scooters, motorcycles, bicycles, a cycle-rickshaw and an auto
+      (`props/vehicles.ts`, spots in `layout.ts` `PARKED`)
+- [x] Cows and dogs with idle motion (`props/animals.ts`)
+- [x] Side roads at both ends; an auto, a scooter and a bicycle shuttle
+      between them, one at a time, stopping and honking for the player
+      (`traffic.ts`; honk sound in phase 6)
+- [x] Walk check (`__walkCheck`): all key places reachable, narrowest
+      walkable width 4.8 m; traffic tested over 800 simulated seconds
+- [x] ~3.5 ms per frame at pixel ratio 1.5 (budget 16.7)
+- [x] Owner plays it and approves
 
 ## 5. People
 - [ ] One stylized figure: the chaiwala, making chai. Judge it before building more.
 - [ ] Men talking at the chai corner, shopkeepers sitting out front
 - [ ] Kids playing gully cricket
 - [ ] Hawkers
+- [ ] Replace the placeholder riders on the moving vehicles (`addRider` in
+      `props/vehicles.ts`) with the proper figures
+- [ ] Maybe: a second look at the cow and dog alongside the people
 
 ## 6. Street sound
 - [ ] Ambient mix: horns, hawkers' calls, temple bells, chai glasses

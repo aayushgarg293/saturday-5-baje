@@ -1,5 +1,6 @@
 import { BOARD_COLOURS, PAL } from "../../render/palette";
 import { PLOT_DEPTH } from "../layout";
+import { dressShop } from "../props/goods";
 import {
   type BuildContext, type BuildResult, type SignSpot,
   FACADE, FLOOR_HEIGHT, balcony, body, ledge, roof, windowRow,
@@ -84,8 +85,9 @@ export function shopfront(
   const inner = w - pillar * 2;
   p.box(inner, 0.3, 0.3, mid, OPENING_TOP - 0.3, face - 0.2, PAL.shutter);
   const state = r.next();
-  if (state > 0.72) {
-    const bottom = state > 0.9 ? PLINTH_H : r.range(1.6, 2.4); // closed, or half down
+  const shutter = state > 0.9 ? "closed" : state > 0.72 ? "half" : "open";
+  if (shutter !== "open") {
+    const bottom = shutter === "closed" ? PLINTH_H : r.range(1.6, 2.4);
     p.slab(x0 + pillar, x1 - pillar, bottom, OPENING_TOP - 0.45, face - 0.24, face - 0.2, PAL.shutter);
   }
 
@@ -94,8 +96,11 @@ export function shopfront(
   // (its top edge meets the wall at ~3.8 m, just under the signboard)
   p.box(w + 0.1, 0.04, 1.5, mid, OPENING_TOP - 0.12, face + 0.72, awningColour, { rx: 0.3 });
 
-  // signboard on the wall above the awning (blank until phase 3 paints it)
+  // signboard on the wall above the awning (its lettering is painted by world/signs.ts)
   const board = { w: w - 0.3, h: 0.72, y: 4.3 };
   p.box(board.w, board.h, 0.08, mid, board.y, face + 0.04, r.pick(BOARD_COLOURS));
-  return { kind, x: mid, y: board.y, z: face + 0.08, w: board.w, h: board.h };
+
+  // the goods, by what the shop sells
+  dressShop(c, { x0: x0 + pillar, x1: x1 - pillar, face, back, floor: PLINTH_H, top: OPENING_TOP, shutter });
+  return { kind, x: mid, y: board.y, z: face + 0.08, w: board.w, h: board.h, nameIndex: c.shopName };
 }

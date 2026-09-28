@@ -16,6 +16,17 @@ export type Rng = {
   pick<T>(items: readonly T[]): T;
 };
 
+/** The numbers 0..n-1 in a shuffled order that's the same on every load. */
+export function shuffled(n: number, seed: number): number[] {
+  const rng = makeRng(seed);
+  const order = [...Array(n).keys()];
+  for (let i = n - 1; i > 0; i--) {
+    const j = Math.floor(rng.next() * (i + 1));
+    [order[i], order[j]] = [order[j], order[i]];
+  }
+  return order;
+}
+
 export function makeRng(seed: number): Rng {
   // mulberry32: a tiny, well-known generator; good enough for placing props
   let a = seed >>> 0;

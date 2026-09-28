@@ -8,23 +8,29 @@ Read both before starting work.
 
 ## Status
 
-Phase 3 (the look) built: ink outlines and a warm colour grade
-(`render/post.ts`), a painted sky with clouds (`world/sky.ts`), brush strokes
-and weathering on every surface (`render/paint.ts`), and every shop board,
-wall ad and film poster lettered (`world/signs.ts`, words in `world/names.ts`).
-Next: phase 4, street life (`TASKS.md`).
+Phase 4 (street life) built: the five food stalls, shop goods by trade, the
+temple and its peepal tree, parked vehicles, cows and dogs with idle motion,
+and passing traffic that shuttles between two side roads (`world/life.ts`,
+`world/traffic.ts`, `world/props/`). Vehicle riders are placeholders until
+phase 5 (people). Next: phase 5 (`TASKS.md`).
 
-Baseline (2026-09-28, M4, Chrome, 1470×956): **~3.2 ms per frame at pixel
-ratio 1.5, ~5 ms at 2; 85–162 draw calls** depending on the view (shadow pass
-included). Budget for 60 fps: 16.7 ms.
+Baseline (2026-09-28, M4, Chrome, 1470×956): **~3.5 ms per frame at pixel
+ratio 1.5, ~5.3 ms at 2; 110–206 draw calls** depending on the view (shadow
+pass included). Budget for 60 fps: 16.7 ms.
 
 ## How the world is organised
 
 - **`src/world/layout.ts` is the street plan, as data.** Everything is placed
   by `s` (metres along the street) and `offset` (metres to the side, left
   negative); `pointAt(s, offset)` turns that into world x/z, so the street can
-  curve without anything else knowing. Plots, galis, the cafe and the phase 4
-  stall spots (`SLOTS`) all live there.
+  curve without anything else knowing. Plots, galis, side roads, the cafe,
+  stall spots (`SLOTS`), parked vehicles (`PARKED`) and animals all live there.
+- **Props** (`world/props/`) are built in their own frame (x along the street,
+  +z facing the middle of the street) and placed with `placeOnStreet()`.
+  Everything that never moves goes into one `StaticBatch`: one draw call.
+- **Shop names decide shop goods.** `street.ts` gives each shop a name from
+  `names.ts`; the name's `trade` picks its goods (`props/goods.ts`) and the
+  sign painter shows the same name.
 - **Buildings are built in their own local frame** (x along the frontage, +z
   toward the street, z = 0 at the plot's front edge) from parts, then merged
   into **one mesh per building** with `Parts` (`src/world/kit.ts`). One building
@@ -49,6 +55,9 @@ Dev tools (dev server only), from the browser console:
 - `await __shot('start')`: save a frame from a saved spot (`src/dev/cameras.ts`)
   to `.shots/start.jpg`; `await __shotAll()` for every spot.
 - `__game.step(seconds)`: advance the game without rendering.
+- `__walkCheck()`: flood-fills everywhere the player can stand; reports which
+  key places are reachable and the narrowest walkable width. Run it after
+  placing anything on the street.
 - `C` in the game: show your position as a ready-made `__shot` line.
 - The top-left overlay shows fps, frame time, draw calls and triangles.
 
@@ -141,4 +150,10 @@ Keep each entry short.)*
 | Brush strokes look like wood-grain rings | Rotating the stroke pattern by an angle that varies across the surface: at large world coordinates a small angle change is a big shift. `paint.ts` stretches noise along the surface with a small wobble instead. |
 | The colour grade turned everything dull and grey-violet | The grade *multiplies* by its tints, and a hex colour becomes a much darker number once converted to linear light. Keep tints close to white (`GRADE` in `post.ts`). |
 | A `__shot` of a side-wall ad shows a blank wall | The test camera was inside the neighbouring building: side walls face *along* the street, so "a few metres in front of it" is inside the row. View side walls from a point on the street's centre line. |
+| A prop added twice ends up in the wrong place | `Parts.add` moves the shape it's given in place. Clone a shape *before* adding it if you need a copy (the umbrella's lining). |
+| Something seen from below is invisible | Surfaces are drawn from their front only. Things you look up at (umbrellas, canopies) need a mirrored copy facing down. |
+| A vehicle stopped forever for someone standing at the road's edge | Its "in my path" test had too wide a margin. Use the player's body radius plus a little (`traffic.ts`). |
+| Vehicles cut across each other in the back lanes | Routes went diagonally from the side road to far waiting spots, past nearer ones. They now drive along the lane's outer half until level with their spot, then pull in. |
+| The walk check says a place is unreachable, but it isn't | Check what's *on* the probe point first: a dog was lying exactly on the spot being tested. |
+| Animals look like boxes | Flat (faceted) shading suits buildings, not bodies. Build rounded things with `Parts.build(name, { smooth: true })`. |
 | The fort looked like it was floating | It was on a pointed peak, so the ends of a wide fort hung in the air. Hill forts need a broad flat-topped hill (`ridgeProfile` in `backdrop.ts`). Check suspected floating with a narrow-field `__shot` (set `__game.camera.fov` low) and by measuring, before changing anything. |

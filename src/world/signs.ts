@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { type Rng, makeRng } from "../core/rng";
+import { type Rng, makeRng, shuffled } from "../core/rng";
 import { toon } from "../render/toon";
 import { CINEMA, FILMS, SHOP_NAMES, WALL_ADS } from "./names";
 import type { WorldSign } from "./street";
@@ -13,8 +13,9 @@ import type { WorldSign } from "./street";
  * imperfections: slightly tilted lettering, faded patches, rust streaks,
  * peeling edges.
  *
- * The words come from `names.ts`. Which shop gets which name is shuffled
- * once with a fixed seed, so it's the same on every load.
+ * The words come from `names.ts`. Which shop gets which name is decided in
+ * `street.ts` (it also decides the shop's goods); ads and films are shuffled
+ * here with a fixed seed, so it's all the same on every load.
  */
 
 const LATIN = '"Arial Black", "Helvetica Neue", Arial, sans-serif';
@@ -43,7 +44,7 @@ const BOARD_STYLES = [
 ] as const;
 
 /** Draws one sign. `i` counts signs of the same kind (0, 1, 2…), to pick its content. */
-type Painter = (ctx: CanvasRenderingContext2D, w: number, h: number, i: number, rng: Rng) => void;
+type Painter = (ctx: CanvasRenderingContext2D, w: number, h: number, i: number, rng: Rng, sign: WorldSign) => void;
 
 type PainterSpec = {
   paint: Painter;
@@ -55,8 +56,7 @@ type PainterSpec = {
   cutout?: boolean;
 };
 
-// Shuffled once, with a fixed seed: which shop gets which name, and so on.
-const shopOrder = shuffled(SHOP_NAMES.length, 11);
+// Shuffled once, with a fixed seed: which ad and film goes where.
 const adOrder = shuffled(WALL_ADS.length, 12);
 const filmOrder = shuffled(FILMS.length, 13);
 
@@ -97,8 +97,9 @@ const PAINTERS: Partial<Record<WorldSign["kind"], PainterSpec>> = {
   } },
 
   /** Every other shop: its name big in Hindi, then English, what it sells, and a phone number. */
-  shop: { ppm: 220, weather: 0.35, paint(ctx, w, h, i, rng) {
-    const name = SHOP_NAMES[shopOrder[i % shopOrder.length]];
+  shop: { ppm: 220, weather: 0.35, paint(ctx, w, h, i, rng, sign) {
+    // the name was chosen when the street was built (it also decides the shop's goods)
+    const name = SHOP_NAMES[sign.nameIndex ?? i % SHOP_NAMES.length];
     const [bg, main, second] = BOARD_STYLES[Math.floor(rng.next() * BOARD_STYLES.length)];
     background(ctx, w, h, bg, second);
     brushStreaks(ctx, w, h, rng);
@@ -122,6 +123,15 @@ const PAINTERS: Partial<Record<WorldSign["kind"], PainterSpec>> = {
     text(ctx, ad.hi, w / 2, h * 0.8, w * 0.7, h * 0.13, ad.fg, DEVANAGARI);
     weather(ctx, w, h, rng, 1.4);
     peel(ctx, w, h, rng); // flaked-off paint shows the wall behind
+  } },
+
+  /** A stall's small painted board: one word or two, bold, in Hindi. */
+  stallSign: { ppm: 260, weather: 0.4, paint(ctx, w, h, _i, rng, sign) {
+    const [bg, fg, border] = BOARD_STYLES[Math.floor(rng.next() * BOARD_STYLES.length)];
+    background(ctx, w, h, bg, border);
+    tilted(ctx, w / 2, h * 0.53, rng.range(-0.02, 0.02), () =>
+      text(ctx, sign.label ?? "", 0, 0, w * 0.86, h * 0.72, fg, DEVANAGARI));
+    weather(ctx, w, h, rng, 0.6);
   } },
 
   /** A cluster of film posters pasted on a wall, overlapping and torn. */
@@ -192,7 +202,7 @@ function paintTexture(sign: WorldSign, spec: PainterSpec, index: number, rng: Rn
   canvas.width = Math.round(sign.w * ppm);
   canvas.height = Math.round(sign.h * ppm);
   const ctx = canvas.getContext("2d")!;
-  spec.paint(ctx, canvas.width, canvas.height, index, rng);
+  spec.paint(ctx, canvas.width, canvas.height, index, rng, sign);
 
   const tex = new THREE.CanvasTexture(canvas);
   tex.colorSpace = THREE.SRGBColorSpace; // the canvas colours are ordinary screen colours
@@ -351,15 +361,4 @@ function poster(ctx: CanvasRenderingContext2D, w: number, h: number, film: (type
   ctx.fillStyle = `rgba(250,244,230,${rng.range(0.05, 0.3)})`;
   ctx.fillRect(x0, y0, w, h);
   ctx.restore();
-}
-
-/** The numbers 0..n-1 in a shuffled order that's the same on every load. */
-function shuffled(n: number, seed: number): number[] {
-  const rng = makeRng(seed);
-  const order = [...Array(n).keys()];
-  for (let i = n - 1; i > 0; i--) {
-    const j = Math.floor(rng.next() * (i + 1));
-    [order[i], order[j]] = [order[j], order[i]];
-  }
-  return order;
 }

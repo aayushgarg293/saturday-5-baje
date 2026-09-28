@@ -47,4 +47,20 @@ export const CAMERAS: Record<string, CameraSpot> = {
   end: along(196, 0, 0, 0.1),
   /** From the far end, looking back down the whole street. */
   back: along(200, 0, Math.PI),
+
+  // --- street life (phase 4) ---
+  /** The chai tapri at the first gali's mouth. */
+  chai: along(51, 0.8, 0.45, -0.1),
+  /** The golgappa cart. */
+  golgappa: along(69, -0.8, -0.5, -0.1),
+  /** Kachori and samosa, with a cow in the road beyond. */
+  kachori: along(33, -0.6, -0.45, -0.1),
+  /** The jalebi stall. */
+  jalebi: along(127, 0.6, 0.5, -0.1),
+  /** The ice gola cart. */
+  iceGola: along(145, -0.6, -0.5, -0.05),
+  /** The temple and its peepal tree. */
+  temple: along(89, 1, 0.55, 0.12),
+  /** Into the south side road, where the traffic comes from. */
+  sideRoad: along(6, -1.5, -0.9, 0),
 };

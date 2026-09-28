@@ -63,6 +63,23 @@ export class Parts {
   }
 
   /**
+   * A thin rod from point a to point b (a bicycle frame tube, a pole, a
+   * rail). Worked out from its two ends, so connected rods always meet.
+   */
+  strut(a: THREE.Vector3Like, b: THREE.Vector3Like, radius: number, color: number, segments = 6) {
+    const start = new THREE.Vector3(a.x, a.y, a.z);
+    const dir = new THREE.Vector3(b.x, b.y, b.z).sub(start);
+    const length = dir.length();
+    const geo = new THREE.CylinderGeometry(radius, radius, length, segments);
+    // a cylinder is made standing along y: turn y onto the rod's direction
+    geo.applyQuaternion(new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.normalize()));
+    const mid = start.clone().addScaledVector(dir, length / 2);
+    geo.translate(mid.x, mid.y, mid.z);
+    paint(geo, color);
+    this.geos.push(geo);
+  }
+
+  /**
    * Move/turn the most recently added part by `matrix`. Handy when a part is
    * easiest to describe around the origin and then place (e.g. along a curve).
    */
@@ -70,22 +87,35 @@ export class Parts {
     this.geos[this.geos.length - 1]?.applyMatrix4(matrix);
   }
 
+  /** Add all of another `Parts`' pieces, moved by `matrix` (for building a thing out of smaller things). */
+  addParts(other: Parts, matrix: THREE.Matrix4) {
+    for (const g of other.geos) this.geos.push(g.clone().applyMatrix4(matrix));
+  }
+
   /** How many parts have been added so far. */
   get count() {
     return this.geos.length;
   }
 
+  /** All the parts merged into one shape, without making a mesh from it. */
+  geometry(): THREE.BufferGeometry {
+    const merged = mergeGeometries(this.geos.map(normalise));
+    if (!merged) throw new Error("Parts: parts could not be merged");
+    return merged;
+  }
+
   /**
    * Merge every part into one mesh: cel-shaded by default, or `unlit` for far
-   * silhouettes that shouldn't react to light or fade into the haze.
+   * silhouettes that shouldn't react to light or fade into the haze. `smooth`
+   * shades rounded things (animals, people) smoothly instead of facet by
+   * facet, which suits buildings but makes a body look boxy.
    */
-  build(name: string, { castShadow = true, receiveShadow = true, unlit = false } = {}): THREE.Mesh {
-    const merged = mergeGeometries(this.geos.map(normalise));
-    if (!merged) throw new Error(`Parts.build(${name}): parts could not be merged`);
+  build(name: string, { castShadow = true, receiveShadow = true, unlit = false, smooth = false } = {}): THREE.Mesh {
+    const merged = this.geometry();
     this.geos.forEach((g) => g.dispose());
     const material = unlit
       ? flat(0xffffff, { fog: false, vertexColors: true })
-      : toon({ color: 0xffffff, vertexColors: true });
+      : toon({ color: 0xffffff, vertexColors: true, flatShading: !smooth });
     const mesh = new THREE.Mesh(merged, material);
     mesh.name = name;
     mesh.castShadow = castShadow;

@@ -26,11 +26,17 @@ export type BuildContext = {
   rng: Rng;
   /** Main wall colour. */
   wall: number;
+  /** For shops: which name it has (world/names.ts), which also decides its goods. */
+  shopName?: number;
 };
 
 /** Where a signboard is, so phase 3 can paint text onto it. Local frame. */
 export type SignSpot = {
-  kind: "shop" | "stdShop" | "cafe" | "cafeBlade" | "cafeDoor" | "wallAd" | "posters";
+  kind: "shop" | "stdShop" | "cafe" | "cafeBlade" | "cafeDoor" | "wallAd" | "posters" | "stallSign";
+  /** The word(s) on a stall's board. */
+  label?: string;
+  /** Which entry of SHOP_NAMES (world/names.ts) a shop board shows. */
+  nameIndex?: number;
   /** Centre of the board's front face. */
   x: number;
   y: number;

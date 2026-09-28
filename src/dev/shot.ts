@@ -1,7 +1,9 @@
 import type * as THREE from "three";
 import type { Player } from "../core/player";
+import type { Life } from "../world/life";
 import type { Street } from "../world/street";
 import { CAMERAS, type CameraSpot } from "./cameras";
+import { type WalkReport, walkCheck } from "./walk";
 
 /**
  * Dev-only tools, reachable from the browser console (and by Claude through
@@ -29,6 +31,8 @@ export type GameHandle = {
   player: Player;
   /** The street's colliders and signboard positions, for scripted checks. */
   street: Street;
+  /** Stalls, animals and traffic, for scripted checks. */
+  life: Life;
   /** Advance the game by `seconds` without rendering. */
   step(seconds: number): void;
   /** Render one frame now. */
@@ -40,11 +44,13 @@ declare global {
     __game: GameHandle;
     __shot: (name: string, spot?: string | CameraSpot, size?: ShotSize) => Promise<unknown>;
     __shotAll: () => Promise<unknown[]>;
+    __walkCheck: () => WalkReport;
   }
 }
 
 export function installDevTools(game: GameHandle) {
   window.__game = game;
+  window.__walkCheck = () => walkCheck(game.player.colliders);
 
   window.__shot = async (name, spot = name, size = {}) => {
     const { width = 1600, height = 900 } = size;
