@@ -87,6 +87,15 @@ export const PAL = {
   dogBrown: 0x7a5236,
   dogBlack: 0x2f2a27,
 
+  // people
+  hairBlack: 0x1f1b19,
+  hairGrey: 0x8d8680,
+  vestCream: 0xefe8d6, // the chaiwala's baniyan
+  dhotiWhite: 0xe7e0cf,
+  chappal: 0x5a3b28,
+  gamchhaRed: 0xb8352c,
+  lipShade: 0x8a4a3c,
+
   // signboards: blank for now, painted with text in phase 3
   boardYellow: 0xe9c24a,
   boardRed: 0xc2483a,
@@ -114,6 +123,9 @@ export const WALL_COLOURS = [
   PAL.limeGreen,
   PAL.sandstone,
 ] as const;
+
+/** Skin tones, warm browns from lighter to deeper. */
+export const SKIN_TONES = [0xd9a47a, 0xc98f63, 0xb97c52, 0xa66b45, 0x8f5a3a, 0x7a4b31] as const;
 
 /** Signboard colours (the cafe's own blue is kept for the cafe). */
 export const BOARD_COLOURS = [

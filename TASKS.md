@@ -96,7 +96,16 @@ motion; busy but walkable.
 - [x] Owner plays it and approves
 
 ## 5. People
-- [ ] One stylized figure: the chaiwala, making chai. Judge it before building more.
+- [x] The people system (`src/people/`): skeleton, one skinned mesh per body
+      (+ a painted face shell), painted anime faces (eyes, brows, moustache,
+      tilak), hair, clothes (vest, dhoti, gamchha so far), arm IK, head look-at
+- [x] The chaiwala (`people/chaiwala.ts`): stirs → lifts and pours → wipes his
+      hands on the gamchha, in a loop; looks at you when you're near
+- [x] Owner round 1 ("face mostly enough, more expressive would help; body
+      too stiff"): blinking; a grin, raised brows and a nod when he first
+      notices you; torso twists toward the work, shoulders rock with the
+      stirring, leans into the pour, weight shifts hip to hip, head tilts
+- [x] Owner judges the chaiwala: approved
 - [ ] Men talking at the chai corner, shopkeepers sitting out front
 - [ ] Kids playing gully cricket
 - [ ] Hawkers

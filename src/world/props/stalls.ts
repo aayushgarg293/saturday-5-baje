@@ -64,10 +64,9 @@ export function chaiTapri(rng: Rng): Stall {
   const top = 0.9;
   p.slab(-0.8, 0.8, 0, top, -0.35, 0.35, PAL.woodLight); // counter
   p.slab(-0.85, 0.85, top, top + 0.04, -0.4, 0.4, PAL.wood); // its top
-  // stove and a steaming pan of chai; a big kettle; a row of glass tumblers on a tray
+  // stove; a big kettle; a row of glass tumblers on a tray
   p.cylinder(0.17, 0.19, 0.14, -0.45, top + 0.11, 0, PAL.ironBlack, { segments: 12 });
-  p.cylinder(0.16, 0.15, 0.14, -0.45, top + 0.25, 0, PAL.steel, { segments: 14 });
-  p.cylinder(0.14, 0.15, 0.03, -0.45, top + 0.31, 0, 0xc88f5a, { segments: 14 }); // the chai itself
+  // (the pan of chai itself belongs to the chaiwala, people/chaiwala.ts: he picks it up to pour)
   p.cylinder(0.1, 0.12, 0.26, 0.05, top + 0.17, -0.12, PAL.steel, { segments: 12 });
   p.strut({ x: 0.13, y: top + 0.2, z: -0.12 }, { x: 0.25, y: top + 0.28, z: -0.12 }, 0.015, PAL.steel); // spout
   p.box(0.6, 0.02, 0.2, 0.45, top + 0.05, 0.15, PAL.steel); // tray

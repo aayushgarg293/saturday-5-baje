@@ -3,6 +3,7 @@ import type { Box } from "../core/colliders";
 import { makeRng } from "../core/rng";
 import type { SignSpot } from "./buildings/common";
 import { Parts } from "./kit";
+import { buildChaiwala } from "../people/chaiwala";
 import { ANIMALS, PARKED, SLOTS } from "./layout";
 import { type Animal, buildCow, buildDog } from "./props/animals";
 import { type Placement, StaticBatch, placeOnStreet } from "./props/batch";
@@ -90,6 +91,10 @@ export function buildLife(): Life {
   for (const d of ANIMALS.dogs) addAnimal(buildDog(rng), d.s, d.offset, rng.range(-0.6, 0.6) + (rng.next() < 0.5 ? Math.PI : 0));
   for (const animal of animals) animal.group.traverse((o) => { o.castShadow = true; });
 
+  // --- people (phase 5a: the chaiwala) ---------------------------------------------
+  const chaiwala = buildChaiwala(placeOnStreet(SLOTS.chaiTapri.s, SLOTS.chaiTapri.offset));
+  group.add(chaiwala.group);
+
   // --- passing traffic ----------------------------------------------------------------
   const traffic = buildTraffic();
   group.add(traffic.group);
@@ -108,6 +113,7 @@ export function buildLife(): Life {
         local.copy(player).applyMatrix4(inverse.copy(animal.group.matrixWorld).invert());
         animal.update(t, dt, local);
       }
+      chaiwala.update(t, dt, player);
       traffic.update(dt, player);
     },
   };

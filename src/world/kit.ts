@@ -29,6 +29,17 @@ export class Parts {
   private readonly quat = new THREE.Quaternion();
   private readonly pos = new THREE.Vector3();
   private readonly scale = new THREE.Vector3(1, 1, 1);
+  /** For skinned things (people): which joint the next parts follow. */
+  private joint: number | null = null;
+
+  /**
+   * For a body that bends (a person): every part added from now on follows
+   * joint number `index` of the skeleton, until this is called again. Once
+   * used, every part of this `Parts` must be given a joint.
+   */
+  setJoint(index: number) {
+    this.joint = index;
+  }
 
   /** A box `w` wide (x), `h` tall (y), `d` deep (z), centred at (x, y, z). */
   box(w: number, h: number, d: number, x: number, y: number, z: number, color: number, at: Placement = {}) {
@@ -58,7 +69,13 @@ export class Parts {
     this.quat.setFromEuler(this.euler);
     this.matrix.compose(this.pos.set(x, y, z), this.quat, this.scale);
     geo.applyMatrix4(this.matrix);
+    this.finish(geo, color);
+  }
+
+  /** Colour a finished shape, tag it with its joint (if skinned), and keep it. */
+  private finish(geo: THREE.BufferGeometry, color: number) {
     paint(geo, color);
+    if (this.joint !== null) attachToJoint(geo, this.joint);
     this.geos.push(geo);
   }
 
@@ -75,8 +92,7 @@ export class Parts {
     geo.applyQuaternion(new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.normalize()));
     const mid = start.clone().addScaledVector(dir, length / 2);
     geo.translate(mid.x, mid.y, mid.z);
-    paint(geo, color);
-    this.geos.push(geo);
+    this.finish(geo, color);
   }
 
   /**
@@ -136,13 +152,29 @@ function paint(geo: THREE.BufferGeometry, hex: number) {
 }
 
 /**
+ * Skinning data: every vertex follows one joint fully. (A joint "index" and
+ * "weight" per vertex; up to four joints can share a vertex, we use one.)
+ */
+function attachToJoint(geo: THREE.BufferGeometry, joint: number) {
+  const n = geo.attributes.position.count;
+  const index = new Uint16Array(n * 4);
+  const weight = new Float32Array(n * 4);
+  for (let i = 0; i < n; i++) {
+    index[i * 4] = joint;
+    weight[i * 4] = 1;
+  }
+  geo.setAttribute("skinIndex", new THREE.Uint16BufferAttribute(index, 4));
+  geo.setAttribute("skinWeight", new THREE.Float32BufferAttribute(weight, 4));
+}
+
+/**
  * Merging needs every shape to have exactly the same set of data (position,
  * normal, colour) and the same index style, so strip anything extra (like
  * texture coordinates) and make all of them "non-indexed".
  */
 function normalise(geo: THREE.BufferGeometry): THREE.BufferGeometry {
   for (const name of Object.keys(geo.attributes)) {
-    if (name !== "position" && name !== "normal" && name !== "color") geo.deleteAttribute(name);
+    if (!["position", "normal", "color", "skinIndex", "skinWeight"].includes(name)) geo.deleteAttribute(name);
   }
   return geo.index ? geo.toNonIndexed() : geo;
 }
