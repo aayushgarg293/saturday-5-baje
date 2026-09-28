@@ -4,7 +4,10 @@ import { Player } from "./core/player";
 import { addLights } from "./render/lights";
 import { PAL } from "./render/palette";
 import { createRenderer, fitToWindow } from "./render/renderer";
+import { buildBackdrop } from "./world/backdrop";
+import { buildSigns } from "./world/signs";
 import { buildStreet } from "./world/street";
+import { buildWires } from "./world/wires";
 
 /**
  * Entry point: builds the scene, then runs the frame loop.
@@ -24,16 +27,18 @@ const scene = new THREE.Scene();
 scene.fog = new THREE.Fog(PAL.haze, 40, 160);
 
 // 65° field of view: wide enough to feel present, without fish-eye stretching.
-const camera = new THREE.PerspectiveCamera(65, 1, 0.1, 400);
+// Draws up to 1200 m away, so the far hills (700 m) aren't cut off.
+const camera = new THREE.PerspectiveCamera(65, 1, 0.1, 1200);
 fitToWindow(renderer, camera);
 
 const lights = addLights(scene);
 const street = buildStreet();
-scene.add(street.group);
+const wires = buildWires();
+scene.add(street.group, buildSigns(street.signs), wires.group, buildBackdrop());
 
 // --- the player ----------------------------------------------------------------
 const input = new Input(canvas);
-const player = new Player(camera, input, street.colliders);
+const player = new Player(camera, input, [...street.colliders, ...wires.colliders]);
 player.place(street.spawn.x, street.spawn.z, street.spawn.yaw);
 
 // Click to capture the mouse; the start screen shows whenever it's released.
@@ -69,6 +74,7 @@ if (import.meta.env.DEV) {
     camera,
     renderer,
     player,
+    street,
     render,
     step(seconds) {
       // fixed 1/60 s steps, like real frames, so results match normal play

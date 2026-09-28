@@ -1,0 +1,144 @@
+import type { Rng } from "../../core/rng";
+import { PAL } from "../../render/palette";
+import type { Parts } from "../kit";
+import { PLOT_DEPTH } from "../layout";
+
+/**
+ * Shared building pieces: walls, windows, ledges, rooftops.
+ *
+ * Every building is built in its own local frame:
+ *   x   along the frontage, from -w/2 to +w/2
+ *   y   up from the ground
+ *   z   toward the street; z = 0 is the front edge of the plot (the edge of
+ *       the raised platform), and the building goes back to z = -PLOT_DEPTH
+ *
+ * A rule learned from Sakura Crossing: you cannot carve a hole into a box.
+ * Openings (shopfronts, doors) are built from pieces around the gap, and
+ * details (window frames, ledges) are built OUTWARD from the wall face,
+ * never sunk into it, or they disappear inside the wall.
+ */
+
+/** Everything a building builder needs. */
+export type BuildContext = {
+  parts: Parts;
+  /** Frontage width, metres. */
+  w: number;
+  rng: Rng;
+  /** Main wall colour. */
+  wall: number;
+};
+
+/** Where a signboard is, so phase 3 can paint text onto it. Local frame. */
+export type SignSpot = {
+  kind: "shop" | "stdShop" | "cafe" | "cafeBlade" | "cafeDoor";
+  /** Centre of the board's front face. */
+  x: number;
+  y: number;
+  z: number;
+  w: number;
+  h: number;
+  /** Extra turn about the vertical axis (the blade sign faces along the street). */
+  ry?: number;
+  /**
+   * For boards readable from both sides (the blade sign): how far behind
+   * the front face the back face is, so it can be painted too.
+   */
+  backOffset?: number;
+};
+
+export type BuildResult = {
+  /** Total height, including the parapet. */
+  height: number;
+  signs: SignSpot[];
+};
+
+export const FLOOR_HEIGHT = 3.1;
+/** How far the building's facade sits behind the plot front (houses have a step, shops a platform). */
+export const FACADE = { shop: 1.1, house: 0.6 };
+
+/** The solid mass of a building: one big box from the facade to the back. */
+export function body(c: BuildContext, y0: number, y1: number, zFront: number) {
+  c.parts.slab(-c.w / 2, c.w / 2, y0, y1, -PLOT_DEPTH, zFront, c.wall);
+}
+
+/**
+ * A window on a facade at `zFace`: a wooden frame, a dark pane in front of
+ * it (so a rim of frame shows around the pane), and a stone sill.
+ */
+export function windowAt(c: BuildContext, x: number, y: number, zFace: number, w = 0.9, h = 1.25) {
+  const p = c.parts;
+  p.box(w + 0.16, h + 0.16, 0.05, x, y, zFace + 0.025, PAL.wood);
+  p.box(w, h, 0.05, x, y, zFace + 0.06, PAL.windowDark);
+  p.box(w + 0.3, 0.08, 0.2, x, y - h / 2 - 0.1, zFace + 0.1, PAL.stoneTrim);
+}
+
+/** A row of windows across one floor, evenly spaced. */
+export function windowRow(c: BuildContext, y: number, zFace: number, maxCount = 4) {
+  const count = Math.max(1, Math.min(maxCount, Math.floor(c.w / 1.9)));
+  for (let i = 0; i < count; i++) {
+    const x = -c.w / 2 + (c.w / count) * (i + 0.5);
+    windowAt(c, x, y, zFace);
+  }
+}
+
+/** A chajja: the thin ledge that sticks out over each floor line to throw off rain and sun. */
+export function ledge(c: BuildContext, y: number, zFace: number, depth = 0.45) {
+  c.parts.box(c.w + 0.1, 0.1, depth, 0, y, zFace + depth / 2, PAL.stoneTrim);
+}
+
+/** A small balcony: a slab and a railing, centred on the frontage. */
+export function balcony(c: BuildContext, y: number, zFace: number) {
+  const p = c.parts;
+  const bw = Math.min(c.w * 0.6, 3.2);
+  const depth = 0.8;
+  p.box(bw, 0.14, depth, 0, y, zFace + depth / 2, PAL.stoneTrim);
+  p.box(bw, 0.9, 0.05, 0, y + 0.52, zFace + depth - 0.03, PAL.railing); // front rail
+  p.box(0.05, 0.9, depth, -bw / 2 + 0.03, y + 0.52, zFace + depth / 2, PAL.railing);
+  p.box(0.05, 0.9, depth, bw / 2 - 0.03, y + 0.52, zFace + depth / 2, PAL.railing);
+}
+
+/**
+ * The flat roof: a parapet round the front and sides, and the rooftop clutter
+ * of the time: a black water tank, a TV antenna, sometimes a dish.
+ * Returns the height of the top of the parapet.
+ */
+export function roof(c: BuildContext, roofY: number, zFace: number): number {
+  const p = c.parts;
+  const r = c.rng;
+  const para = 0.85; // parapet height
+  const t = 0.2; // parapet thickness
+  p.slab(-c.w / 2, c.w / 2, roofY, roofY + para, zFace - t, zFace, c.wall); // front
+  p.slab(-c.w / 2, -c.w / 2 + t, roofY, roofY + para, -PLOT_DEPTH, zFace, c.wall); // sides
+  p.slab(c.w / 2 - t, c.w / 2, roofY, roofY + para, -PLOT_DEPTH, zFace, c.wall);
+  p.box(c.w + 0.12, 0.08, 0.34, 0, roofY + para + 0.04, zFace - 0.1, PAL.stoneTrim); // coping
+
+  // Water tank on a little stand, toward the back of the roof.
+  if (r.next() < 0.75) {
+    const tx = r.range(-c.w / 2 + 1, c.w / 2 - 1);
+    const tz = r.range(-PLOT_DEPTH + 1.2, -PLOT_DEPTH / 2);
+    const tankR = r.range(0.45, 0.65);
+    p.slab(tx - 0.6, tx + 0.6, roofY, roofY + 0.5, tz - 0.6, tz + 0.6, PAL.plinth);
+    p.cylinder(tankR, tankR, 1.1, tx, roofY + 0.5 + 0.55, tz, PAL.waterTank, { segments: 12 });
+    p.cylinder(0.2, 0.2, 0.08, tx, roofY + 1.64, tz, PAL.waterTank, { segments: 8 }); // lid
+  }
+
+  // TV antenna: a pole with crossbars, the unmistakable 2000s roofline.
+  if (r.next() < 0.55) {
+    const ax = r.range(-c.w / 2 + 0.6, c.w / 2 - 0.6);
+    const az = r.range(-PLOT_DEPTH + 1, zFace - 1);
+    const poleH = r.range(2.2, 3.2);
+    p.cylinder(0.025, 0.025, poleH, ax, roofY + poleH / 2, az, PAL.metal, { segments: 5 });
+    for (let i = 0; i < 4; i++) {
+      const len = 1.1 - i * 0.18;
+      p.box(len, 0.03, 0.03, ax, roofY + poleH - 0.1 - i * 0.28, az, PAL.metal, { ry: r.range(-0.3, 0.3) });
+    }
+  }
+
+  // A satellite dish (arriving in the later 2000s), tilted up at the sky.
+  if (r.next() < 0.25) {
+    const dx = r.range(-c.w / 2 + 0.7, c.w / 2 - 0.7);
+    p.cylinder(0.38, 0.06, 0.16, dx, roofY + 1.1, zFace - 0.9, PAL.boardWhite, { rx: -0.9, segments: 12 });
+    p.box(0.05, 1.0, 0.05, dx, roofY + 0.5, zFace - 0.9, PAL.metal);
+  }
+  return roofY + para;
+}

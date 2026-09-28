@@ -42,9 +42,10 @@ export function addLights(scene: THREE.Scene): Lights {
   cam.right = cam.top = SHADOW_HALF;
   cam.near = 1;
   cam.far = 200;
-  // small offsets that stop surfaces from shadowing themselves in stripes ("acne")
-  sun.shadow.bias = -0.0004;
-  sun.shadow.normalBias = 0.03;
+  // Small offsets that stop surfaces from shadowing themselves in fine stripes
+  // ("shadow acne"). 0.03 left stripes on big walls turned away from the sun.
+  sun.shadow.bias = -0.0005;
+  sun.shadow.normalBias = 0.06;
   scene.add(sun, sun.target);
 
   scene.add(new THREE.HemisphereLight(PAL.skyLight, PAL.groundLight, 1.25));

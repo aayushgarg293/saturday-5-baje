@@ -8,11 +8,27 @@ Read both before starting work.
 
 ## Status
 
-Phase 1 (walking skeleton) built: a grey box street you can walk in first
-person. Next: phase 2, the real street layout (`TASKS.md`).
+Phase 2 (street layout and buildings) built: a 205 m curving market street
+with shops, havelis, houses, the cafe building, galis, poles and wires, and
+the hills with the fort. Flat colours only. Next: phase 3, the look (`TASKS.md`).
 
 Baseline (2026-09-28, M4, Chrome, 1470×956 at pixel ratio 1.5):
-**~1.0 ms per frame, 77 draw calls** (including the shadow pass).
+**1.0–1.7 ms per frame, 57–103 draw calls** depending on the view
+(including the shadow pass). Budget for 60 fps: 16.7 ms.
+
+## How the world is organised
+
+- **`src/world/layout.ts` is the street plan, as data.** Everything is placed
+  by `s` (metres along the street) and `offset` (metres to the side, left
+  negative); `pointAt(s, offset)` turns that into world x/z, so the street can
+  curve without anything else knowing. Plots, galis, the cafe and the phase 4
+  stall spots (`SLOTS`) all live there.
+- **Buildings are built in their own local frame** (x along the frontage, +z
+  toward the street, z = 0 at the plot's front edge) from parts, then merged
+  into **one mesh per building** with `Parts` (`src/world/kit.ts`). One building
+  = one draw call. Shared pieces are in `src/world/buildings/common.ts`.
+- **Signboards are blank boards for now.** Each builder returns where its
+  boards are; `street.signs` has their world positions for phase 3 to paint.
 
 ## Commands
 
@@ -111,4 +127,8 @@ Keep each entry short.)*
 
 | Symptom | Cause and fix |
 |---|---|
-| Shopfront line ragged; walls stop you short of the kerb; a gali is blocked | A box's two ground sizes were passed in the wrong order, so buildings were long along the street instead of deep. `building()` in `street.ts` now takes `sizeX` (east–west) and `sizeZ` (north–south), never "width/depth". Caught by walking into every wall with `__game`; screenshots looked plausible. |
+| Shopfront line ragged; walls stop you short of the kerb; a gali is blocked | A box's two ground sizes were passed in the wrong order, so buildings were long along the street instead of deep. Always name sizes by axis (`sizeX`, `sizeZ`), never "width/depth". Caught by walking into every wall with `__game`; screenshots looked plausible. |
+| The street jumps 10 m just after the start; the player stops early at the south end | `layout.ts` shifted the centre-line table by its own origin point *while* shifting that point to zero, so every later point was left unshifted. Copy values out before mutating the array they come from. Now checked: consecutive centre-line points are never more than 0.5 m apart. |
+| A flickering speckled pattern on a surface | Two faces at exactly the same depth ("z-fighting"): the GPU can't pick one. Move one back by a few centimetres. First seen in the cafe's stair doorway. |
+| Fine vertical stripes on big walls turned away from the sun | Shadow acne. `normalBias` raised from 0.03 to 0.06 in `lights.ts`. |
+| The fort looked like it was floating | It was on a pointed peak, so the ends of a wide fort hung in the air. Hill forts need a broad flat-topped hill (`ridgeProfile` in `backdrop.ts`). Check suspected floating with a narrow-field `__shot` (set `__game.camera.fov` low) and by measuring, before changing anything. |

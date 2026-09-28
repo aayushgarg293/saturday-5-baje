@@ -1,5 +1,6 @@
 import type * as THREE from "three";
 import type { Player } from "../core/player";
+import type { Street } from "../world/street";
 import { CAMERAS, type CameraSpot } from "./cameras";
 
 /**
@@ -26,6 +27,8 @@ export type GameHandle = {
   camera: THREE.PerspectiveCamera;
   renderer: THREE.WebGLRenderer;
   player: Player;
+  /** The street's colliders and signboard positions, for scripted checks. */
+  street: Street;
   /** Advance the game by `seconds` without rendering. */
   step(seconds: number): void;
   /** Render one frame now. */

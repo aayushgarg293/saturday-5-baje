@@ -19,22 +19,37 @@ Proves the foundation before anything is pretty.
 - [x] FPS counter (dev only)
 - [x] Scripted collision checks pass (walls, both ends, both galis, sliding)
 - [x] Speed: ~1 ms per frame on the M4 (budget for 60 fps is 16.7 ms)
-- [ ] Owner plays it in Chrome and Safari
-
-Found while building (for phase 3):
-- At 4:30 pm the west-side buildings shade the whole street floor; tune
-  heights / sun angle so sunlight falls on part of it.
-- Shadow edges are jagged where they cross walls at a shallow angle.
+- [x] Owner plays it (speed confirmed good)
 
 **Done when:** you can walk the length of the grey street at 60 fps on the
 MacBook Air, and frames can be captured with `__shot`.
 
 ## 2. The street: layout and buildings
-- [ ] Street plan: length, width, where the cafe, temple, stalls and gali go
-- [ ] Buildings: shopfronts, shutters, havelis with jharokhas, flat roofs, water tanks, antennas
-- [ ] The cafe building: shop below, narrow staircase, cafe signboard
-- [ ] Background: Aravalli hills and a hilltop fort silhouette
-- [ ] Overhead wires and poles
+- [x] Street plan (`world/layout.ts`): 205 m, gentle S-bend, cafe on the right
+      near the end, two walkable gali stubs, temple plot, phase 4 stall slots
+- [x] Buildings: shops (platform, open room, shutter, awning, board), havelis
+      (arched door, jharokhas, cornices, chhatris), houses; flat roofs with
+      parapets, black water tanks, TV antennas, dishes
+- [x] The cafe building: STD/PCO shop below, stair doorway (closed until
+      phase 7), first-floor window strip, main board and blade sign
+- [x] Background: three layers of Aravalli ridges, fort on a flat-topped hill
+      where the street points
+- [x] Overhead wires and poles, sagging, dropping to houses, tangled bundles
+- [x] Checks: blade sign visible from the start (9/9 rays, 173 m); 81 s walk
+      to the cafe; wall sweep every 2 m on both sides with no gaps; both ends
+      and both galis stop you correctly; 1.0–1.7 ms per frame
+- [x] Owner feedback round 1: the cafe couldn't be picked out, and the fort
+      didn't read as a fort. Fixed: the cafe's signs are painted now
+      (`world/signs.ts`: main board, two-sided blade sign, stair-door board,
+      STD/ISD/PCO below), pulled forward from phase 3; the fort is rebuilt with
+      merlons, tapering bastions, an arched gate, a palace with chhatris, and
+      outer walls stepping down the hill (one draw call)
+- [x] Owner plays it and approves
+
+Carried to phase 3 (the look):
+- Shadow edges are jagged where they cross walls at a shallow angle.
+- The hills' colours are close to the sky's; tune with the sky and haze.
+- Balcony railings are solid dark panels; lighten or add bars.
 
 **Done when:** the empty street already reads as a Rajasthan market street.
 
@@ -42,7 +57,9 @@ MacBook Air, and frames can be captured with `__shot`.
 - [ ] Toon shading tuned: bands, shadow colour, rim light
 - [ ] Ink outlines
 - [ ] Sky, haze and a warm colour grade for 4:30 pm
-- [ ] Hand-painted signboards and wall-painted ads (Canvas2D, Devanagari)
+- [ ] Hand-painted signboards for every other shop (the cafe's are done;
+      `world/signs.ts` already paints any `kind` that has a painter) and
+      wall-painted ads (Canvas2D, Devanagari)
 - [ ] Film posters with look-alike names
 
 **Done when:** the frames look painted, and still hold 60 fps.

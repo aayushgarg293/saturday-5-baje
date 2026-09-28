@@ -1,0 +1,36 @@
+import { PAL } from "../../render/palette";
+import {
+  type BuildContext, type BuildResult,
+  FACADE, FLOOR_HEIGHT, balcony, body, ledge, roof, windowAt, windowRow,
+} from "./common";
+
+/**
+ * A plain house: a step at the front, a door, windows, maybe a balcony.
+ * The quiet buildings between the shops and havelis.
+ */
+export function buildHouse(c: BuildContext): BuildResult {
+  const p = c.parts;
+  const r = c.rng;
+  const face = -FACADE.house;
+  const floors = r.next() < 0.5 ? 1 : 2;
+  const top = floors * FLOOR_HEIGHT + 0.4;
+
+  p.slab(-c.w / 2, c.w / 2, 0, 0.3, face, 0, PAL.plinth); // front step
+  body(c, 0, top, face);
+
+  // a door, and a window beside it
+  const doorX = r.range(-c.w / 4, c.w / 4);
+  p.slab(doorX - 0.62, doorX + 0.62, 0.3, 2.55, face, face + 0.06, PAL.stoneTrim); // frame
+  p.slab(doorX - 0.5, doorX + 0.5, 0.3, 2.45, face + 0.06, face + 0.1, PAL.wood);
+  const winX = doorX + (doorX < 0 ? 1.8 : -1.8);
+  if (Math.abs(winX) < c.w / 2 - 0.6) windowAt(c, winX, 1.8, face);
+
+  for (let i = 1; i < floors; i++) {
+    const floorY = i * FLOOR_HEIGHT;
+    ledge(c, floorY, face, 0.35);
+    windowRow(c, floorY + 1.6, face, 3);
+    if (r.next() < 0.5) balcony(c, floorY + 0.05, face);
+  }
+  const height = roof(c, top, face);
+  return { height, signs: [] };
+}

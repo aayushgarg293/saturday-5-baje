@@ -1,11 +1,16 @@
+import { CAFE, pointAt, yawAlong } from "../world/layout";
+
 /**
  * Saved camera spots for `__shot`.
  *
  * Checking the same views before and after a change is how visual
  * regressions get caught, so add a spot here whenever a new place in the
- * world is worth checking. `pos` is [x, z] in metres; `yaw` is the direction
- * faced (0 = north along the street, π = back south); `pitch` tilts the view
- * up (+) or down (-). Press C in the game to read these values off any spot.
+ * world is worth checking. `pos` is world [x, z] in metres; `yaw` is the
+ * direction faced (0 = north); `pitch` tilts the view up (+) or down (-).
+ * Press C in the game to read these values off any spot.
+ *
+ * Most spots are defined by distance along the street (`along`), so they
+ * stay put even if the street's curve is changed.
  */
 export type CameraSpot = {
   pos: [number, number];
@@ -13,13 +18,33 @@ export type CameraSpot = {
   pitch?: number;
 };
 
+/** A spot `s` metres along the street, `offset` to the side, looking along the street turned by `turn` radians (left +). */
+function along(s: number, offset = 0, turn = 0, pitch = 0): CameraSpot {
+  const p = pointAt(s, offset);
+  return { pos: [p.x, p.z], yaw: yawAlong(s, turn), pitch };
+}
+
+const cafeMid = (CAFE.s0 + CAFE.s1) / 2;
+
 export const CAMERAS: Record<string, CameraSpot> = {
-  /** The opening view: south end, looking up the street. */
-  start: { pos: [0, -4], yaw: 0 },
-  /** Halfway along, looking north. */
-  middle: { pos: [0, -60], yaw: 0 },
-  /** Near the north end, looking up at the closing building. */
-  end: { pos: [0, -112], yaw: 0, pitch: 0.15 },
-  /** From the north end, looking back down the whole street. */
-  back: { pos: [0, -112], yaw: Math.PI },
+  /** The opening view: the south end, looking up the street. The cafe sign should be visible. */
+  start: along(1.5),
+  /** Shops on the left, early in the walk. */
+  shops: along(22, 1, 0.55),
+  /** The first gali, from the street. */
+  gali: along(56, 0.5, 1.2),
+  /** In the middle of the bend, among the havelis. */
+  bend: along(88, 0, 0, 0.05),
+  /** Looking up at haveli rooftops and wires. */
+  rooftops: along(110, -1, -0.5, 0.45),
+  /** The cricket gali, from the street. */
+  cricket: along(116, 0, -1.1),
+  /** Approaching the cafe: its front and blade sign. */
+  cafeApproach: along(158, -1.5, -0.12, 0.08),
+  /** Standing in front of the cafe. */
+  cafe: along(cafeMid, -1.8, -1.35, 0.15),
+  /** Beyond the cafe, looking at the end of the street and the hills over it. */
+  end: along(196, 0, 0, 0.1),
+  /** From the far end, looking back down the whole street. */
+  back: along(200, 0, Math.PI),
 };

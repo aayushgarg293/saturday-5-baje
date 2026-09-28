@@ -82,6 +82,17 @@ export type ToonOptions = {
   tint?: number;
   /** Faceted shading, one flat tone per polygon (default true). */
   flatShading?: boolean;
+  /**
+   * Take each part's colour from the mesh itself ("vertex colours") instead
+   * of one colour for the whole material. This is what lets a whole building,
+   * made of many differently-coloured parts, be drawn in one go.
+   */
+  vertexColors?: boolean;
+  /**
+   * A picture painted onto the surface, like the lettering on a signboard.
+   * Materials with a picture are never shared (each sign has its own).
+   */
+  map?: THREE.Texture;
 };
 
 const toonCache = new Map<string, THREE.MeshToonMaterial>();
@@ -92,30 +103,44 @@ const toonCache = new Map<string, THREE.MeshToonMaterial>();
  * cheaper to draw.
  */
 export function toon(opts: ToonOptions): THREE.MeshToonMaterial {
-  const { color, bands = 3, tint = PAL.shadowTint, flatShading = true } = opts;
-  const key = [color, bands, tint, flatShading].join("|");
-  const cached = toonCache.get(key);
+  const { color, bands = 3, tint = PAL.shadowTint, flatShading = true, vertexColors = false, map } = opts;
+  const key = [color, bands, tint, flatShading, vertexColors].join("|");
+  const cached = map ? undefined : toonCache.get(key);
   if (cached) return cached;
 
-  const mat = new THREE.MeshToonMaterial({ color, gradientMap: gradientMap(bands) });
+  const mat = new THREE.MeshToonMaterial({ color, gradientMap: gradientMap(bands), vertexColors, map: map ?? null });
   // The renderer honours `flatShading` on any material, but Three.js's type
   // definitions don't list it for toon materials, so it's set this way.
   Object.assign(mat, { flatShading });
   applyShadowTint(mat, tint);
-  toonCache.set(key, mat);
+  if (!map) toonCache.set(key, mat);
   return mat;
 }
 
-const flatCache = new Map<number, THREE.MeshBasicMaterial>();
+const flatCache = new Map<string, THREE.MeshBasicMaterial>();
+
+export type FlatOptions = {
+  /**
+   * Fade into the distance haze (default true). Turn off for things that are
+   * already painted at their faded colour, like the far hills; otherwise the
+   * haze would swallow them completely.
+   */
+  fog?: boolean;
+  /** Take colours from the mesh's parts (see ToonOptions.vertexColors). */
+  vertexColors?: boolean;
+};
 
 /**
  * An unlit, single-colour material: ignores lights completely. For things
- * that should never be shaded, like the sky, far silhouettes and glowing signs.
+ * that should never be shaded, like the sky, far silhouettes, wires and
+ * glowing signs.
  */
-export function flat(color: number): THREE.MeshBasicMaterial {
-  const cached = flatCache.get(color);
+export function flat(color: number, opts: FlatOptions = {}): THREE.MeshBasicMaterial {
+  const { fog = true, vertexColors = false } = opts;
+  const key = [color, fog, vertexColors].join("|");
+  const cached = flatCache.get(key);
   if (cached) return cached;
-  const mat = new THREE.MeshBasicMaterial({ color });
-  flatCache.set(color, mat);
+  const mat = new THREE.MeshBasicMaterial({ color, fog, vertexColors });
+  flatCache.set(key, mat);
   return mat;
 }
