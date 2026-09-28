@@ -30,7 +30,7 @@ export type BuildContext = {
 
 /** Where a signboard is, so phase 3 can paint text onto it. Local frame. */
 export type SignSpot = {
-  kind: "shop" | "stdShop" | "cafe" | "cafeBlade" | "cafeDoor";
+  kind: "shop" | "stdShop" | "cafe" | "cafeBlade" | "cafeDoor" | "wallAd" | "posters";
   /** Centre of the board's front face. */
   x: number;
   y: number;
@@ -86,15 +86,28 @@ export function ledge(c: BuildContext, y: number, zFace: number, depth = 0.45) {
   c.parts.box(c.w + 0.1, 0.1, depth, 0, y, zFace + depth / 2, PAL.stoneTrim);
 }
 
-/** A small balcony: a slab and a railing, centred on the frontage. */
+/**
+ * A small balcony: a slab and an iron railing (a top rail on thin bars),
+ * centred on the frontage.
+ */
 export function balcony(c: BuildContext, y: number, zFace: number) {
   const p = c.parts;
   const bw = Math.min(c.w * 0.6, 3.2);
   const depth = 0.8;
+  const railY = y + 0.95;
+  const front = zFace + depth - 0.03;
   p.box(bw, 0.14, depth, 0, y, zFace + depth / 2, PAL.stoneTrim);
-  p.box(bw, 0.9, 0.05, 0, y + 0.52, zFace + depth - 0.03, PAL.railing); // front rail
-  p.box(0.05, 0.9, depth, -bw / 2 + 0.03, y + 0.52, zFace + depth / 2, PAL.railing);
-  p.box(0.05, 0.9, depth, bw / 2 - 0.03, y + 0.52, zFace + depth / 2, PAL.railing);
+  // top rails: front and both sides
+  p.box(bw, 0.05, 0.05, 0, railY, front, PAL.railing);
+  p.box(0.05, 0.05, depth, -bw / 2 + 0.03, railY, zFace + depth / 2, PAL.railing);
+  p.box(0.05, 0.05, depth, bw / 2 - 0.03, railY, zFace + depth / 2, PAL.railing);
+  // bars, about every 15 cm
+  const bar = (x: number, z: number) => p.box(0.025, 0.88, 0.025, x, y + 0.51, z, PAL.railing);
+  for (let x = -bw / 2 + 0.03; x <= bw / 2; x += 0.15) bar(x, front);
+  for (let z = zFace + 0.15; z < front; z += 0.15) {
+    bar(-bw / 2 + 0.03, z);
+    bar(bw / 2 - 0.03, z);
+  }
 }
 
 /**

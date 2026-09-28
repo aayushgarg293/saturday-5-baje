@@ -82,19 +82,26 @@ export function buildStreet(): Street {
     const back = new THREE.Vector3(0, 0, -PLOT_DEPTH / 2).applyMatrix4(mesh.matrixWorld);
     colliders.push(boxAt(back.x, back.z, w, PLOT_DEPTH, rot));
 
-    for (const sp of result.signs) {
-      signs.push({
-        kind: sp.kind,
-        position: new THREE.Vector3(sp.x, sp.y, sp.z).applyMatrix4(mesh.matrixWorld),
-        rotationY: rot + (sp.ry ?? 0),
-        w: sp.w,
-        h: sp.h,
-        backOffset: sp.backOffset,
-      });
-    }
+    for (const sp of result.signs) addSign(sp, mesh, rot);
+    return { mesh, rot, w, height: result.height };
+  }
+
+  /** Record a sign given in a building's own frame, in world terms. */
+  function addSign(sp: SignSpot, mesh: THREE.Mesh, rot: number) {
+    signs.push({
+      kind: sp.kind,
+      position: new THREE.Vector3(sp.x, sp.y, sp.z).applyMatrix4(mesh.matrixWorld),
+      rotationY: rot + (sp.ry ?? 0),
+      w: sp.w,
+      h: sp.h,
+      backOffset: sp.backOffset,
+    });
   }
 
   // --- the plots on both sides ---------------------------------------------------
+  // Each side's buildings in order along the street, for finding wall-ad spots.
+  const rows: Record<"left" | "right", RowEntry[]> = { left: [], right: [] };
+
   for (const plot of planPlots(rng)) {
     const sign = plot.side === "left" ? -1 : 1;
     const a = pointAt(plot.s0, sign * plot.setback);
@@ -107,10 +114,14 @@ export function buildStreet(): Street {
 
     if (plot.type === "gali") {
       closeGali(plot, normal);
+      rows[plot.side].push({ s0: plot.s0, height: 0 }); // a gap: the walls either side are exposed to the ground
       continue;
     }
-    place(plot.type, a, b, normal, `${plot.type}@${plot.side}${plot.s0.toFixed(0)}`);
+    const built = place(plot.type, a, b, normal, `${plot.type}@${plot.side}${plot.s0.toFixed(0)}`);
+    rows[plot.side].push({ s0: plot.s0, ...built });
   }
+
+  addWallAds(rows, addSign);
 
   /** A gali is a gap in the row; a house across its far end makes it a short dead end. */
   function closeGali(plot: Plot, normal: THREE.Vector2) {
@@ -135,6 +146,65 @@ export function buildStreet(): Street {
   }
 
   return { group, colliders, signs, spawn: { ...pointAt(1.5, 0), yaw: yawAlong(1.5) } };
+}
+
+/** One building (or gap) in a row along the street. */
+type RowEntry = {
+  s0: number;
+  height: number;
+  /** Missing for a gap (a gali). */
+  mesh?: THREE.Mesh;
+  rot?: number;
+  w?: number;
+};
+
+/** At most this many painted wall ads on the street. */
+const MAX_WALL_ADS = 8;
+
+/**
+ * Painted wall ads go on the classic spot: the bare side wall of a building
+ * that stands taller than its neighbour (or next to a gali), high enough to be
+ * seen down the street. Worked out from the buildings' heights.
+ *
+ * Which end of a building faces which neighbour: a building's local +x points
+ * toward increasing `s` on the left side of the street, and toward decreasing
+ * `s` on the right (they face opposite ways).
+ */
+function addWallAds(
+  rows: Record<"left" | "right", RowEntry[]>,
+  addSign: (sp: SignSpot, mesh: THREE.Mesh, rot: number) => void,
+) {
+  const spots: { sp: SignSpot; e: RowEntry; score: number }[] = [];
+  for (const side of ["left", "right"] as const) {
+    const row = rows[side];
+    const nextIsPlusX = side === "left" ? 1 : -1;
+    row.forEach((e, i) => {
+      if (!e.mesh || e.w === undefined) return;
+      for (const [nb, sign] of [[row[i - 1], -nextIsPlusX], [row[i + 1], nextIsPlusX]] as const) {
+        if (!nb) continue; // the street ends are closed off by other buildings
+        const roofY = e.height - 0.85; // below the parapet
+        const y0 = Math.max(nb.height + 0.4, 2.4);
+        const top = roofY - 0.3;
+        const bottom = Math.max(y0, top - 4.2); // ads are at most ~4 m tall
+        if (top - bottom < 2.2) continue;
+        spots.push({
+          e,
+          score: top - bottom + (nb.height === 0 ? 2 : 0), // prefer big walls, and gali corners
+          sp: {
+            kind: "wallAd",
+            x: sign * (e.w / 2),
+            y: (top + bottom) / 2,
+            z: -5, // centred on the wall's depth, behind the facade's ledges
+            w: 6.4,
+            h: top - bottom,
+            ry: sign * (Math.PI / 2), // face out of the side wall
+          },
+        });
+      }
+    });
+  }
+  spots.sort((a, b) => b.score - a.score);
+  for (const { sp, e } of spots.slice(0, MAX_WALL_ADS)) addSign(sp, e.mesh!, e.rot!);
 }
 
 /** The ground: a big dusty plane, the road ribbon down the middle, and the two drains. */

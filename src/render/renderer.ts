@@ -17,12 +17,14 @@ const MAX_PIXEL_RATIO = 1.5;
 export function createRenderer(canvas: HTMLCanvasElement): THREE.WebGLRenderer {
   const renderer = new THREE.WebGLRenderer({
     canvas,
-    antialias: true, // smooths jagged edges; replaced by our own pass in phase 3
+    // no built-in smoothing: frames go through our own passes (render/post.ts),
+    // which end with their own edge smoothing (FXAA)
+    antialias: false,
     powerPreference: "high-performance",
   });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, MAX_PIXEL_RATIO));
   renderer.outputColorSpace = THREE.SRGBColorSpace;
-  renderer.setClearColor(PAL.sky);
+  renderer.setClearColor(PAL.skyHorizon); // behind the sky dome; only seen if something goes wrong
 
   // Shadows: PCF gives slightly soft edges, which suits a painted look better
   // than the pixel-stepped edges of the basic mode.

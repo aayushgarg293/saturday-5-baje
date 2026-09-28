@@ -46,21 +46,32 @@ MacBook Air, and frames can be captured with `__shot`.
       outer walls stepping down the hill (one draw call)
 - [x] Owner plays it and approves
 
-Carried to phase 3 (the look):
-- Shadow edges are jagged where they cross walls at a shallow angle.
-- The hills' colours are close to the sky's; tune with the sky and haze.
-- Balcony railings are solid dark panels; lighten or add bars.
-
 **Done when:** the empty street already reads as a Rajasthan market street.
 
 ## 3. The look
-- [ ] Toon shading tuned: bands, shadow colour, rim light
-- [ ] Ink outlines
-- [ ] Sky, haze and a warm colour grade for 4:30 pm
-- [ ] Hand-painted signboards for every other shop (the cafe's are done;
-      `world/signs.ts` already paints any `kind` that has a painter) and
-      wall-painted ads (Canvas2D, Devanagari)
-- [ ] Film posters with look-alike names
+Owner's choices: warm & dusty (Ghibli-like), medium outlines, painterly +
+weathered, invented period shop names.
+- [x] Post-processing (`render/post.ts`): depth-based ink in warm brown,
+      warm/violet split-tone grade, vignette, paper grain, FXAA; dev keys O / G
+- [x] Sky (`world/sky.ts`): painted gradient dome with a warm glow on the sun
+      side, 13 flat cel clouds; haze matched to the horizon; hills re-coloured
+- [x] Lighting: cool fill opposite the sun (coloured shadows), 4096 shadow map
+      with soft edges (fixes the jagged shadows)
+- [x] Painted surfaces (`render/paint.ts`): brush strokes, uneven lime-wash,
+      dust at the foot of walls, rain streaks, worn ground patches
+- [x] Every shop board lettered: 36 invented names in Hindi + English, what
+      they sell, a phone number, hand-painted styles, faded and rusty
+- [x] 8 wall-painted ads on exposed side walls (look-alike brands, invented
+      slogans), placed automatically from building heights, peeling
+- [x] Film posters (look-alike titles) torn and overlapping on house walls
+      and beside the cafe's stair door
+- [x] Balcony railings as bars; lighter, sun-bleached road
+- [x] ~3.2 ms per frame at pixel ratio 1.5 (budget 16.7)
+- [x] Owner plays it and approves
+
+Ideas for later polish: the road could use more texture (tyre marks,
+potholes); ads are seen at an angle, which is right, but a couple could go
+on end walls facing straight down the street.
 
 **Done when:** the frames look painted, and still hold 60 fps.
 

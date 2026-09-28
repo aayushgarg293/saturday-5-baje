@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { PAINT_FRAGMENT_DECL, PAINT_FRAGMENT_MAIN, PAINT_VERTEX_DECL, PAINT_VERTEX_MAIN } from "./paint";
 import { PAL } from "./palette";
 
 /**
@@ -63,14 +64,27 @@ const patchedChunk = originalChunk.includes(ORIGINAL_LINE)
   : null;
 if (!patchedChunk) console.warn("toon.ts: shadow-tint patch not applied (Three.js changed)");
 
-function applyShadowTint(mat: THREE.MeshToonMaterial, tint: number) {
-  if (!patchedChunk) return;
-  const uniform = { value: new THREE.Color(tint) };
+/**
+ * Customise a toon material's shader just before it's compiled: add the
+ * violet shadow tint (above) and the painted-surface layer (render/paint.ts).
+ */
+function patchToon(mat: THREE.MeshToonMaterial, tint: number, paint: number) {
+  const tintUniform = { value: new THREE.Color(tint) };
+  const paintUniform = { value: paint };
   mat.onBeforeCompile = (shader) => {
-    shader.uniforms.uShadowTint = uniform;
-    shader.fragmentShader = shader.fragmentShader.replace(`#include <${CHUNK}>`, patchedChunk);
+    shader.uniforms.uShadowTint = tintUniform;
+    shader.uniforms.uPaint = paintUniform;
+    shader.vertexShader = shader.vertexShader
+      .replace("#include <common>", "#include <common>\n" + PAINT_VERTEX_DECL)
+      .replace("#include <project_vertex>", "#include <project_vertex>\n" + PAINT_VERTEX_MAIN);
+    let frag = shader.fragmentShader
+      .replace("#include <common>", "#include <common>\n" + PAINT_FRAGMENT_DECL)
+      .replace("#include <color_fragment>", "#include <color_fragment>\n" + PAINT_FRAGMENT_MAIN);
+    if (patchedChunk) frag = frag.replace(`#include <${CHUNK}>`, patchedChunk);
+    shader.fragmentShader = frag;
   };
-  // Tells Three.js that materials with different tints need different shaders.
+  // Materials with different tints need different shaders (the paint strength
+  // is just a number fed in, so it can share).
   mat.customProgramCacheKey = () => `toonTint_${tint}`;
 }
 
@@ -93,6 +107,16 @@ export type ToonOptions = {
    * Materials with a picture are never shared (each sign has its own).
    */
   map?: THREE.Texture;
+  /**
+   * Strength of the painted-surface layer (brush strokes, weathering), 0–1.
+   * Default 1; signboards use less so their lettering stays clean.
+   */
+  paint?: number;
+  /**
+   * Cut out see-through parts of the picture: pixels less opaque than this
+   * aren't drawn at all (for torn posters and wall paintings). 0 = off.
+   */
+  alphaTest?: number;
 };
 
 const toonCache = new Map<string, THREE.MeshToonMaterial>();
@@ -103,16 +127,21 @@ const toonCache = new Map<string, THREE.MeshToonMaterial>();
  * cheaper to draw.
  */
 export function toon(opts: ToonOptions): THREE.MeshToonMaterial {
-  const { color, bands = 3, tint = PAL.shadowTint, flatShading = true, vertexColors = false, map } = opts;
-  const key = [color, bands, tint, flatShading, vertexColors].join("|");
+  const {
+    color, bands = 3, tint = PAL.shadowTint, flatShading = true,
+    vertexColors = false, map, paint = 1, alphaTest = 0,
+  } = opts;
+  const key = [color, bands, tint, flatShading, vertexColors, paint].join("|");
   const cached = map ? undefined : toonCache.get(key);
   if (cached) return cached;
 
-  const mat = new THREE.MeshToonMaterial({ color, gradientMap: gradientMap(bands), vertexColors, map: map ?? null });
+  const mat = new THREE.MeshToonMaterial({
+    color, gradientMap: gradientMap(bands), vertexColors, map: map ?? null, alphaTest,
+  });
   // The renderer honours `flatShading` on any material, but Three.js's type
   // definitions don't list it for toon materials, so it's set this way.
   Object.assign(mat, { flatShading });
-  applyShadowTint(mat, tint);
+  patchToon(mat, tint, paint);
   if (!map) toonCache.set(key, mat);
   return mat;
 }
@@ -128,19 +157,28 @@ export type FlatOptions = {
   fog?: boolean;
   /** Take colours from the mesh's parts (see ToonOptions.vertexColors). */
   vertexColors?: boolean;
+  /**
+   * A picture with see-through parts (like a cloud). Drawn blended over what's
+   * behind it, and it doesn't hide things behind it from the depth test.
+   * Materials with a picture are never shared.
+   */
+  map?: THREE.Texture;
 };
 
 /**
  * An unlit, single-colour material: ignores lights completely. For things
- * that should never be shaded, like the sky, far silhouettes, wires and
+ * that should never be shaded, like far silhouettes, wires, clouds and
  * glowing signs.
  */
 export function flat(color: number, opts: FlatOptions = {}): THREE.MeshBasicMaterial {
-  const { fog = true, vertexColors = false } = opts;
+  const { fog = true, vertexColors = false, map } = opts;
   const key = [color, fog, vertexColors].join("|");
-  const cached = flatCache.get(key);
+  const cached = map ? undefined : flatCache.get(key);
   if (cached) return cached;
-  const mat = new THREE.MeshBasicMaterial({ color, fog, vertexColors });
-  flatCache.set(key, mat);
+  const mat = new THREE.MeshBasicMaterial({
+    color, fog, vertexColors,
+    ...(map ? { map, transparent: true, depthWrite: false } : {}),
+  });
+  if (!map) flatCache.set(key, mat);
   return mat;
 }

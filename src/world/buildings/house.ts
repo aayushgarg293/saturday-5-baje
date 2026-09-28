@@ -1,6 +1,6 @@
 import { PAL } from "../../render/palette";
 import {
-  type BuildContext, type BuildResult,
+  type BuildContext, type BuildResult, type SignSpot,
   FACADE, FLOOR_HEIGHT, balcony, body, ledge, roof, windowAt, windowRow,
 } from "./common";
 
@@ -25,6 +25,14 @@ export function buildHouse(c: BuildContext): BuildResult {
   const winX = doorX + (doorX < 0 ? 1.8 : -1.8);
   if (Math.abs(winX) < c.w / 2 - 0.6) windowAt(c, winX, 1.8, face);
 
+  // Film posters pasted on the wall on the other side of the door, if there's room.
+  const signs: SignSpot[] = [];
+  const posterW = 1.5;
+  const posterX = doorX + Math.sign(doorX - winX) * (0.62 + 0.2 + posterW / 2);
+  if (r.next() < 0.75 && Math.abs(posterX) + posterW / 2 < c.w / 2 - 0.2) {
+    signs.push({ kind: "posters", x: posterX, y: 1.55, z: face, w: posterW, h: 1.05 });
+  }
+
   for (let i = 1; i < floors; i++) {
     const floorY = i * FLOOR_HEIGHT;
     ledge(c, floorY, face, 0.35);
@@ -32,5 +40,5 @@ export function buildHouse(c: BuildContext): BuildResult {
     if (r.next() < 0.5) balcony(c, floorY + 0.05, face);
   }
   const height = roof(c, top, face);
-  return { height, signs: [] };
+  return { height, signs };
 }

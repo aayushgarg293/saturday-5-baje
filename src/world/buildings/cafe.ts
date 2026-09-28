@@ -81,6 +81,10 @@ export function buildCafe(c: BuildContext): BuildResult {
     backOffset: 0.16, // the board is 0.14 thick: its other face, read by people walking the other way
   };
 
+  // one film poster on the narrow bit of wall beside the stair door: stairwells
+  // were always papered with them
+  const poster = { kind: "posters" as const, x: (door.x1 + half) / 2, y: 1.55, z: face, w: 0.62, h: 0.9 };
+
   const height = roof(c, FIRST_FLOOR_TOP, face);
-  return { height, signs: [shopSign, doorSign, mainSign, bladeSign] };
+  return { height, signs: [shopSign, doorSign, mainSign, bladeSign, poster] };
 }

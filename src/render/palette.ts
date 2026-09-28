@@ -8,19 +8,23 @@
  * First-pass values; phase 3 (the look) tunes them properly.
  */
 export const PAL = {
-  // sky and air
-  sky: 0xbcd6e6,
-  haze: 0xe9dcc3, // warm dusty haze toward the ends of the street
+  // sky and air: a warm, dusty summer afternoon
+  skyTop: 0x7fa3c4, // dusty blue straight overhead
+  skyMid: 0xadc4d3,
+  skyHorizon: 0xeadfc8, // warm cream haze at the horizon
+  sunGlow: 0xf6e1b6, // the sky on the sun's side, low down
+  haze: 0xe6d9c1, // distance haze on the street: matches the horizon, so the far end melts into the sky
 
   // light
   sun: 0xfff0d6, // warm late-afternoon sun
   skyLight: 0xcfe0f0, // fill light from the sky above
+  fillLight: 0xb9c3e8, // cool light from the side away from the sun: colours the shadows
   groundLight: 0xc9a67e, // warm light bounced up off the dusty ground
   shadowTint: 0x6c5f8c, // shadow sides lean cool violet, not grey
 
   // ground
   dust: 0xcdb48e, // the unpaved edges of the street
-  asphalt: 0x6f6a66, // the worn road down the middle
+  asphalt: 0x827a72, // the worn, sun-bleached, dusty road down the middle
   drain: 0x57584c, // the open nali along the shopfronts
 
   // walls (lime-wash and stone, the Rajasthan town palette)
@@ -55,12 +59,13 @@ export const PAL = {
   cafeSign: 0x2f63b0, // the cyber cafe's sign: a bright blue that carries down the street
 
   // the far skyline, already faded by distance (drawn without haze)
-  hillNear: 0xa9a4a8,
-  hillMid: 0xbab8c0,
-  hillFar: 0xcacbd4,
-  fort: 0x9d948f, // walls facing the town
-  fortShade: 0x8c837f, // bastions, towers and domes: a touch darker so shapes separate
-  fortDark: 0x6f6864, // the gate's opening
+  // (violet-greys that sit against the warm horizon; paler = further away)
+  hillNear: 0xa69ca0,
+  hillMid: 0xb9aeb1,
+  hillFar: 0xcdc3c3,
+  fort: 0x9a8d88, // walls facing the town
+  fortShade: 0x8a7e7a, // bastions, towers and domes: a touch darker so shapes separate
+  fortDark: 0x6a5f5a, // the gate's opening
 } as const;
 
 /** The wall colours buildings choose from. */

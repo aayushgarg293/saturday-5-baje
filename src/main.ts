@@ -3,9 +3,11 @@ import { Input } from "./core/input";
 import { Player } from "./core/player";
 import { addLights } from "./render/lights";
 import { PAL } from "./render/palette";
+import { Pipeline } from "./render/post";
 import { createRenderer, fitToWindow } from "./render/renderer";
 import { buildBackdrop } from "./world/backdrop";
 import { buildSigns } from "./world/signs";
+import { buildSky } from "./world/sky";
 import { buildStreet } from "./world/street";
 import { buildWires } from "./world/wires";
 
@@ -23,8 +25,9 @@ const startScreen = document.querySelector<HTMLDivElement>("#start")!;
 // --- the 3D world ------------------------------------------------------------
 const renderer = createRenderer(canvas);
 const scene = new THREE.Scene();
-// Distance haze: things fade into the warm dusty air from 40 m to 160 m away.
-scene.fog = new THREE.Fog(PAL.haze, 40, 160);
+// Distance haze: things fade into the warm dusty air from 45 m to 240 m away.
+// Its colour matches the sky's horizon, so the far end of the street melts into it.
+scene.fog = new THREE.Fog(PAL.haze, 45, 240);
 
 // 65° field of view: wide enough to feel present, without fish-eye stretching.
 // Draws up to 1200 m away, so the far hills (700 m) aren't cut off.
@@ -34,7 +37,8 @@ fitToWindow(renderer, camera);
 const lights = addLights(scene);
 const street = buildStreet();
 const wires = buildWires();
-scene.add(street.group, buildSigns(street.signs), wires.group, buildBackdrop());
+const sky = buildSky();
+scene.add(sky.group, street.group, buildSigns(street.signs), wires.group, buildBackdrop());
 
 // --- the player ----------------------------------------------------------------
 const input = new Input(canvas);
@@ -54,8 +58,15 @@ function update(dt: number) {
   lights.followPlayer(player.pos);
 }
 
+// Frames are drawn through the post-processing pipeline (ink, colour grade, smoothing).
+const pipeline = new Pipeline(renderer, scene, camera);
+// A frame is now several renders; count draw calls for the whole frame, not the last one.
+renderer.info.autoReset = false;
+
 function render() {
-  renderer.render(scene, camera);
+  renderer.info.reset();
+  sky.follow(camera); // the sky stays centred on the viewer
+  pipeline.render();
 }
 
 // Dev-only tools. `import.meta.env.DEV` is true under `npm run dev` and false in
@@ -67,6 +78,9 @@ if (import.meta.env.DEV) {
   const stats = createStats(renderer, player);
   input.onKeyPress = (code) => {
     if (code === "KeyC") stats.togglePosition();
+    // compare the look with and without each pass
+    if (code === "KeyO") pipeline.enabled.ink = !pipeline.enabled.ink;
+    if (code === "KeyG") pipeline.enabled.grade = !pipeline.enabled.grade;
   };
   afterFrame = (dt) => stats.update(dt);
   installDevTools({
