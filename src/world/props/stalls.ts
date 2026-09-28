@@ -87,7 +87,16 @@ export function chaiTapri(rng: Rng): Stall {
     legs(p, x - 0.2, x + 0.2, -0.6, 0.9, 0.38, PAL.woodLight);
   }
   if (rng.next() < 0.7) p.cylinder(0.2, 0.2, 0.5, -0.9, 0.25, -0.35, PAL.steel, { segments: 12 }); // a water drum
-  return { parts: p, size: [3.4, 1.6], signs: [board("चाय", 0, 0.55, 0.36, 1.1, 0.4)] };
+  // a long board hung from the front of the tarp, between the two front poles
+  p.slab(-1.08, 1.08, 1.68, 2.0, 0.9, 0.93, PAL.wood);
+  return {
+    parts: p,
+    size: [3.4, 1.6],
+    signs: [
+      board("चाय", 0, 0.55, 0.36, 1.1, 0.4),
+      board("शादी पार्टी के ऑर्डर बुक किए जाते हैं", 0, 1.84, 0.93, 2.1, 0.28),
+    ],
+  };
 }
 
 /** The golgappa cart: a glass case of puris, the clay matka of spicy water, steel bowls. */
