@@ -88,6 +88,10 @@ if (import.meta.env.DEV) {
     if (code === "KeyG") pipeline.enabled.grade = !pipeline.enabled.grade;
   };
   afterFrame = (dt) => stats.update(dt);
+  if (new URLSearchParams(location.search).has("lineup")) {
+    const { addLineup } = await import("./dev/lineup");
+    addLineup(scene);
+  }
   installDevTools({
     scene,
     camera,

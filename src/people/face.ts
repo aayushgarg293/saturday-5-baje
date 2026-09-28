@@ -32,6 +32,14 @@ export type FaceRecipe = {
   brow: number;
   /** Hair colour, for brows and moustache. */
   hair: number;
+  /** Bigger eyes (children), default 1. */
+  eyeScale?: number;
+  /** A heavier lash line with flicks at the corners, and kajal. */
+  lashes?: boolean;
+  /** A small gold nath on the left nostril. */
+  noseRing?: boolean;
+  /** Lip colour, if the lips should show (otherwise just a line). */
+  lips?: number;
 };
 
 /**
@@ -98,6 +106,11 @@ function paintFace(r: FaceRecipe, expression: Expression): THREE.CanvasTexture {
   const EYE_DOWN = 1.64, EYE_SIDE = 0.33;
   for (const s of [-1, 1]) {
     const [x, y] = at(s * EYE_SIDE, EYE_DOWN);
+    const e = r.eyeScale ?? 1;
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.scale(e, e);
+    ctx.translate(-x, -y);
     if (expression === "blink") {
       // closed: just the lid, curving down, and the lashes' line
       ctx.strokeStyle = ink;
@@ -106,6 +119,7 @@ function paintFace(r: FaceRecipe, expression: Expression): THREE.CanvasTexture {
       ctx.moveTo(x - 26, y);
       ctx.quadraticCurveTo(x, y + 12, x + 26, y);
       ctx.stroke();
+      ctx.restore();
       continue;
     }
     ctx.fillStyle = "#f4efe6"; // a sliver of white either side of the iris
@@ -134,6 +148,22 @@ function paintFace(r: FaceRecipe, expression: Expression): THREE.CanvasTexture {
       ctx.quadraticCurveTo(x, y + 6, x + 22, y + 16);
       ctx.stroke();
     }
+    if (r.lashes) {
+      // kajal and lashes: a heavier line, flicked out at the outer corner
+      ctx.lineWidth = 10;
+      ctx.beginPath();
+      ctx.moveTo(x - 27, y);
+      ctx.quadraticCurveTo(x, y - 21, x + 27, y);
+      ctx.stroke();
+      ctx.lineWidth = 4;
+      for (const f of [0, 1]) {
+        ctx.beginPath();
+        ctx.moveTo(x + s * (24 - f * 8), y - 6 - f * 5);
+        ctx.lineTo(x + s * (33 - f * 6), y - 13 - f * 6);
+        ctx.stroke();
+      }
+    }
+    ctx.restore();
     if (r.age > 0.35) {
       // lines under the eyes, with age
       ctx.strokeStyle = "rgba(60,35,25,0.35)";
@@ -205,6 +235,22 @@ function paintFace(r: FaceRecipe, expression: Expression): THREE.CanvasTexture {
   } else {
     ctx.moveTo(mx - 18, my);
     ctx.quadraticCurveTo(mx, my + 4, mx + 18, my);
+    ctx.stroke();
+  }
+
+  if (r.lips !== undefined && !smiling) {
+    // a fuller lower lip, softly coloured
+    ctx.fillStyle = css(r.lips, 0.85);
+    ctx.beginPath();
+    ctx.ellipse(mx, my + 5, 15, 6, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  if (r.noseRing) {
+    ctx.strokeStyle = "#e0b040";
+    ctx.lineWidth = 3;
+    const [rx, ry] = at(0.1, 1.93);
+    ctx.beginPath();
+    ctx.arc(rx, ry, 7, 0, Math.PI * 2);
     ctx.stroke();
   }
 

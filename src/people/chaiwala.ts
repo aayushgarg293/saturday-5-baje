@@ -127,6 +127,7 @@ export function buildChaiwala(where: Placement): Chaiwala {
   group.applyMatrix4(where.matrix);
 
   const person = buildPerson({
+    body: "man",
     build: { scale: 1, girth: 1.05 },
     skin: SKIN_TONES[3],
     hair: "receding",

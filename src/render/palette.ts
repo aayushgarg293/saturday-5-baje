@@ -124,6 +124,30 @@ export const WALL_COLOURS = [
   PAL.sandstone,
 ] as const;
 
+/** Clothing colours, as worn on a Rajasthan street in the 2000s. */
+export const CLOTH = {
+  /** Men's shirts: pale, faded, a few bolder. */
+  shirts: [0xe8e4da, 0xb9cde0, 0xd7c9a8, 0x9fb79a, 0xe1b9a3, 0x7f9bbf, 0xcfd6d8, 0xa8676a],
+  /** Kurtas: white, cream, pale blue, a saffron one. */
+  kurtas: [0xefeade, 0xe6dcc4, 0xc9d8e3, 0xe9c088, 0xd9d2e6],
+  /** Trousers and pyjamas. */
+  trousers: [0x4d4a47, 0x6b6257, 0x2f3e57, 0x8a7d6a, 0xe7e0cf],
+  jeans: 0x3d5577,
+  /** Safas (turbans): the brightest things on the street. [main, stripe] */
+  safas: [[0xf08a24, 0xd6283a], [0xd6283a, 0xf2c230], [0xe8508c, 0xf08a24], [0xf2c230, 0xd6283a], [0xf0f0e6, 0xd6283a]],
+  /** Ghagras and odhnis: bright prints, with a contrasting border. [main, border] */
+  ghagras: [[0xc2185b, 0xf2c230], [0xe65100, 0x2e7d32], [0x1565c0, 0xf2c230], [0x2e7d32, 0xd6283a], [0x8e24aa, 0xf08a24]],
+  odhnis: [[0xf08a24, 0xd6283a], [0xd6283a, 0xf2c230], [0xf9a825, 0xc2185b], [0xe8508c, 0x2e7d32], [0x00897b, 0xf08a24]],
+  /** Salwar-kameez sets. [kameez, salwar, dupatta] */
+  suits: [[0x7fb3d5, 0xe8e4da, 0x2e5f8a], [0xf4c2c2, 0xc2185b, 0xf2c230], [0xa5d6a7, 0x2e7d32, 0xf9a825], [0xffe082, 0xe65100, 0xd6283a]],
+  schoolShirt: 0xf3f1ea,
+  schoolShorts: 0x2a3a5c,
+  tshirts: [0xd6283a, 0x1e88e5, 0xf2c230, 0x43a047, 0xf3f1ea],
+  jackets: [0x6d4c41, 0x37474f, 0x8d6e63, 0x546e7a],
+  bangles: [0xd6283a, 0x2e7d32, 0xf2c230, 0x8e24aa],
+  jhola: [0xd9c7a3, 0x9c5a3c, 0x5c7a99],
+} as const;
+
 /** Skin tones, warm browns from lighter to deeper. */
 export const SKIN_TONES = [0xd9a47a, 0xc98f63, 0xb97c52, 0xa66b45, 0x8f5a3a, 0x7a4b31] as const;
 
