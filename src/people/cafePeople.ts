@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { cue } from "../core/cues";
 import type { Rng } from "../core/rng";
 import { flat } from "../render/toon";
 import { say } from "../ui/caption";
@@ -107,11 +108,23 @@ export function buildCafePeople(frame: THREE.Matrix4, rng: Rng): CafePeople {
 
   // --- the customers --------------------------------------------------------------------------------
   const customers: Actor[] = [];
+  // who's typing, and where their keyboard and mouse are (for the clicks you hear)
+  const typists: { actor: Actor; keys: THREE.Vector3; mouse: THREE.Vector3; keyIn: number; mouseIn: number }[] = [];
+  group.updateMatrixWorld(true);
+  const onDesk = (b: Booth, spot: { u: number; y: number; v: number }) => {
+    const q = boothPoint(b, spot.u, spot.v);
+    return group.localToWorld(new THREE.Vector3(q.x, HALL.floor + spot.y, q.z));
+  };
   const seat = (b: Booth, p: ReturnType<typeof buildPerson>, actions: Action[], notice: "none" | "glance" = "none") => {
     const a = makeActor({ person: p, at: { x: b.x, z: b.z, turn: b.turn }, seat: SEAT.booth, actions, notice, phase: rng.range(0, 20) });
     customers.push(a);
+    typists.push({ actor: a, keys: onDesk(b, DESK.keyboard), mouse: onDesk(b, DESK.mouse), keyIn: 0, mouseIn: 0 });
     return a;
   };
+  {
+    const k = group.localToWorld(new THREE.Vector3(1.58, HALL.floor + 1.02, -9.18)); // the owner's keyboard (furniture.ts, counter)
+    typists.push({ actor: owner, keys: k, mouse: k, keyIn: 0, mouseIn: 0 });
+  }
 
   // the CS boys: booth 10's friend is on his right, 11's on his left
   for (const [n, friendSide, screen] of [[10, -1, "game"], [11, 1, "game2"]] as const) {
@@ -197,6 +210,23 @@ export function buildCafePeople(frame: THREE.Matrix4, rng: Rng): CafePeople {
       if (player.distanceTo(centre) > NEAR) return;
       owner.update(t, dt, player);
       for (const c of customers) c.update(t, dt, player);
+      // the clicks of whoever's typing, at the pace of what they're doing:
+      // bursts of typing, the uncle's one finger at a time, the gamers'
+      // keys and mouse
+      for (const ty of typists) {
+        const doing = ty.actor.now.name;
+        const pace = doing === "type" ? [0.06, 0.2] : doing === "peck" ? [0.75, 0.95] : doing === "play" ? [0.12, 0.4] : null;
+        ty.keyIn -= dt;
+        ty.mouseIn -= dt;
+        if (pace && ty.keyIn < 0) {
+          cue("keyClick", ty.keys);
+          ty.keyIn = pace[0] + Math.random() * (pace[1] - pace[0]);
+        }
+        if (doing === "play" && ty.mouseIn < 0) {
+          cue("mouseClick", ty.mouse);
+          ty.mouseIn = 0.2 + Math.random() * 0.8;
+        }
+      }
       // the first time you come up and near the counter, he points you to your booth
       if (!pointedYou && player.y > HALL.floor - 0.5) {
         local.copy(player);

@@ -3,6 +3,7 @@ import { Bed } from "./audio/bed";
 import { AudioEngine } from "./audio/engine";
 import { Radio } from "./audio/radio";
 import { StreetSounds } from "./audio/street";
+import { CafeSounds } from "./audio/cafe";
 import { Input } from "./core/input";
 import { Player } from "./core/player";
 import { addLights } from "./render/lights";
@@ -63,10 +64,12 @@ const audio = new AudioEngine();
 let bed: Bed | null = null;
 let radio: Radio | null = null;
 let streetSounds: StreetSounds | null = null;
+let cafeSounds: CafeSounds | null = null;
 audio.onStart((ctx) => {
   bed = new Bed(audio, ctx);
   radio = new Radio(audio, ctx, life.radioAt);
   streetSounds = new StreetSounds(audio, ctx);
+  cafeSounds = new CafeSounds(audio, ctx, street.cafeFrame);
 });
 window.addEventListener("keydown", (e) => {
   if (e.code === "KeyM") audio.toggleMute();
@@ -94,6 +97,7 @@ function update(dt: number) {
   bed?.update(dt, player.pos);
   radio?.update(dt, player.pos);
   streetSounds?.update(dt, player.pos);
+  cafeSounds?.update(dt, player.pos);
 }
 
 // Frames are drawn through the post-processing pipeline (ink, colour grade, smoothing).
@@ -152,5 +156,8 @@ renderer.setAnimationLoop((time) => {
   update(dt);
   render();
   audio.listen(camera); // after drawing: the camera's matrix is up to date
+  // Climbing the cafe's stairs, the street's sounds fade away: from the
+  // doorstep (0.45 m up) to the first floor (4.8 m), the only place above it.
+  audio.setIndoors(THREE.MathUtils.clamp((player.pos.y - 0.45) / (4.8 - 0.45), 0, 1));
   afterFrame(dt);
 });

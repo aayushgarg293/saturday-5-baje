@@ -216,7 +216,12 @@ motion; busy but walkable.
 - [x] Owner looks at the cafe's people: "it looks good"
 - [ ] Sitting down at the computer: the camera moves to the screen
 - [ ] The wall clock and the look-up control
-- [ ] Dial-up modem and room sounds
+- [x] Owner: the street's sounds should go silent as you climb, leaving only
+      the cafe's. `AudioEngine.setIndoors`: street, radio, background and
+      their echo fade out up the stairs (silent at the top); the cafe's own
+      `inside` sounds fade in (`audio/cafe.ts`): ceiling fans (whoosh, tick,
+      hum) and key/mouse clicks cued by the people typing
+- [ ] Dial-up modem (with sitting down)
 
 - [ ] Before release: Shift speed back from 10 m/s (testing) to ~3.6 (`FAST_SPEED` in `core/player.ts`)
 

@@ -9,17 +9,22 @@ import { type Ctx, gain } from "./synth";
  *   screen's click (`start`).
  * - The mix: three groups ("buses") with their own volume, so they can be
  *   balanced against each other: the everywhere layer (`bed`), the sounds
- *   placed in the street (`street`), and the radio. All go through a
+ *   placed in the street (`street`), the radio, and the cafe's own sounds
+ *   inside (`inside`). All go through a
  *   gentle compressor and a limiter, so layers piling up never distort.
  * - The street's echo: a short reverb, made in code, of a narrow street
  *   between walls. Sounds send a little to it; far-off ones more.
  * - The listener: your ears, moved with the camera every frame, so placed
  *   sounds come from the right side and get quieter with distance.
  * - Mute: the M key.
+ * - Indoors: climbing the cafe's stairs, the street's sounds fade away
+ *   and the cafe's own come up (`setIndoors`).
  */
 
-export type Bus = "bed" | "street" | "radio";
-const LEVELS: Record<Bus, number> = { bed: 0.75, street: 0.9, radio: 0.8 };
+export type Bus = "bed" | "street" | "radio" | "inside";
+const LEVELS: Record<Bus, number> = { bed: 0.75, street: 0.9, radio: 0.8, inside: 0.9 };
+/** The street's sounds, which fade out indoors. */
+const OUTSIDE: Bus[] = ["bed", "street", "radio"];
 
 export class AudioEngine {
   ctx: Ctx | null = null;
@@ -27,6 +32,8 @@ export class AudioEngine {
   /** Send sounds here (a little) for the street's echo. */
   echo!: GainNode;
   private master!: GainNode;
+  /** The echo's return into the mix (the echo is the street's: it fades indoors too). */
+  private echoReturn!: GainNode;
   private muted = false;
   private startListeners: ((ctx: Ctx) => void)[] = [];
 
@@ -67,7 +74,8 @@ export class AudioEngine {
     const reverb = ctx.createConvolver();
     reverb.buffer = streetEcho(ctx);
     this.echo = gain(ctx, 1);
-    this.echo.connect(reverb).connect(gain(ctx, 0.5)).connect(mix);
+    this.echoReturn = gain(ctx, 0.5);
+    this.echo.connect(reverb).connect(this.echoReturn).connect(mix);
 
     for (const f of this.startListeners) f(ctx);
   }
@@ -80,6 +88,18 @@ export class AudioEngine {
 
   bus(name: Bus): GainNode {
     return this.buses[name];
+  }
+
+  /**
+   * How far indoors you are, 0 (out on the street) to 1 (up in the cafe):
+   * the street's sounds fade by that much. Every frame.
+   */
+  setIndoors(k: number) {
+    if (!this.ctx) return;
+    const t = this.ctx.currentTime;
+    for (const bus of OUTSIDE) this.buses[bus].gain.setTargetAtTime(LEVELS[bus] * (1 - k), t, 0.15);
+    this.buses.inside.gain.setTargetAtTime(LEVELS.inside * k, t, 0.15); // and the cafe's own come up
+    this.echoReturn.gain.setTargetAtTime(0.5 * (1 - k), t, 0.15);
   }
 
   toggleMute() {

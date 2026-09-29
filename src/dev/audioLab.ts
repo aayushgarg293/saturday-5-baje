@@ -35,6 +35,8 @@ export async function audioLab(opts: {
   /** Where to stand: metres along the street, and to the side. */
   s?: number;
   offset?: number;
+  /** Or exactly here (world position of the ears; the cafe is upstairs). */
+  at?: THREE.Vector3;
   layers: (engine: AudioEngine, ctx: OfflineAudioContext) => Layer[] | Layer;
   during?: (ctx: OfflineAudioContext, player: THREE.Vector3) => void;
 }): Promise<AudioReport> {
@@ -46,7 +48,7 @@ export async function audioLab(opts: {
 
   // stand at the spot, looking up the street
   const at = pointAt(opts.s ?? 56, opts.offset ?? 0);
-  const player = new THREE.Vector3(at.x, 1.6, at.z);
+  const player = opts.at ? opts.at.clone() : new THREE.Vector3(at.x, 1.6, at.z);
   const camera = new THREE.PerspectiveCamera();
   camera.position.copy(player);
   camera.rotation.set(0, yawAlong(opts.s ?? 56), 0, "YXZ");

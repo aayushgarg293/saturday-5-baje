@@ -1,3 +1,4 @@
+import { CafeSounds } from "../audio/cafe";
 import type { Room } from "../world/cafe/room";
 import { cue, onCue } from "../core/cues";
 import { StreetSounds } from "../audio/street";
@@ -58,7 +59,7 @@ declare global {
     /** Render sound offline and measure it (dev/audioLab.ts). */
     __audioLab: typeof audioLab;
     /** The sound layers, for building them in `__audioLab`. */
-    __audioLayers: { Bed: typeof Bed; Radio: typeof Radio; StreetSounds: typeof StreetSounds };
+    __audioLayers: { Bed: typeof Bed; Radio: typeof Radio; StreetSounds: typeof StreetSounds; CafeSounds: typeof CafeSounds };
     /** The game's own cue functions (importing core/cues.ts from the console can give a second copy). */
     __cues: { cue: typeof cue; onCue: typeof onCue };
   }
@@ -68,7 +69,7 @@ export function installDevTools(game: GameHandle) {
   window.__game = game;
   window.__walkCheck = () => walkCheck(game.player.colliders);
   window.__audioLab = audioLab;
-  window.__audioLayers = { Bed, Radio, StreetSounds };
+  window.__audioLayers = { Bed, Radio, StreetSounds, CafeSounds };
   window.__cues = { cue, onCue };
 
   window.__shot = async (name, spot = name, size = {}) => {
