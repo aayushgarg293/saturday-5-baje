@@ -127,6 +127,10 @@ motion; busy but walkable.
 - [x] Gully cricket (`cricket.ts`): batter, bowler, two fielders and one ball
       on a shared 7 s loop; `crouch` in poses for bending the knees
 - [x] Owner looks at the shopkeepers, the temple and the cricket: "i like it"
+- [x] Owner's request: political posters on the electricity poles (28, on
+      all nine poles; `polePosters` in `wires.ts`, painted by `signs.ts`, words
+      in `names.ts`): independent candidates with invented symbols, a college
+      union election, a birthday, a minister's welcome
 - [ ] Walkers (4–6) along the verges, stepping aside for you
 - [ ] Replace the placeholder riders on the moving vehicles (`addRider` in
       `props/vehicles.ts`) with the proper figures

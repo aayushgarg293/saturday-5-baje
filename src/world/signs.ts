@@ -1,11 +1,12 @@
 import * as THREE from "three";
 import { type Rng, makeRng, shuffled } from "../core/rng";
 import { toon } from "../render/toon";
-import { CINEMA, FILMS, SHOP_NAMES, WALL_ADS } from "./names";
+import { CINEMA, FILMS, POLE_POSTERS, type PolePoster, SHOP_NAMES, WALL_ADS } from "./names";
 import type { WorldSign } from "./street";
 
 /**
- * Everything painted on the street: signboards, wall ads and film posters.
+ * Everything painted on the street: signboards, wall ads, film posters, and
+ * the political posters on the electricity poles.
  *
  * Each one is drawn in code onto a hidden canvas (the browser's 2D drawing
  * surface), and that picture is put on a flat panel just in front of the
@@ -59,6 +60,7 @@ type PainterSpec = {
 // Shuffled once, with a fixed seed: which ad and film goes where.
 const adOrder = shuffled(WALL_ADS.length, 12);
 const filmOrder = shuffled(FILMS.length, 13);
+const polePosterOrder = shuffled(POLE_POSTERS.length, 14);
 
 const PAINTERS: Partial<Record<WorldSign["kind"], PainterSpec>> = {
   /** The main board across the cafe's front. */
@@ -146,6 +148,12 @@ const PAINTERS: Partial<Record<WorldSign["kind"], PainterSpec>> = {
       const y = h / 2 + rng.range(-h * 0.03, h * 0.03);
       tilted(ctx, x, y, rng.range(-0.05, 0.05), () => poster(ctx, pw, ph, film, rng));
     }
+  } },
+
+  /** An election (or birthday, or welcome) poster pasted on an electricity pole. */
+  polePoster: { ppm: 700, weather: 0.45, cutout: true, paint(ctx, w, h, i, rng) {
+    // five designs round and round the poles: the same face on every pole, as it always was
+    politicalPoster(ctx, w, h, POLE_POSTERS[polePosterOrder[i % polePosterOrder.length]], rng);
   } },
 };
 
@@ -361,4 +369,190 @@ function poster(ctx: CanvasRenderingContext2D, w: number, h: number, film: (type
   ctx.fillStyle = `rgba(250,244,230,${rng.range(0.05, 0.3)})`;
   ctx.fillRect(x0, y0, w, h);
   ctx.restore();
+}
+
+/**
+ * A political poster, filling the canvas: a band across the top, the
+ * leader's photo in an oval frame, the election symbol (or a garland, or a
+ * row of supporters), the name big, and the appeal in a band at the bottom.
+ * Cheap printing on thin paper: the edges are ragged, and a corner is often
+ * torn away (see-through), with glue stains and sun fading.
+ */
+function politicalPoster(ctx: CanvasRenderingContext2D, w: number, h: number, p: PolePoster, rng: Rng) {
+  const [paper, ink, second] = p.colours;
+  ctx.save();
+  // the paper, with ragged edges and sometimes a torn-off corner
+  ctx.beginPath();
+  const torn = rng.next() < 0.5 ? rng.range(0.12, 0.3) : 0;
+  const step = w / 14;
+  ctx.moveTo(0, rng.range(0, h * 0.01));
+  for (let x = step; x <= w; x += step) ctx.lineTo(x, rng.range(0, h * 0.012));
+  for (let y = step; y <= h * (1 - torn); y += step) ctx.lineTo(w - rng.range(0, w * 0.015), y);
+  if (torn > 0) ctx.lineTo(w * (1 - torn * 1.2), h - rng.range(0, h * 0.01)); // the torn corner, bottom right
+  for (let x = w * (1 - torn * 1.2); x >= 0; x -= step) ctx.lineTo(x, h - rng.range(0, h * 0.015));
+  for (let y = h; y >= 0; y -= step) ctx.lineTo(rng.range(0, w * 0.015), y);
+  ctx.closePath();
+  ctx.clip();
+
+  ctx.fillStyle = paper;
+  ctx.fillRect(0, 0, w, h);
+  // top band
+  ctx.fillStyle = ink;
+  ctx.fillRect(0, 0, w, h * 0.13);
+  text(ctx, p.top, w / 2, h * 0.068, w * 0.9, h * 0.075, paper, DEVANAGARI);
+
+  // the photo: an oval frame, the leader inside
+  const cx = p.symbol ? w * 0.36 : w / 2, cy = h * 0.4, r = w * 0.25;
+  ctx.fillStyle = second;
+  ctx.beginPath();
+  ctx.ellipse(cx, cy, r * 1.08, r * 1.28, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.save();
+  ctx.beginPath();
+  ctx.ellipse(cx, cy, r, r * 1.2, 0, 0, Math.PI * 2);
+  ctx.clip();
+  ctx.fillStyle = "#cfd9e0"; // the studio backdrop
+  ctx.fillRect(cx - r, cy - r * 1.2, r * 2, r * 2.4);
+  leader(ctx, cx, cy - r * 0.15, r * 0.9, p, rng);
+  ctx.restore();
+
+  if (p.kind === "welcome") {
+    // a marigold garland round the photo
+    for (let a = 0; a < Math.PI * 2; a += 0.3) {
+      ctx.fillStyle = a % 0.6 < 0.3 ? "#f5a623" : "#e8641e";
+      ctx.beginPath();
+      ctx.arc(cx + Math.cos(a) * r * 1.12, cy + Math.sin(a) * r * 1.32, r * 0.1, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+  if (p.symbol) {
+    // the election symbol, in a white box, labelled
+    const sx = w * 0.79, sy = h * 0.4, sb = w * 0.3;
+    text(ctx, "चुनाव चिह्न", sx, sy - sb * 0.72, sb * 1.1, h * 0.035, second, DEVANAGARI);
+    ctx.fillStyle = "#fbf6ea";
+    ctx.fillRect(sx - sb / 2, sy - sb / 2, sb, sb);
+    ctx.strokeStyle = second;
+    ctx.lineWidth = w * 0.01;
+    ctx.strokeRect(sx - sb / 2, sy - sb / 2, sb, sb);
+    symbol(ctx, p.symbol.draw, sx, sy, sb * 0.36);
+    text(ctx, p.symbol.name, sx, sy + sb * 0.72, sb * 1.1, h * 0.05, ink, DEVANAGARI);
+  }
+
+  // the name, what they're standing for, and (birthday) the row of well-wishers
+  text(ctx, p.name, w / 2, h * 0.7, w * 0.92, h * 0.09, ink, DEVANAGARI);
+  text(ctx, p.role, w / 2, h * 0.785, w * 0.9, h * 0.045, second, DEVANAGARI);
+  if (p.kind === "birthday") {
+    for (let k = 0; k < 5; k++) {
+      const hx = w * (0.18 + k * 0.16), hy = h * 0.845;
+      ctx.fillStyle = "#fbf6ea";
+      ctx.beginPath();
+      ctx.arc(hx, hy, w * 0.055, 0, Math.PI * 2);
+      ctx.fill();
+      leader(ctx, hx, hy - w * 0.005, w * 0.05, p, rng, true);
+    }
+  }
+  // the appeal, in a band at the bottom
+  ctx.fillStyle = second;
+  ctx.fillRect(0, h * 0.895, w, h * 0.105);
+  text(ctx, p.line, w / 2, h * 0.948, w * 0.9, h * 0.06, paper, DEVANAGARI);
+
+  // glue stains, and the sun
+  for (let k = 0; k < 3; k++) {
+    ctx.fillStyle = "rgba(120,90,40,0.12)";
+    ctx.beginPath();
+    ctx.ellipse(rng.range(0, w), rng.range(0, h), rng.range(w * 0.05, w * 0.15), rng.range(h * 0.02, h * 0.06), rng.range(0, 3), 0, Math.PI * 2);
+    ctx.fill();
+  }
+  weather(ctx, w, h, rng, 0.8);
+  ctx.restore();
+}
+
+/**
+ * The leader in the photo: head and shoulders, a white kurta, hair, a
+ * moustache, hands folded. Simple shapes, not anyone real. The student
+ * leader wears sunglasses; the minister a white Gandhi topi. `small` (the
+ * well-wishers' row) leaves out the hands.
+ */
+function leader(ctx: CanvasRenderingContext2D, cx: number, cy: number, s: number, p: PolePoster, rng: Rng, small = false) {
+  const skin = ["#c98f63", "#b97c52", "#a66b45", "#8f5a3a"][Math.floor(rng.next() * 4)];
+  // shoulders in a white kurta
+  ctx.fillStyle = small ? rng.pick(["#fbf6ea", "#dfe8f0", "#f0d9a8"]) : "#fbf6ea";
+  ctx.beginPath();
+  ctx.ellipse(cx, cy + s * 1.05, s * 0.85, s * 0.6, 0, Math.PI, 0);
+  ctx.fill();
+  // neck and head
+  ctx.fillStyle = skin;
+  ctx.fillRect(cx - s * 0.12, cy + s * 0.2, s * 0.24, s * 0.3);
+  ctx.beginPath();
+  ctx.ellipse(cx, cy, s * 0.34, s * 0.42, 0, 0, Math.PI * 2);
+  ctx.fill();
+  // hair, or the topi
+  ctx.fillStyle = p.kind === "welcome" && !small ? "#fbf6ea" : "#1f1b19";
+  ctx.beginPath();
+  if (p.kind === "welcome" && !small) {
+    ctx.moveTo(cx - s * 0.38, cy - s * 0.2);
+    ctx.lineTo(cx + s * 0.38, cy - s * 0.2);
+    ctx.lineTo(cx + s * 0.3, cy - s * 0.5);
+    ctx.lineTo(cx - s * 0.3, cy - s * 0.5);
+  } else {
+    ctx.ellipse(cx, cy - s * 0.2, s * 0.36, s * 0.26, 0, Math.PI, 0);
+  }
+  ctx.fill();
+  // face: eyes (or sunglasses), a moustache
+  ctx.fillStyle = "#1f1b19";
+  if (p.kind === "student" && !small) {
+    for (const k of [-1, 1]) {
+      ctx.beginPath();
+      ctx.ellipse(cx + k * s * 0.14, cy - s * 0.02, s * 0.12, s * 0.08, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.fillRect(cx - s * 0.05, cy - s * 0.04, s * 0.1, s * 0.03);
+  } else {
+    for (const k of [-1, 1]) ctx.fillRect(cx + k * s * 0.14 - s * 0.03, cy - s * 0.04, s * 0.06, s * 0.05);
+  }
+  if (p.kind !== "student") ctx.fillRect(cx - s * 0.14, cy + s * 0.15, s * 0.28, s * 0.06);
+  // hands folded in a namaste
+  if (!small && p.kind !== "birthday") {
+    ctx.fillStyle = skin;
+    ctx.beginPath();
+    ctx.ellipse(cx, cy + s * 0.95, s * 0.12, s * 0.28, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+/** Draw an election symbol, centred on (x, y), about `s` in radius, in ink. */
+function symbol(ctx: CanvasRenderingContext2D, draw: "umbrella" | "pot" | "cot", x: number, y: number, s: number) {
+  ctx.fillStyle = ctx.strokeStyle = "#1f1a17";
+  ctx.lineWidth = s * 0.1;
+  ctx.beginPath();
+  if (draw === "umbrella") {
+    ctx.arc(x, y - s * 0.1, s, Math.PI, 0);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(x, y - s * 0.1);
+    ctx.lineTo(x, y + s * 0.8);
+    ctx.arc(x - s * 0.18, y + s * 0.8, s * 0.18, 0, Math.PI);
+    ctx.stroke();
+  } else if (draw === "pot") {
+    ctx.ellipse(x, y + s * 0.25, s * 0.8, s * 0.7, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillRect(x - s * 0.3, y - s * 0.75, s * 0.6, s * 0.4); // the neck
+    ctx.fillRect(x - s * 0.42, y - s * 0.85, s * 0.84, s * 0.16); // the rim
+  } else {
+    // a charpai: a frame, woven across, on four legs
+    ctx.strokeRect(x - s, y - s * 0.4, s * 2, s * 0.8);
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(x - s, y - s * 0.4, s * 2, s * 0.8);
+    ctx.clip(); // the weave stays inside the frame
+    ctx.lineWidth = s * 0.06;
+    for (let k = -4; k <= 4; k++) {
+      ctx.beginPath();
+      ctx.moveTo(x + k * s * 0.28 - s * 0.3, y - s * 0.4);
+      ctx.lineTo(x + k * s * 0.28 + s * 0.3, y + s * 0.4);
+      ctx.stroke();
+    }
+    ctx.restore();
+    for (const k of [-1, 1]) ctx.fillRect(x + k * s * 0.95 - s * 0.06, y + s * 0.4, s * 0.12, s * 0.5);
+  }
 }

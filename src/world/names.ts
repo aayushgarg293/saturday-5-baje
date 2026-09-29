@@ -99,3 +99,50 @@ export const FILMS: Film[] = [
 
 /** The town's cinema, advertised on the posters. */
 export const CINEMA = { en: "MAYUR TALKIES", hi: "मयूर टॉकीज़" };
+
+/**
+ * Political posters pasted on the electricity poles: municipal election
+ * candidates, a college union election, a local leader's birthday, a welcome
+ * for a visiting minister. All made up: independent candidates (no real
+ * party), invented election symbols, common made-up names.
+ *
+ *   `kind`     which layout the painter uses
+ *   `top`      the band across the top
+ *   `name`     the big name under the portrait
+ *   `role`     what they're standing for, or who they are
+ *   `line`     the appeal at the bottom
+ *   `symbol`   the election symbol drawn beside the portrait, and its name
+ *   `colours`  paper, main ink, second ink
+ */
+export type PolePoster = {
+  kind: "vote" | "student" | "birthday" | "welcome";
+  top: string;
+  name: string;
+  role: string;
+  line: string;
+  symbol?: { draw: "umbrella" | "pot" | "cot"; name: string };
+  colours: [string, string, string];
+};
+
+export const POLE_POSTERS: PolePoster[] = [
+  {
+    kind: "vote", top: "नगर पालिका चुनाव 2006", name: "रमेश चंद सोनी", role: "वार्ड नं. 14 से निर्दलीय प्रत्याशी",
+    line: "को भारी मतों से विजयी बनाएँ", symbol: { draw: "umbrella", name: "छाता" }, colours: ["#f4c542", "#1f4f8f", "#c0392b"],
+  },
+  {
+    kind: "vote", top: "नगर पालिका चुनाव 2006", name: "हाजी अब्दुल रशीद", role: "वार्ड नं. 9 से निर्दलीय प्रत्याशी",
+    line: "आपका अपना, आपके बीच", symbol: { draw: "pot", name: "मटका" }, colours: ["#2f7d45", "#fbf6ea", "#f4c542"],
+  },
+  {
+    kind: "student", top: "छात्रसंघ चुनाव 2007", name: "सुनील चौधरी", role: "अध्यक्ष पद हेतु",
+    line: "क्रमांक 3 पर मोहर लगाएँ", symbol: { draw: "cot", name: "चारपाई" }, colours: ["#fbf6ea", "#c0392b", "#1f1a17"],
+  },
+  {
+    kind: "birthday", top: "जन्मदिन की हार्दिक शुभकामनाएँ", name: "विक्रम सिंह राठौड़", role: "युवा नेता",
+    line: "शुभेच्छु: मोहल्ला युवा मंच", colours: ["#e07b2e", "#fbf6ea", "#3a1f10"],
+  },
+  {
+    kind: "welcome", top: "हार्दिक स्वागत एवं अभिनंदन", name: "माननीय मंत्री जी", role: "का नगर आगमन पर",
+    line: "निवेदक: व्यापार मंडल", colours: ["#b8352c", "#f7d64a", "#fbf4e4"],
+  },
+];

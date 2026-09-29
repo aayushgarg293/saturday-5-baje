@@ -6,6 +6,7 @@ import { PAL } from "../render/palette";
 import { flat } from "../render/toon";
 import { Parts } from "./kit";
 import { centreAt, pointAt } from "./layout";
+import type { WorldSign } from "./street";
 
 /**
  * Electricity poles and the overhead wires strung between them, sagging,
@@ -15,6 +16,9 @@ import { centreAt, pointAt } from "./layout";
  * All the poles are merged into one mesh and all the wires into another, so
  * the whole tangle costs two draw calls. Wires are drawn unlit, as dark
  * silhouettes against the sky, which is how you actually see them.
+ *
+ * The poles also carry posters: election candidates, birthday wishes for a
+ * local leader (painted by world/signs.ts, words in names.ts).
  */
 
 /** Poles along the street: s = metres along, side -1 = left, +1 = right. */
@@ -34,7 +38,7 @@ const POLE_OFFSET = 2.65;
 const POLE_HEIGHT = 8.5;
 const WIRE_RADIUS = 0.013;
 
-export function buildWires(): { group: THREE.Group; colliders: Box[] } {
+export function buildWires(): { group: THREE.Group; colliders: Box[]; signs: WorldSign[] } {
   const rng = makeRng(99);
   const group = new THREE.Group();
   group.name = "wires";
@@ -92,7 +96,48 @@ export function buildWires(): { group: THREE.Group; colliders: Box[] } {
   wireMesh.name = "wires";
   group.add(wireMesh);
   wires.forEach((w) => w.dispose());
-  return { group, colliders };
+  return { group, colliders, signs: polePosters() };
+}
+
+/** A poster's size, metres: about A3, the size these were printed. */
+const POSTER = { w: 0.36, h: 0.5 };
+
+/**
+ * Posters pasted round each pole at eye height and a bit above: one or two
+ * facing the middle of the street, one facing whoever walks toward the pole
+ * from the south (the way in), and often one facing north (the way home).
+ * Stacked ones on the same face overlap, the newer pasted over the older.
+ */
+function polePosters(): WorldSign[] {
+  const rng = makeRng(51); // its own seed, so the wires don't change
+  const signs: WorldSign[] = [];
+  for (const pole of POLES) {
+    const at = pointAt(pole.s, pole.side * POLE_OFFSET);
+    const h = centreAt(pole.s).heading;
+    const forward = { x: Math.sin(h), z: -Math.cos(h) }; // up the street (increasing s)
+    const toMiddle = { x: -pole.side * Math.cos(h), z: -pole.side * Math.sin(h) };
+    const faces: { dir: { x: number; z: number }; heights: number[] }[] = [
+      { dir: toMiddle, heights: rng.next() < 0.5 ? [2.3] : [1.95, 2.38] },
+      { dir: { x: -forward.x, z: -forward.z }, heights: [rng.range(1.9, 2.4)] },
+    ];
+    if (rng.next() < 0.6) faces.push({ dir: forward, heights: [rng.range(1.9, 2.4)] });
+    for (const { dir, heights } of faces) {
+      heights.forEach((y, k) => {
+        // just proud of the pole's surface (it's about 0.13 m in radius at this
+        // height); a later one pasted over an earlier sits a few mm further out,
+        // or the two would flicker where they overlap
+        const out = 0.14 + k * 0.006;
+        signs.push({
+          kind: "polePoster",
+          position: new THREE.Vector3(at.x + dir.x * out, y, at.z + dir.z * out),
+          rotationY: Math.atan2(dir.x, dir.z) + rng.range(-0.06, 0.06),
+          w: POSTER.w,
+          h: POSTER.h,
+        });
+      });
+    }
+  }
+  return signs;
 }
 
 /**
