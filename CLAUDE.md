@@ -12,8 +12,10 @@ Phases 0–4 done. Phase 5 (people) in progress: the people system, the
 chaiwala, clothing and role recipes, the men on the chai benches and the
 stall sellers, shopkeepers, the temple, the cricket kids and the walkers are
 built (`src/people/`, placed by `people/crowd.ts` and `world/life.ts`).
-The moving vehicles carry real riders (`people/riders.ts`). Next: phase 6,
-street sound (`TASKS.md`).
+The moving vehicles carry real riders (`people/riders.ts`). Phase 6 (sound)
+in progress: the sound system and a quiet background layer (`src/audio/`).
+The owner prefers a spare soundscape: add sounds only when asked. Next: the
+radio's film tune (`TASKS.md`).
 
 Baseline (2026-09-28, M4, Chrome, 1470×956): **~3.5 ms per frame at pixel
 ratio 1.5, ~5.3 ms at 2; 110–206 draw calls** depending on the view (shadow
@@ -167,3 +169,4 @@ Keep each entry short.)*
 | One vehicle (the bicycle) never left its lane | "Whoever has waited longest goes next" sorted by seconds *left* to wait, which is zero for everyone ready, so the first in the list always won. Track time since each last arrived (`idle` in `traffic.ts`) and pick the largest. Found by logging departures over ten simulated minutes; the owner noticed first. |
 | A test says traffic is stuck | Check where the test put the player: vehicles stop for anyone in their path, and a test player parked on the road holds traffic up for good. Park it off the road (offset ≥ 3). |
 | The owner doesn't see a vehicle that the tests say is running | Tests checked the traffic never collided or stuck, not *when* the player would see each vehicle. Check from the player's side: simulate walking in from the start and log when each vehicle first passes within 10 m. |
+| Sound played out of the owner's speakers during a test | Calling `__game.audio.start()` in Claude's tab starts real sound. Measure with `__audioLab` instead (renders offline, silently); if the live context was started, `await __game.audio.ctx.close()`. |

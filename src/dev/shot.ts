@@ -1,3 +1,6 @@
+import { Bed } from "../audio/bed";
+import { audioLab } from "./audioLab";
+import type { AudioEngine } from "../audio/engine";
 import type * as THREE from "three";
 import type { Player } from "../core/player";
 import type { Life } from "../world/life";
@@ -33,6 +36,8 @@ export type GameHandle = {
   street: Street;
   /** Stalls, animals and traffic, for scripted checks. */
   life: Life;
+  /** The sound (for measuring levels: Claude can't listen). */
+  audio: AudioEngine;
   /** Advance the game by `seconds` without rendering. */
   step(seconds: number): void;
   /** Render one frame now. */
@@ -45,12 +50,18 @@ declare global {
     __shot: (name: string, spot?: string | CameraSpot, size?: ShotSize) => Promise<unknown>;
     __shotAll: () => Promise<unknown[]>;
     __walkCheck: () => WalkReport;
+    /** Render sound offline and measure it (dev/audioLab.ts). */
+    __audioLab: typeof audioLab;
+    /** The sound layers, for building them in `__audioLab`. */
+    __audioLayers: { Bed: typeof Bed };
   }
 }
 
 export function installDevTools(game: GameHandle) {
   window.__game = game;
   window.__walkCheck = () => walkCheck(game.player.colliders);
+  window.__audioLab = audioLab;
+  window.__audioLayers = { Bed };
 
   window.__shot = async (name, spot = name, size = {}) => {
     const { width = 1600, height = 900 } = size;

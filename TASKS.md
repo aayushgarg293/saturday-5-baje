@@ -161,8 +161,15 @@ motion; busy but walkable.
 - [ ] Maybe: a second look at the cow and dog alongside the people
 
 ## 6. Street sound
-- [ ] Ambient mix: horns, hawkers' calls, temple bells, chai glasses
-- [ ] Film tune on a shop radio (original), positioned in 3D
+- [x] The sound system (`src/audio/`): engine (mixer, street echo, listener
+      on the camera, M to mute), synth building blocks; `__audioLab` renders
+      sound offline and measures it (Claude can't listen)
+- [x] The background layer (`audio/bed.ts`): the town's hum and air, passing
+      traffic beyond the rooftops, a koel, pigeons, a far-off pressure cooker,
+      dog, horn and hawker. Owner listened: crows ("pew pew") and the voice
+      murmur taken out; "we can add more sounds later"
+- [ ] Film tune on the chai tapri's radio (original, 2000s filmy), in 3D
+- [ ] More street sounds, when the owner has thought about which
 
 ## 7. The cafe
 - [ ] Staircase up to the first floor

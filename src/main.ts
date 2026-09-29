@@ -1,4 +1,6 @@
 import * as THREE from "three";
+import { Bed } from "./audio/bed";
+import { AudioEngine } from "./audio/engine";
 import { Input } from "./core/input";
 import { Player } from "./core/player";
 import { addLights } from "./render/lights";
@@ -47,8 +49,22 @@ const input = new Input(canvas);
 const player = new Player(camera, input, [...street.colliders, ...wires.colliders, ...life.colliders]);
 player.place(street.spawn.x, street.spawn.z, street.spawn.yaw);
 
-// Click to capture the mouse; the start screen shows whenever it's released.
-startScreen.addEventListener("click", () => input.lock());
+// --- sound ----------------------------------------------------------------------
+// Browsers only allow sound after a click, so it starts with the first click.
+const audio = new AudioEngine();
+let bed: Bed | null = null;
+audio.onStart((ctx) => {
+  bed = new Bed(audio, ctx);
+});
+window.addEventListener("keydown", (e) => {
+  if (e.code === "KeyM") audio.toggleMute();
+});
+
+// Click to capture the mouse (and start the sound); the start screen shows whenever it's released.
+startScreen.addEventListener("click", () => {
+  audio.start();
+  input.lock();
+});
 input.onLockChange = (locked) => {
   startScreen.hidden = locked;
 };
@@ -61,6 +77,7 @@ function update(dt: number) {
   player.update(dt);
   life.update(time, dt, player.pos);
   lights.followPlayer(player.pos);
+  bed?.update(dt, player.pos);
 }
 
 // Frames are drawn through the post-processing pipeline (ink, colour grade, smoothing).
@@ -99,6 +116,7 @@ if (import.meta.env.DEV) {
     player,
     street,
     life,
+    audio,
     render,
     step(seconds) {
       // fixed 1/60 s steps, like real frames, so results match normal play
@@ -116,5 +134,6 @@ renderer.setAnimationLoop((time) => {
   const dt = Math.min(clock.getDelta(), 0.1);
   update(dt);
   render();
+  audio.listen(camera); // after drawing: the camera's matrix is up to date
   afterFrame(dt);
 });
