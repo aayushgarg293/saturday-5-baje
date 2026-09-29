@@ -12,7 +12,8 @@ Phases 0–4 done. Phase 5 (people) in progress: the people system, the
 chaiwala, clothing and role recipes, the men on the chai benches and the
 stall sellers, shopkeepers, the temple, the cricket kids and the walkers are
 built (`src/people/`, placed by `people/crowd.ts` and `world/life.ts`).
-Next: real riders on the moving vehicles (`TASKS.md`).
+The moving vehicles carry real riders (`people/riders.ts`). Next: phase 6,
+street sound (`TASKS.md`).
 
 Baseline (2026-09-28, M4, Chrome, 1470×956): **~3.5 ms per frame at pixel
 ratio 1.5, ~5.3 ms at 2; 110–206 draw calls** depending on the view (shadow
@@ -162,3 +163,6 @@ Keep each entry short.)*
 | The walk check's narrowest width jumps around between runs | The moving vehicles have colliders too: whatever's driving past at that moment narrows the street. For the street's own narrowest point, move `__game.life.traffic.colliders` far away (`cx += 5000`), check, then put them back. |
 | Speed measured in Claude's tab varies ±2× between runs | The background tab and the GPU's clock aren't steady. Compare with and without the thing being tested (e.g. hide `crowd`) in the same run, not against an old number. |
 | Two walkers stood frozen side by side for minutes | "Never step closer to anyone" blocked every step, because the small sidestep back to the usual lane brought them closer even while the step along the street took them apart. Try the step along the street alone before holding still (`think` in `walkers.ts`). Found by stepping the game for minutes and logging who hasn't moved. |
+| A rider's arms stuck straight out, short of the handlebar | The scooter's bar is further forward than an upright arm reaches. Real riders sit at the front of the seat and lean in: move `seat.x` forward and raise `lean` in the vehicle's `Ride`, and check the shoulder-to-grip distance is under the arm's length (≈0.53 m). |
+| One vehicle (the bicycle) never left its lane | "Whoever has waited longest goes next" sorted by seconds *left* to wait, which is zero for everyone ready, so the first in the list always won. Track time since each last arrived (`idle` in `traffic.ts`) and pick the largest. Found by logging departures over ten simulated minutes; the owner noticed first. |
+| A test says traffic is stuck | Check where the test put the player: vehicles stop for anyone in their path, and a test player parked on the road holds traffic up for good. Park it off the road (offset ≥ 3). |

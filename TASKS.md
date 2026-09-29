@@ -139,8 +139,18 @@ motion; busy but walkable.
       arm styles. Tested: 5 simulated minutes, nobody stuck or inside
       anything, no vehicle held up
 - [x] Owner watches the walkers: "looks good"
-- [ ] Replace the placeholder riders on the moving vehicles (`addRider` in
-      `props/vehicles.ts`) with the proper figures
+- [x] Real riders on the moving vehicles (`people/riders.ts`; each vehicle
+      gives its seat, grips and footrests as `Ride` in `props/vehicles.ts`):
+      the khaki auto driver and a passenger; an uncle on the scooter with a
+      child standing on the footboard; the doodhwala on his bicycle with milk
+      cans, pedalling. 30 people on the street in all
+- [x] Owner round ("can't see the doodhwala and the Chetak"): the traffic
+      only ever sent the auto and the scooter (a turn-taking bug), one
+      vehicle at a time. Now all three take turns, and up to two are out at
+      once, one each way: a vehicle onto the street about every 35 s
+- [x] The doodhwala now sets off first, from the north end, toward you as you
+      walk in (he started behind you before, and you'd have to turn round)
+- [x] Owner saw the auto, the Chetak and the doodhwala: phase 5 done
 - [ ] Maybe: a second look at the cow and dog alongside the people
 
 ## 6. Street sound

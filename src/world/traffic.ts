@@ -5,7 +5,8 @@ import { PAL } from "../render/palette";
 import { toon } from "../render/toon";
 import { Parts } from "./kit";
 import { PLOT_DEPTH, SIDE_ROADS, SIDE_ROAD_SETBACK, pointAt } from "./layout";
-import { type VehicleKind, addRider, buildVehicle } from "./props/vehicles";
+import { type Riders, buildRiders } from "../people/riders";
+import { type VehicleKind, buildVehicle } from "./props/vehicles";
 
 /**
  * The occasional passing vehicle.
@@ -16,8 +17,9 @@ import { type VehicleKind, addRider, buildVehicle } from "./props/vehicles";
  * into the other side road, and waits again. Nothing ever appears or
  * vanishes.
  *
- * To keep it calm, and so they never meet head-on in a side road, only ONE
- * vehicle is on the move at a time, with a pause between them.
+ * To keep it calm, at most two are on the move at once, going opposite ways
+ * (they pass each other in their own lanes), and never so that they'd meet
+ * in a side road.
  *
  * They stop if you're in the way, or someone walking is (and honk: a hook
  * for phase 6's sound), and
@@ -31,6 +33,8 @@ type Mover = {
   group: THREE.Group;
   wheels: { mesh: THREE.Mesh; radius: number }[];
   collider: Box;
+  /** The people on it (people/riders.ts). */
+  riders: Riders;
   length: number;
   width: number;
   cruise: number;
@@ -39,6 +43,8 @@ type Mover = {
   at: End;
   /** Seconds left to wait before it may set off. */
   wait: number;
+  /** Seconds since it last arrived (whoever's waited longest goes next). */
+  idle: number;
   /** While driving: the route, how far along it is, and its speed. */
   route: THREE.CatmullRomCurve3 | null;
   routeLength: number;
@@ -53,8 +59,12 @@ const LANE = { north: -1.0, south: 0.95 };
 const CRUISE: Record<VehicleKind, number> = { bicycle: 3, auto: 4.5, scooter: 5.5, motorcycle: 5.5, rickshaw: 2.5 };
 /** Speed through the side roads and their turns. */
 const SLOW = 2.0;
-/** Pause between one vehicle arriving and the next setting off, seconds. */
-const GAP = 7;
+/** At least this long between one vehicle setting off and the next, seconds. */
+const GAP = 6;
+/** At most this many on the road at once (one each way). */
+const MAX_MOVING = 2;
+/** Riders further than this from the player aren't posed (nobody can see them move). */
+const RIDERS_NEAR = 45;
 
 export type Traffic = {
   group: THREE.Group;
@@ -70,37 +80,58 @@ export function buildTraffic(): Traffic {
   const group = new THREE.Group();
   group.name = "traffic";
 
-  // who starts where, and how long before they first go
+  // Who starts where, and how long before they first go. The first to go
+  // leaves the far (north) end and comes toward you as you walk in, so you
+  // meet the slowest, the doodhwala on his bicycle, within the first minute;
+  // the auto overtakes you from behind soon after. (Ties go in this order.)
   const cast: { kind: VehicleKind; start: End; slot: number; firstWait: number }[] = [
-    { kind: "auto", start: "south", slot: 0, firstWait: 4 },
-    { kind: "scooter", start: "north", slot: 1, firstWait: 0 },
-    { kind: "bicycle", start: "south", slot: 2, firstWait: 0 },
+    { kind: "bicycle", start: "north", slot: 1, firstWait: 0 },
+    { kind: "auto", start: "south", slot: 0, firstWait: 0 },
+    { kind: "scooter", start: "north", slot: 2, firstWait: 0 },
   ];
   const movers = cast.map((c, i) => makeMover(c.kind, c.slot, c.start, c.firstWait + i * 0.01, rng, group));
 
-  let moving: Mover | null = null;
-  let quietFor = 0; // seconds since the last vehicle finished
+  // who's on the road now, and how long since anyone last set off
+  const moving: Mover[] = [];
+  let sinceDeparture = 0;
 
   const traffic: Traffic = {
     group,
     colliders: movers.map((m) => m.collider),
     onHonk: () => {},
     update(dt, player, walkers = []) {
-      for (const m of movers) m.wait = Math.max(0, m.wait - dt);
-      if (!moving) {
-        quietFor += dt;
-        // the vehicle that has waited longest goes next, once the street has been quiet a while
-        const next = movers.filter((m) => m.wait === 0).sort((a, b) => a.wait - b.wait)[0];
-        if (next && quietFor > GAP) {
+      sinceDeparture += dt;
+      for (const m of movers) {
+        m.wait = Math.max(0, m.wait - dt);
+        if (!moving.includes(m)) m.idle += dt;
+      }
+      // The next to go: whoever has been parked longest (and has had their
+      // rest), once the street has been quiet for a moment. At most two on
+      // the road, going opposite ways: they pass in their own lanes. A
+      // vehicle may only set off toward one already on its way if that one
+      // is still far off, so they pass on the street and not in a side road.
+      if (sinceDeparture > GAP && moving.length < MAX_MOVING) {
+        const next = movers
+          .filter((m) => !moving.includes(m) && m.wait === 0)
+          .filter((m) => moving.every((o) => o.at === m.at && o.travelled < o.routeLength * 0.45))
+          .sort((a, b) => b.idle - a.idle)[0];
+        if (next) {
           depart(next);
-          moving = next;
+          moving.push(next);
+          sinceDeparture = 0;
         }
       }
-      if (moving) {
-        if (drive(moving, dt, [player, ...walkers], traffic.onHonk)) {
-          moving.wait = rng.range(10, 30);
-          moving = null;
-          quietFor = 0;
+      // the riders: every frame when they're anywhere near (the ones waiting
+      // round the corner are out of sight, but you might walk into the side road)
+      for (const m of movers) {
+        const onRoad = moving.includes(m);
+        if (onRoad || m.group.position.distanceTo(player) < RIDERS_NEAR) m.riders.update(dt, onRoad ? m.speed : 0, player);
+      }
+      for (const m of [...moving]) {
+        if (drive(m, dt, [player, ...walkers], traffic.onHonk)) {
+          m.wait = rng.range(6, 16); // a rest before going again
+          m.idle = 0;
+          moving.splice(moving.indexOf(m), 1);
         }
       }
     },
@@ -111,10 +142,11 @@ export function buildTraffic(): Traffic {
 /** Make one vehicle, with its rider, waiting at its slot. */
 function makeMover(kind: VehicleKind, slot: number, start: End, wait: number, rng: Rng, group: THREE.Group): Mover {
   const v = buildVehicle(kind, rng, true);
-  addRider(v.parts, v.seat, rng);
   const g = new THREE.Group();
   g.name = `mover:${kind}`;
   g.add(v.parts.build(kind));
+  const riders = buildRiders(kind, v.ride!, rng);
+  g.add(riders.group);
   const wheels = v.wheels.map((w) => {
     const p = new Parts();
     p.cylinder(w.radius, w.radius, w.width, 0, 0, 0, PAL.tyre, { rx: Math.PI / 2, segments: 14 });
@@ -131,11 +163,15 @@ function makeMover(kind: VehicleKind, slot: number, start: End, wait: number, rn
   const m: Mover = {
     kind, group: g, wheels, length: v.size[0], width: v.size[1], cruise: CRUISE[kind],
     collider: boxAt(0, 0, v.size[0], v.size[1]),
-    slots, at: start, wait, route: null, routeLength: 0, travelled: 0, speed: 0, stoppedFor: 0,
+    riders,
+    slots, at: start, wait, idle: 0, route: null, routeLength: 0, travelled: 0, speed: 0, stoppedFor: 0,
   };
   // park it at its slot, facing along the back lane toward the side road
   const toward = sideRoadMouth(start);
   pose(m, slots[start], new THREE.Vector3().subVectors(toward, slots[start]));
+  // sit everyone down once now (until someone's near enough to be posed every frame)
+  g.updateMatrixWorld(true);
+  riders.update(0, 0, new THREE.Vector3(1e4, 0, 1e4));
   return m;
 }
 
