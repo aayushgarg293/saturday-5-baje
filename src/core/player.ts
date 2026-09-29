@@ -23,7 +23,9 @@ const EYE_HEIGHT = 1.55;
 const RADIUS = 0.3;
 /** Walking and faster-walking speeds, metres per second. */
 const WALK_SPEED = 2.0;
-const FAST_SPEED = 3.6;
+// (raised to 10 while building, so the cafe is quick to reach for testing;
+// bring it back to about 3.6 for the finished game: see TASKS.md)
+const FAST_SPEED = 10;
 /**
  * How quickly speed catches up with the keys. Higher is snappier. Stopping is
  * a little quicker than starting, which feels natural on foot.
@@ -49,6 +51,13 @@ export class Player {
   /** Direction he faces: yaw turns left/right, pitch looks up/down (radians). */
   yaw = 0;
   pitch = 0;
+  /**
+   * The height of the floor under him (his feet ease toward it). Steps up
+   * are judged from this, not from his feet: running up the stairs, the
+   * eased feet trail behind the slope, and judged from them the next step
+   * would look too high to climb.
+   */
+  private ground = 0;
   /** Current velocity, metres per second. */
   private readonly vel = new THREE.Vector3();
   /** Distance walked, used to time the head bob. */
@@ -75,7 +84,7 @@ export class Player {
   place(x: number, z: number, yaw: number, pitch = 0, y?: number) {
     // (`y`: which floor, if it's not the street; he's put on the ground below that)
     this.pos.set(x, 0, z);
-    this.pos.y = groundAt(this.floors, x, z, y ?? 0);
+    this.ground = this.pos.y = groundAt(this.floors, x, z, y ?? 0);
     this.yaw = yaw;
     this.pitch = pitch;
     this.vel.set(0, 0, 0);
@@ -132,8 +141,8 @@ export class Player {
     }
 
     // --- up or down to the ground under him ---------------------------------
-    const ground = groundAt(this.floors, this.pos.x, this.pos.z, this.pos.y);
-    this.pos.y += (ground - this.pos.y) * (1 - Math.exp(-CLIMB_RATE * dt));
+    this.ground = groundAt(this.floors, this.pos.x, this.pos.z, this.ground);
+    this.pos.y += (this.ground - this.pos.y) * (1 - Math.exp(-CLIMB_RATE * dt));
 
     // Head bob follows the distance actually moved (so pressing into a wall
     // doesn't bob in place).

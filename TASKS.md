@@ -199,6 +199,8 @@ motion; busy but walkable.
 - [ ] The wall clock and the look-up control
 - [ ] Dial-up modem and room sounds
 
+- [ ] Before release: Shift speed back from 10 m/s (testing) to ~3.6 (`FAST_SPEED` in `core/player.ts`)
+
 ## 8. The computer
 - [ ] Windows XP look-alike desktop: wallpaper, taskbar, Start menu, windows, sounds
 - [ ] Yorkut: profile, scraps, a friend's post, communities
