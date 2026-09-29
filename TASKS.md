@@ -150,6 +150,13 @@ motion; busy but walkable.
       once, one each way: a vehicle onto the street about every 35 s
 - [x] The doodhwala now sets off first, from the north end, toward you as you
       walk in (he started behind you before, and you'd have to turn round)
+- [x] Owner round ("this time I didn't see the Chetak"): with two at most,
+      going opposite ways, the scooter waited behind the doodhwala at the
+      north end. Now up to three: one may follow another the same way (well
+      behind, no faster, and vehicles stop for a vehicle stopped ahead). The
+      scooter leaves first, toward you; the auto behind you; the doodhwala
+      after the scooter. Tested 10 simulated minutes: 7 trips each, all three
+      out at once at times, never closer than 7 m in a lane
 - [x] Owner saw the auto, the Chetak and the doodhwala: phase 5 done
 - [ ] Maybe: a second look at the cow and dog alongside the people
 

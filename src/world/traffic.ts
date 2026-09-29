@@ -17,9 +17,9 @@ import { type VehicleKind, buildVehicle } from "./props/vehicles";
  * into the other side road, and waits again. Nothing ever appears or
  * vanishes.
  *
- * To keep it calm, at most two are on the move at once, going opposite ways
- * (they pass each other in their own lanes), and never so that they'd meet
- * in a side road.
+ * Up to three are on the move at once: ones going opposite ways pass each
+ * other in their own lanes (never in a side road), and one following
+ * another the same way keeps its distance and stops if the one ahead does.
  *
  * They stop if you're in the way, or someone walking is (and honk: a hook
  * for phase 6's sound), and
@@ -61,8 +61,10 @@ const CRUISE: Record<VehicleKind, number> = { bicycle: 3, auto: 4.5, scooter: 5.
 const SLOW = 2.0;
 /** At least this long between one vehicle setting off and the next, seconds. */
 const GAP = 6;
-/** At most this many on the road at once (one each way). */
-const MAX_MOVING = 2;
+/** At most this many on the road at once. */
+const MAX_MOVING = 3;
+/** A vehicle may follow another the same way once that one is this far ahead, metres. */
+const FOLLOW_GAP = 35;
 /** Riders further than this from the player aren't posed (nobody can see them move). */
 const RIDERS_NEAR = 45;
 
@@ -80,14 +82,16 @@ export function buildTraffic(): Traffic {
   const group = new THREE.Group();
   group.name = "traffic";
 
-  // Who starts where, and how long before they first go. The first to go
-  // leaves the far (north) end and comes toward you as you walk in, so you
-  // meet the slowest, the doodhwala on his bicycle, within the first minute;
-  // the auto overtakes you from behind soon after. (Ties go in this order.)
+  // Who starts where, and how long before they first go. So you meet all
+  // three in your first minute on the street: the scooter leaves the far
+  // (north) end first and comes toward you; the auto sets off behind you
+  // and overtakes you; the doodhwala follows the scooter down from the north
+  // (the slower behind the faster, so he never catches it up). Ties go in
+  // this order.
   const cast: { kind: VehicleKind; start: End; slot: number; firstWait: number }[] = [
-    { kind: "bicycle", start: "north", slot: 1, firstWait: 0 },
+    { kind: "scooter", start: "north", slot: 1, firstWait: 0 },
     { kind: "auto", start: "south", slot: 0, firstWait: 0 },
-    { kind: "scooter", start: "north", slot: 2, firstWait: 0 },
+    { kind: "bicycle", start: "north", slot: 2, firstWait: 0 },
   ];
   const movers = cast.map((c, i) => makeMover(c.kind, c.slot, c.start, c.firstWait + i * 0.01, rng, group));
 
@@ -106,14 +110,21 @@ export function buildTraffic(): Traffic {
         if (!moving.includes(m)) m.idle += dt;
       }
       // The next to go: whoever has been parked longest (and has had their
-      // rest), once the street has been quiet for a moment. At most two on
-      // the road, going opposite ways: they pass in their own lanes. A
-      // vehicle may only set off toward one already on its way if that one
-      // is still far off, so they pass on the street and not in a side road.
+      // rest), a few seconds after the last one set off. Against everyone
+      // already on the road it must be safe to go:
+      //  - one coming the other way (heading for the end this one leaves
+      //    from) must still be far off, so they pass on the street in their
+      //    own lanes, never in a side road;
+      //  - one going the same way must be well ahead, and no slower (so it
+      //    isn't caught up; if it stops, the one behind stops too).
       if (sinceDeparture > GAP && moving.length < MAX_MOVING) {
+        const safeWith = (m: Mover, o: Mover) =>
+          o.at === m.at
+            ? o.travelled < o.routeLength * 0.45
+            : o.travelled > FOLLOW_GAP && m.cruise <= o.cruise;
         const next = movers
           .filter((m) => !moving.includes(m) && m.wait === 0)
-          .filter((m) => moving.every((o) => o.at === m.at && o.travelled < o.routeLength * 0.45))
+          .filter((m) => moving.every((o) => safeWith(m, o)))
           .sort((a, b) => b.idle - a.idle)[0];
         if (next) {
           depart(next);
@@ -128,7 +139,9 @@ export function buildTraffic(): Traffic {
         if (onRoad || m.group.position.distanceTo(player) < RIDERS_NEAR) m.riders.update(dt, onRoad ? m.speed : 0, player);
       }
       for (const m of [...moving]) {
-        if (drive(m, dt, [player, ...walkers], traffic.onHonk)) {
+        // stop for anyone in the way: you, someone walking, or a vehicle stopped ahead
+        const others = moving.filter((o) => o !== m).map((o) => o.group.position);
+        if (drive(m, dt, [player, ...walkers, ...others], traffic.onHonk)) {
           m.wait = rng.range(6, 16); // a rest before going again
           m.idle = 0;
           moving.splice(moving.indexOf(m), 1);
