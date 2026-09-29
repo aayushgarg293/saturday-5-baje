@@ -48,7 +48,7 @@ scene.add(sky.group, street.group, life.group, buildSigns([...street.signs, ...l
 
 // --- the player ----------------------------------------------------------------
 const input = new Input(canvas);
-const player = new Player(camera, input, [...street.colliders, ...wires.colliders, ...life.colliders]);
+const player = new Player(camera, input, [...street.colliders, ...wires.colliders, ...life.colliders], street.floors);
 player.place(street.spawn.x, street.spawn.z, street.spawn.yaw);
 
 // --- sound ----------------------------------------------------------------------

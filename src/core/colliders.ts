@@ -7,7 +7,12 @@
  * step it is pushed back out of any box it has moved into.
  *
  * Boxes can be **rotated**, because the street curves and the buildings along
- * it aren't lined up with the x/z axes. Height is ignored: the street is flat.
+ * it aren't lined up with the x/z axes.
+ *
+ * Most boxes stand the full height (a building is solid top to bottom). A box
+ * can instead cover only a band of heights (`y0`..`y1`): the walls of the
+ * cafe's first floor stop you only when you're up there, not on the street
+ * below (core/floors.ts is where the floors are).
  */
 
 export type Box = {
@@ -23,6 +28,9 @@ export type Box = {
    * collider can share one angle.
    */
   rot: number;
+  /** Only between these heights (metres); left out, the box is solid all the way up. */
+  y0?: number;
+  y1?: number;
 };
 
 /** A box from its centre, full size and rotation. */
@@ -38,8 +46,12 @@ export function boxAt(cx: number, cz: number, sizeX: number, sizeZ: number, rot 
  * becomes "is a point inside a bigger box", push the point out through the
  * nearest side, then turn it back into the world.
  */
-export function pushOut(p: { x: number; z: number }, r: number, boxes: readonly Box[]) {
+export function pushOut(p: { x: number; z: number }, r: number, boxes: readonly Box[], feet?: number) {
+  // a box stops you only if it's there at your knee height: the first
+  // floor's walls don't stop you on the street below, and vice versa
+  const knee = feet === undefined ? undefined : feet + 0.4;
   for (const b of boxes) {
+    if (knee !== undefined && ((b.y0 !== undefined && knee < b.y0) || (b.y1 !== undefined && knee >= b.y1))) continue;
     // world → box frame (the inverse of a rotation.y of b.rot)
     const cos = Math.cos(b.rot), sin = Math.sin(b.rot);
     const dx = p.x - b.cx, dz = p.z - b.cz;

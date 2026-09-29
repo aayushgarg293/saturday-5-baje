@@ -16,6 +16,8 @@ export type CameraSpot = {
   pos: [number, number];
   yaw: number;
   pitch?: number;
+  /** Stand on the floor at about this height (the cafe's first floor: 4.8); left out, the street. */
+  floor?: number;
 };
 
 /** A spot `s` metres along the street, `offset` to the side, looking along the street turned by `turn` radians (left +). */

@@ -76,7 +76,24 @@ export type BuildResult = {
   /** Total height, including the parapet. */
   height: number;
   signs: SignSpot[];
+  /**
+   * Walls to bump into, if the building is more than one solid block (the
+   * cafe, which you can go inside). Left out, the whole plot is solid.
+   */
+  colliders?: LocalBox[];
+  /** Floors to stand on above the street (stairs, upper floors). */
+  floors?: LocalFloor[];
 };
+
+/** A collision box in the building's frame: x0..x1 by z0..z1, and (if not full height) only between heights y0..y1. */
+export type LocalBox = { x0: number; x1: number; z0: number; z1: number; y0?: number; y1?: number };
+
+/**
+ * A floor patch in the building's frame (see core/floors.ts): x0..x1 by
+ * z0..z1, at height `front` along its front edge (z1, toward the street)
+ * rising or falling to `back` at its back edge (z0). Flat if they're equal.
+ */
+export type LocalFloor = { x0: number; x1: number; z0: number; z1: number; front: number; back: number };
 
 export const FLOOR_HEIGHT = 3.1;
 /** How far the building's facade sits behind the plot front (houses have a step, shops a platform). */

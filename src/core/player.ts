@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { type Box, pushOut } from "./colliders";
+import { type Patch, groundAt } from "./floors";
 import type { Input } from "./input";
 
 /**
@@ -9,6 +10,11 @@ import type { Input } from "./input";
  * and puts the camera at his eyes. Simplified from
  * ../sakura-crossing/src/core/player.js (flat ground, no vehicles, no
  * interactions yet).
+ *
+ * The ground is the flat street, except where a floor patch says otherwise
+ * (core/floors.ts): the cafe's staircase and its first floor. His feet ease
+ * up and down to the ground's height, so climbing the stairs feels like
+ * climbing, not like being lifted.
  */
 
 /** Eye height above the ground, in metres. */
@@ -34,9 +40,11 @@ const BOB_HEIGHT = 0.03;
 const BOB_STEPS_PER_METRE = 1.4;
 /** Longest single movement step. Bigger moves are split so fast walking can't skip through a thin wall. */
 const MAX_SUBSTEP = 0.15;
+/** How quickly his feet follow the ground's height (higher: snappier). */
+const CLIMB_RATE = 12;
 
 export class Player {
-  /** Position of his feet on the ground (y stays 0 on the flat street). */
+  /** Position of his feet (y: 0 on the street, higher on the stairs and upstairs). */
   readonly pos = new THREE.Vector3();
   /** Direction he faces: yaw turns left/right, pitch looks up/down (radians). */
   yaw = 0;
@@ -55,6 +63,8 @@ export class Player {
     private readonly input: Input,
     /** Everything the player can bump into (read by dev tools too). */
     readonly colliders: readonly Box[],
+    /** Where the ground isn't the street: stairs, upper floors. */
+    readonly floors: readonly Patch[] = [],
   ) {
     // Yaw first, then pitch: turn the head sideways, then tilt it. The other
     // order makes the horizon roll when you look up and turn.
@@ -62,8 +72,10 @@ export class Player {
   }
 
   /** Put him somewhere, facing a direction, standing still. */
-  place(x: number, z: number, yaw: number, pitch = 0) {
+  place(x: number, z: number, yaw: number, pitch = 0, y?: number) {
+    // (`y`: which floor, if it's not the street; he's put on the ground below that)
     this.pos.set(x, 0, z);
+    this.pos.y = groundAt(this.floors, x, z, y ?? 0);
     this.yaw = yaw;
     this.pitch = pitch;
     this.vel.set(0, 0, 0);
@@ -114,10 +126,14 @@ export class Player {
       // One axis at a time: walking diagonally into a wall then slides along
       // it instead of sticking.
       this.pos.x += stepX / steps;
-      pushOut(this.pos, RADIUS, this.colliders);
+      pushOut(this.pos, RADIUS, this.colliders, this.pos.y);
       this.pos.z += stepZ / steps;
-      pushOut(this.pos, RADIUS, this.colliders);
+      pushOut(this.pos, RADIUS, this.colliders, this.pos.y);
     }
+
+    // --- up or down to the ground under him ---------------------------------
+    const ground = groundAt(this.floors, this.pos.x, this.pos.z, this.pos.y);
+    this.pos.y += (ground - this.pos.y) * (1 - Math.exp(-CLIMB_RATE * dt));
 
     // Head bob follows the distance actually moved (so pressing into a wall
     // doesn't bob in place).
@@ -128,7 +144,7 @@ export class Player {
   private applyCamera() {
     const bob = Math.sin(this.walked * BOB_STEPS_PER_METRE * Math.PI) * BOB_HEIGHT;
     // abs() makes the dip happen once per footstep rather than once per two
-    this.camera.position.set(this.pos.x, EYE_HEIGHT - Math.abs(bob), this.pos.z);
+    this.camera.position.set(this.pos.x, this.pos.y + EYE_HEIGHT - Math.abs(bob), this.pos.z);
     this.camera.rotation.set(this.pitch, this.yaw, 0);
   }
 }

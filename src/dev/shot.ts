@@ -75,7 +75,7 @@ export function installDevTools(game: GameHandle) {
     if (!target) throw new Error(`__shot: no saved camera called "${spot}"`);
 
     const { renderer, camera, player } = game;
-    player.place(target.pos[0], target.pos[1], target.yaw, target.pitch ?? 0);
+    player.place(target.pos[0], target.pos[1], target.yaw, target.pitch ?? 0, target.floor);
     game.step(0); // lets anything that follows the player (the shadow area) catch up
 
     // Render at the requested size, at 1:1 pixels, so every shot is comparable

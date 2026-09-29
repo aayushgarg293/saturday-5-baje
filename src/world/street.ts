@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { type Box, boxAt } from "../core/colliders";
+import type { Patch } from "../core/floors";
 import { type Rng, makeRng, shuffled } from "../core/rng";
 import { PAL, WALL_COLOURS } from "../render/palette";
 import { buildCafe } from "./buildings/cafe";
@@ -41,6 +42,8 @@ export type WorldSign = {
 export type Street = {
   group: THREE.Group;
   colliders: Box[];
+  /** Floors to stand on above the street (the cafe's stairs and first floor). */
+  floors: Patch[];
   signs: WorldSign[];
   /** Where the player starts, and the direction they face (yaw, radians). */
   spawn: { x: number; z: number; yaw: number };
@@ -68,6 +71,7 @@ export function buildStreet(): Street {
   const group = new THREE.Group();
   group.name = "street";
   const colliders: Box[] = [];
+  const floors: Patch[] = [];
   const signs: WorldSign[] = [];
   const people: WorldPeopleSpot[] = [];
   const rng = makeRng(SEED);
@@ -96,9 +100,23 @@ export function buildStreet(): Street {
     mesh.updateMatrixWorld();
     group.add(mesh);
 
-    // collider: the whole footprint, from the front edge back PLOT_DEPTH metres
-    const back = new THREE.Vector3(0, 0, -PLOT_DEPTH / 2).applyMatrix4(mesh.matrixWorld);
-    colliders.push(boxAt(back.x, back.z, w, PLOT_DEPTH, rot));
+    // colliders: the building's own walls if it has any (the cafe: you can go
+    // in), otherwise the whole footprint, from the front edge back PLOT_DEPTH metres
+    const centre = (x0: number, x1: number, z0: number, z1: number) =>
+      new THREE.Vector3((x0 + x1) / 2, 0, (z0 + z1) / 2).applyMatrix4(mesh.matrixWorld);
+    if (result.colliders) {
+      for (const b of result.colliders) {
+        const c = centre(b.x0, b.x1, b.z0, b.z1);
+        colliders.push({ ...boxAt(c.x, c.z, b.x1 - b.x0, b.z1 - b.z0, rot), y0: b.y0, y1: b.y1 });
+      }
+    } else {
+      const back = new THREE.Vector3(0, 0, -PLOT_DEPTH / 2).applyMatrix4(mesh.matrixWorld);
+      colliders.push(boxAt(back.x, back.z, w, PLOT_DEPTH, rot));
+    }
+    for (const f of result.floors ?? []) {
+      const c = centre(f.x0, f.x1, f.z0, f.z1);
+      floors.push({ cx: c.x, cz: c.z, hx: (f.x1 - f.x0) / 2, hz: (f.z1 - f.z0) / 2, rot, front: f.front, back: f.back });
+    }
 
     for (const sp of result.signs) addSign(sp, mesh, rot);
     for (const { x, y, z, turn, ...rest } of spots) {
@@ -201,7 +219,7 @@ export function buildStreet(): Street {
   // south to north, so whoever picks from them can space them out along the walk
   const along = (p: THREE.Vector3) => streetCoords(p.x, p.z).s;
   people.sort((a, b) => along(a.position) - along(b.position));
-  return { group, colliders, signs, spawn: { ...pointAt(1.5, 0), yaw: yawAlong(1.5) }, people };
+  return { group, colliders, floors, signs, spawn: { ...pointAt(1.5, 0), yaw: yawAlong(1.5) }, people };
 }
 
 /** A plain boundary wall with a coping on top (the ends of the side roads' back lanes). */

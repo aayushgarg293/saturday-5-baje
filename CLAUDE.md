@@ -38,6 +38,10 @@ pass included). Budget for 60 fps: 16.7 ms.
   toward the street, z = 0 at the plot's front edge) from parts, then merged
   into **one mesh per building** with `Parts` (`src/world/kit.ts`). One building
   = one draw call. Shared pieces are in `src/world/buildings/common.ts`.
+- **Floors above the street** are patches (`core/floors.ts`): flat or ramps
+  (the cafe's stair). A building can return its own colliders and floors
+  (the cafe does, so you can go in); a collider can cover only a band of
+  heights (`y0`/`y1`), so first-floor walls don't stop you downstairs.
 - **Everything with words is painted by `world/signs.ts`.** Builders return
   sign spots (boards, poster places); `street.ts` adds wall-ad spots where a
   building rises above its neighbour; `signs.ts` paints any spot whose `kind`

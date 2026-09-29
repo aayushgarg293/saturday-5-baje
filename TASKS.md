@@ -182,7 +182,17 @@ motion; busy but walkable.
 - [ ] More sounds only if the owner asks (not wanted: voice murmur, crows)
 
 ## 7. The cafe
-- [ ] Staircase up to the first floor
+- [x] Staircase up to the first floor: the stair door opens onto a steep,
+      narrow flight (21 steps, posters, a sloping band of dark paint) to a
+      landing; the first floor is a hollow room with barred open windows
+      onto the street (`buildings/cafe.ts`). Floors above the street
+      (`core/floors.ts`) and walls that apply only at their own height
+      (`y0`/`y1` on `Box`); the player's feet follow the floor
+- [x] Owner walks up the stairs: "the climb feels good". Added a loose stone
+      step halfway up to the platform at the door (as people put down in
+      small towns); the room is now a long hall, 12.7 m deep instead of 9
+      (owner's choice), with the extra depth behind the row, out of sight
+- [x] Owner looks at the stone step and the long hall: "it is good now"
 - [ ] The owner at the counter
 - [ ] Wooden cubicles with curtains; other customers with light animation
 - [ ] Sitting down at the computer: the camera moves to the screen
