@@ -34,8 +34,32 @@ export const HALL = { x0: -4.78, x1: 2.85, z0: -12.48, z1: -1.32, floor: 4.8, ce
  */
 export type Booth = { n: number; x: number; z: number; turn: number };
 
+/**
+ * A point in a booth's own frame, in the building's frame. v: forward, toward
+ * the screen; u: sideways, positive to the LEFT of someone sitting there.
+ * (A person's own frame is the same as their booth's: +z ahead, +x to their left.)
+ */
+export function boothPoint(b: Booth, u: number, v: number): { x: number; z: number } {
+  const fx = Math.sin(b.turn), fz = Math.cos(b.turn); // forward
+  const sx = Math.cos(b.turn), sz = -Math.sin(b.turn); // sideways (a box's own x, turned by `turn`)
+  return { x: b.x + fx * v + sx * u, z: b.z + fz * v + sz * u };
+}
+
 /** Booth sizes: width (between partitions), desk depth, partition height; the chair's distance back from the desk's front edge. */
-export const BOOTH = { width: 1.25, desk: 0.6, deskTop: 0.75, partition: 1.45, chairBack: 0.55, opening: 0.55 };
+export const BOOTH = { width: 1.25, desk: 0.6, deskTop: 0.75, partition: 1.45, chairBack: 0.42, opening: 0.68 };
+
+/**
+ * Where things are on a booth's desk, in the booth's own frame (u: sideways,
+ * positive to your left; y: up from the floor; v: forward from the chair).
+ * The people's hands and eyes go to these; the furniture puts things here.
+ */
+export const DESK = {
+  keyboard: { u: 0, y: BOOTH.deskTop + 0.03, v: BOOTH.chairBack + 0.12 },
+  mouse: { u: -0.3, y: BOOTH.deskTop + 0.02, v: BOOTH.chairBack + 0.12 },
+  /** The CRT sits at the back of the desk; its screen's centre. */
+  crt: BOOTH.chairBack + BOOTH.desk - 0.17,
+  screen: { u: 0, y: BOOTH.deskTop + 0.24, v: BOOTH.chairBack + BOOTH.desk - 0.17 - 0.155 },
+};
 
 const FACE_WALL = -Math.PI / 2; // facing −x (toward the far side wall)
 const FACE_RAILING = Math.PI / 2; // facing +x
@@ -64,7 +88,8 @@ export const YOUR_BOOTH = 2;
 
 /** The owner's counter, at the top of the stairs, and where he sits behind it (facing the landing). */
 export const COUNTER = { x0: 1.5, x1: 2.2, z0: -9.8, z1: -8.0, top: 1.0 };
-export const OWNER_SEAT = { x: 0.85, z: -8.9, turn: FACE_RAILING };
+/** (A tall seat: behind a counter this high, he sits up on a revolving stool.) */
+export const OWNER_SEAT = { x: 1.1, z: -8.9, turn: FACE_RAILING, seat: 0.74 };
 
 /** Ceiling fans down the middle of the hall. */
 export const FANS = [

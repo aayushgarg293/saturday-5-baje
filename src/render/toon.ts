@@ -163,6 +163,11 @@ export type FlatOptions = {
    * Materials with a picture are never shared.
    */
   map?: THREE.Texture;
+  /**
+   * With a `map`: a solid picture (a computer's screen), not a see-through
+   * one (by default a picture may have clear parts, like the sky's clouds).
+   */
+  opaque?: boolean;
 };
 
 /**
@@ -171,13 +176,13 @@ export type FlatOptions = {
  * glowing signs.
  */
 export function flat(color: number, opts: FlatOptions = {}): THREE.MeshBasicMaterial {
-  const { fog = true, vertexColors = false, map } = opts;
+  const { fog = true, vertexColors = false, map, opaque = false } = opts;
   const key = [color, fog, vertexColors].join("|");
   const cached = map ? undefined : flatCache.get(key);
   if (cached) return cached;
   const mat = new THREE.MeshBasicMaterial({
     color, fog, vertexColors,
-    ...(map ? { map, transparent: true, depthWrite: false } : {}),
+    ...(map ? (opaque ? { map } : { map, transparent: true, depthWrite: false }) : {}),
   });
   if (!map) flatCache.set(key, mat);
   return mat;

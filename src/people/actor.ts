@@ -56,6 +56,11 @@ export type Actor = {
   update(t: number, dt: number, player: THREE.Vector3): void;
   /** Where the hand grips, in the parent's frame (for placing held things). */
   grip(side: "L" | "R", out: THREE.Vector3): THREE.Vector3;
+  /**
+   * Break off the loop for a one-off action (the owner pointing you to your
+   * booth), blending in and out of it; the loop carries on afterwards.
+   */
+  perform(action: Action): void;
 };
 
 export const v = (x: number, y: number, z: number) => new THREE.Vector3(x, y, z);
@@ -97,6 +102,7 @@ export function makeActor(spec: ActorSpec): Actor {
   let greeting = 0; // seconds left of the smile-and-nod
   let greeted = false;
   let blinkIn = 1 + Math.random() * 3;
+  let oneOff: { action: Action; u: number } | null = null;
   const local = new THREE.Vector3(), playerHead = new THREE.Vector3();
   const hand = new THREE.Vector3(), elbow = new THREE.Vector3();
 
@@ -111,7 +117,17 @@ export function makeActor(spec: ActorSpec): Actor {
       now.name = actions[i].name;
       now.u = u;
       const blend = smooth(THREE.MathUtils.clamp((u - (actions[i].duration - BLEND)) / BLEND, 0, 1));
-      const pose = mix(actions[i].pose(u), actions[(i + 1) % actions.length].pose(0), blend);
+      let pose = mix(actions[i].pose(u), actions[(i + 1) % actions.length].pose(0), blend);
+      // a one-off action takes over, blending in at its start and out at its end
+      if (oneOff) {
+        oneOff.u += dt;
+        const { action, u: ou } = oneOff;
+        const w = smooth(THREE.MathUtils.clamp(Math.min(ou / BLEND, (action.duration - ou) / BLEND), 0, 1));
+        pose = mix(pose, action.pose(ou), w);
+        now.name = action.name;
+        now.u = ou;
+        if (ou >= action.duration) oneOff = null;
+      }
 
       // --- the body: sitting or standing, breathing, leaning into the work ---
       const hips = person.bone("hips");
@@ -164,6 +180,9 @@ export function makeActor(spec: ActorSpec): Actor {
       blinkIn -= dt;
       if (blinkIn < -0.13) blinkIn = 2 + Math.random() * 3;
       person.face.set(blinkIn < 0 || pose.closed ? "blink" : greeting > 0 || pose.smile ? "smile" : "neutral");
+    },
+    perform(action) {
+      oneOff = { action, u: 0 };
     },
     grip(side, out) {
       // a little past the wrist, along the forearm: the middle of the fist

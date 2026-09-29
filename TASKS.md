@@ -204,8 +204,16 @@ motion; busy but walkable.
       calendar, booth numbers. Your booth: 2, with the clock in view
 - [x] Owner looks at the furnished hall: "it looks so good"; ½ hour is ₹15
       (half an hour was dearer; the full hour was the deal)
-- [ ] The owner at the counter
-- [ ] Other customers with light animation
+- [x] The people (`people/cafePeople.ts`): the owner on a tall stool at the
+      counter (typing at his PC turned toward him, writing in the register,
+      watching the stairs; the first time you come up he looks at you and
+      points to booth 2, with a caption: `ui/caption.ts`); two CS boys in
+      headphones (booths 10, 11: flicking the mouse, turning to shout); the
+      uncle in glasses (booth 5: one finger, peering, hand on chin); the
+      college guy (booth 7: typing bursts, grinning at his chat, Nokia and
+      bike keys on the desk). Their screens lit (`world/cafe/screens.ts`).
+      Actors can now break off for a one-off action (`perform`)
+- [x] Owner looks at the cafe's people: "it looks good"
 - [ ] Sitting down at the computer: the camera moves to the screen
 - [ ] The wall clock and the look-up control
 - [ ] Dial-up modem and room sounds

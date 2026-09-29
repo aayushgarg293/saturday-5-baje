@@ -135,3 +135,38 @@ export function stumps(): THREE.Mesh {
   for (const x of [-0.1, 0, 0.1]) p.cylinder(0.012, 0.012, 0.58, x, 0.45, 0, PAL.woodLight, { segments: 5 });
   return mesh(p, "stumps");
 }
+
+/**
+ * Big over-ear headphones, built around the middle of the head (attach to
+ * the head bone, at the head's centre): a band over the top, a cup each side.
+ */
+export function headphones(): THREE.Mesh {
+  const p = new Parts();
+  const band = new THREE.TorusGeometry(0.135, 0.012, 6, 16, Math.PI); // an arch in x/y: over the top
+  p.add(band, 0, 0.01, 0, 0x2a2826);
+  for (const s of [-1, 1]) {
+    p.cylinder(0.055, 0.055, 0.045, s * 0.13, 0.0, 0, 0x2a2826, { rz: Math.PI / 2, segments: 12 });
+    p.cylinder(0.045, 0.045, 0.01, s * 0.155, 0.0, 0, 0xc0392b, { rz: Math.PI / 2, segments: 12 }); // the red logo
+  }
+  return mesh(p, "headphones");
+}
+
+/** Reading glasses with thin dark frames, built around the bridge of the nose; attach to the head bone. */
+export function spectacles(): THREE.Mesh {
+  const p = new Parts();
+  for (const s of [-1, 1]) {
+    p.add(new THREE.TorusGeometry(0.026, 0.004, 4, 14), s * 0.038, 0, 0, 0x3a2a1c);
+    p.box(0.004, 0.004, 0.11, s * 0.066, 0.005, -0.055, 0x3a2a1c); // the arm back to the ear
+  }
+  p.box(0.018, 0.004, 0.004, 0, 0.004, 0, 0x3a2a1c); // the bridge
+  return mesh(p, "spectacles");
+}
+
+/** A bunch of bike keys on a ring with a plastic tag, lying on a desk. */
+export function bikeKeys(): THREE.Mesh {
+  const p = new Parts();
+  p.add(new THREE.TorusGeometry(0.018, 0.003, 4, 12).rotateX(Math.PI / 2), 0, 0.003, 0, PAL.chrome);
+  p.box(0.012, 0.004, 0.05, 0.02, 0.003, 0.03, PAL.chrome);
+  p.box(0.03, 0.006, 0.045, -0.025, 0.004, -0.02, 0x2f5f9e); // the tag
+  return mesh(p, "bikeKeys");
+}
