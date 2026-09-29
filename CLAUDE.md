@@ -14,8 +14,8 @@ stall sellers, shopkeepers, the temple, the cricket kids and the walkers are
 built (`src/people/`, placed by `people/crowd.ts` and `world/life.ts`).
 The moving vehicles carry real riders (`people/riders.ts`). Phase 6 (sound)
 in progress: the sound system and a quiet background layer (`src/audio/`).
-The owner prefers a spare soundscape: add sounds only when asked. Next: the
-radio's film tune (`TASKS.md`).
+The radio at the chai tapri plays an original filmy tune (`audio/radio.ts`).
+The owner prefers a spare soundscape: add sounds only when asked.
 
 Baseline (2026-09-28, M4, Chrome, 1470×956): **~3.5 ms per frame at pixel
 ratio 1.5, ~5.3 ms at 2; 110–206 draw calls** depending on the view (shadow

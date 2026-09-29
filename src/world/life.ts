@@ -9,7 +9,7 @@ import { type Walkers, buildWalkers } from "../people/walkers";
 import { ANIMALS, PARKED, SLOTS } from "./layout";
 import { type Animal, buildCow, buildDog } from "./props/animals";
 import { type Placement, StaticBatch, placeOnStreet } from "./props/batch";
-import { chaiTapri, golgappaCart, iceGolaCart, jalebiStall, kachoriStall } from "./props/stalls";
+import { RADIO_AT, chaiTapri, golgappaCart, iceGolaCart, jalebiStall, kachoriStall } from "./props/stalls";
 import { type VehicleKind, buildVehicle } from "./props/vehicles";
 import type { WorldPeopleSpot, WorldSign } from "./street";
 import { type Traffic, buildTraffic } from "./traffic";
@@ -29,6 +29,8 @@ export type Life = {
   signs: WorldSign[];
   traffic: Traffic;
   walkers: Walkers;
+  /** Where the chai tapri's radio is (audio/radio.ts plays from here). */
+  radioAt: THREE.Vector3;
   update(t: number, dt: number, player: THREE.Vector3): void;
 };
 
@@ -121,6 +123,8 @@ export function buildLife(people: WorldPeopleSpot[], solid: readonly Box[]): Lif
     signs,
     traffic,
     walkers,
+    // the radio's speaker, in the world: the tapri's frame applied to its spot on the counter
+    radioAt: new THREE.Vector3(RADIO_AT.x - 0.05, RADIO_AT.y + 0.08, RADIO_AT.z).applyMatrix4(placeOnStreet(SLOTS.chaiTapri.s, SLOTS.chaiTapri.offset).matrix),
     update(t, dt, player) {
       for (const animal of animals) {
         // the player's position in the animal's own frame

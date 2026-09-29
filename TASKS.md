@@ -168,7 +168,11 @@ motion; busy but walkable.
       traffic beyond the rooftops, a koel, pigeons, a far-off pressure cooker,
       dog, horn and hawker. Owner listened: crows ("pew pew") and the voice
       murmur taken out; "we can add more sounds later"
-- [ ] Film tune on the chai tapri's radio (original, 2000s filmy), in 3D
+- [x] The chai tapri's radio (`audio/radio.ts`, the set on the counter in
+      `props/stalls.ts`): an original mid-2000s filmy instrumental (D minor,
+      dholak kaherwa, flute hook, synth sitar, strings, bass; ~95 s loop)
+      through a small-speaker filter; heard up to ~55 m. Owner: "it looks good"
+- [x] Fixed: the chai in the chaiwala's pan flickered (level with the rim)
 - [ ] More street sounds, when the owner has thought about which
 
 ## 7. The cafe

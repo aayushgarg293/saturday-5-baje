@@ -1,3 +1,4 @@
+import { Radio } from "../audio/radio";
 import { Bed } from "../audio/bed";
 import { audioLab } from "./audioLab";
 import type { AudioEngine } from "../audio/engine";
@@ -53,7 +54,7 @@ declare global {
     /** Render sound offline and measure it (dev/audioLab.ts). */
     __audioLab: typeof audioLab;
     /** The sound layers, for building them in `__audioLab`. */
-    __audioLayers: { Bed: typeof Bed };
+    __audioLayers: { Bed: typeof Bed; Radio: typeof Radio };
   }
 }
 
@@ -61,7 +62,7 @@ export function installDevTools(game: GameHandle) {
   window.__game = game;
   window.__walkCheck = () => walkCheck(game.player.colliders);
   window.__audioLab = audioLab;
-  window.__audioLayers = { Bed };
+  window.__audioLayers = { Bed, Radio };
 
   window.__shot = async (name, spot = name, size = {}) => {
     const { width = 1600, height = 900 } = size;

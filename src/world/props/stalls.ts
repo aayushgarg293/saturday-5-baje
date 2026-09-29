@@ -58,6 +58,12 @@ function handcart(p: Parts, length: number, width: number, deckY: number) {
   p.strut({ x: -length / 2, y: deckY, z: -width / 2 + 0.05 }, { x: -length / 2 - 0.5, y: deckY + 0.1, z: -width / 2 + 0.05 }, 0.025, PAL.woodLight);
 }
 
+/**
+ * Where the transistor radio sits on the chai tapri's counter (tapri frame).
+ * The sound comes from here too (audio/radio.ts).
+ */
+export const RADIO_AT = { x: -0.72, y: 0.94, z: -0.27 };
+
 /** The chai tapri: a counter under a tarp on bamboo poles, the stove and kettle, glasses, and two benches. */
 export function chaiTapri(rng: Rng): Stall {
   const p = new Parts();
@@ -86,6 +92,13 @@ export function chaiTapri(rng: Rng): Stall {
     legs(p, x - 0.2, x + 0.2, -0.6, 0.9, 0.38, PAL.woodLight);
   }
   if (rng.next() < 0.7) p.cylinder(0.2, 0.2, 0.5, -0.9, 0.25, -0.35, PAL.steel, { segments: 12 }); // a water drum
+  // the transistor radio at the back corner of the counter: a brown case, the
+  // speaker grille on its face, a dial, and its aerial pulled out at a slant
+  const r = RADIO_AT;
+  p.box(0.26, 0.15, 0.09, r.x, r.y + 0.075, r.z, 0x6b4a33);
+  p.box(0.13, 0.11, 0.01, r.x - 0.05, r.y + 0.075, r.z + 0.046, 0x2b2622); // grille
+  p.cylinder(0.025, 0.025, 0.012, r.x + 0.08, r.y + 0.09, r.z + 0.047, 0xd9c7a3, { rx: Math.PI / 2, segments: 10 }); // dial
+  p.strut({ x: r.x + 0.1, y: r.y + 0.15, z: r.z }, { x: r.x + 0.28, y: r.y + 0.52, z: r.z - 0.05 }, 0.004, PAL.chrome); // aerial
   // a long board hung from the front of the tarp, between the two front poles
   p.slab(-1.08, 1.08, 1.68, 2.0, 0.9, 0.93, PAL.wood);
   return {

@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { Bed } from "./audio/bed";
 import { AudioEngine } from "./audio/engine";
+import { Radio } from "./audio/radio";
 import { Input } from "./core/input";
 import { Player } from "./core/player";
 import { addLights } from "./render/lights";
@@ -53,8 +54,10 @@ player.place(street.spawn.x, street.spawn.z, street.spawn.yaw);
 // Browsers only allow sound after a click, so it starts with the first click.
 const audio = new AudioEngine();
 let bed: Bed | null = null;
+let radio: Radio | null = null;
 audio.onStart((ctx) => {
   bed = new Bed(audio, ctx);
+  radio = new Radio(audio, ctx, life.radioAt);
 });
 window.addEventListener("keydown", (e) => {
   if (e.code === "KeyM") audio.toggleMute();
@@ -78,6 +81,7 @@ function update(dt: number) {
   life.update(time, dt, player.pos);
   lights.followPlayer(player.pos);
   bed?.update(dt, player.pos);
+  radio?.update(dt, player.pos);
 }
 
 // Frames are drawn through the post-processing pipeline (ink, colour grade, smoothing).

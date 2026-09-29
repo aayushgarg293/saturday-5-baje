@@ -232,7 +232,9 @@ export function buildChaiwala(where: Placement): Chaiwala {
 function buildPan(): THREE.Mesh {
   const p = new Parts();
   p.cylinder(0.15, 0.14, 0.13, 0, 0, 0, PAL.steel, { segments: 16 });
-  p.cylinder(0.135, 0.135, 0.02, 0, 0.055, 0, 0xc88f5a, { segments: 16 }); // the chai
+  // the chai, full to the brim: its top 3 mm above the rim, not level with
+  // it (at exactly the same height the two flicker, "z-fighting")
+  p.cylinder(0.135, 0.135, 0.02, 0, 0.058, 0, 0xc88f5a, { segments: 16 });
   p.strut({ x: 0, y: 0.04, z: -0.14 }, { x: 0, y: 0.06, z: -HANDLE }, 0.012, PAL.steel);
   const mesh = new THREE.Mesh(p.geometry(), toon({ color: 0xffffff, vertexColors: true, flatShading: false }));
   mesh.castShadow = true;
