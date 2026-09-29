@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { type Box, boxAt } from "../core/colliders";
+import { cue } from "../core/cues";
 import { type Rng, makeRng } from "../core/rng";
 import { PAL } from "../render/palette";
 import { toon } from "../render/toon";
@@ -51,6 +52,10 @@ type Mover = {
   travelled: number;
   speed: number;
   stoppedFor: number;
+  /** Someone in its path a little way ahead (set while driving; the doodhwala rings his bell). */
+  someoneAhead: boolean;
+  /** Seconds until the bicycle's bell may ring again. */
+  bellIn: number;
 };
 
 /** Offsets across the street of each direction's lane (Indian traffic keeps left). */
@@ -138,6 +143,17 @@ export function buildTraffic(): Traffic {
         const onRoad = moving.includes(m);
         if (onRoad || m.group.position.distanceTo(player) < RIDERS_NEAR) m.riders.update(dt, onRoad ? m.speed : 0, player);
       }
+      // the doodhwala rings his bell at anyone in his way, and now and then
+      // out of habit, while he's out on the street
+      for (const m of moving) {
+        if (m.kind !== "bicycle") continue;
+        m.bellIn -= dt;
+        const onStreet = m.travelled > 25 && m.travelled < m.routeLength - 25;
+        if (onStreet && ((m.someoneAhead && m.bellIn < 0) || m.bellIn < -25)) {
+          cue("cycleBell", m.group.position.clone().setY(1.0));
+          m.bellIn = 5;
+        }
+      }
       for (const m of [...moving]) {
         // stop for anyone in the way: you, someone walking, or a vehicle stopped ahead
         const others = moving.filter((o) => o !== m).map((o) => o.group.position);
@@ -177,7 +193,7 @@ function makeMover(kind: VehicleKind, slot: number, start: End, wait: number, rn
     kind, group: g, wheels, length: v.size[0], width: v.size[1], cruise: CRUISE[kind],
     collider: boxAt(0, 0, v.size[0], v.size[1]),
     riders,
-    slots, at: start, wait, idle: 0, route: null, routeLength: 0, travelled: 0, speed: 0, stoppedFor: 0,
+    slots, at: start, wait, idle: 0, someoneAhead: false, bellIn: 0, route: null, routeLength: 0, travelled: 0, speed: 0, stoppedFor: 0,
   };
   // park it at its slot, facing along the back lane toward the side road
   const toward = sideRoadMouth(start);
@@ -303,6 +319,12 @@ function drive(m: Mover, dt: number, people: readonly THREE.Vector3[], honk: (at
     const ahead = dx * dir.x + dz * dir.z;
     const across = Math.abs(dx * dir.z - dz * dir.x);
     return ahead > 0 && ahead < m.length / 2 + 3.5 && across < m.width / 2 + 0.45;
+  });
+  // (further ahead, roughly in the way: worth a ring of the bell)
+  m.someoneAhead = people.some((p) => {
+    const dx = p.x - pos.x, dz = p.z - pos.z;
+    const ahead = dx * dir.x + dz * dir.z;
+    return ahead > 0 && ahead < 12 && Math.abs(dx * dir.z - dz * dir.x) < m.width / 2 + 0.9;
   });
   if (blocked) target = 0;
   // ease toward the target speed: gentle pull-away, firmer braking

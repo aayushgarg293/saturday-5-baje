@@ -1,3 +1,5 @@
+import { cue, onCue } from "../core/cues";
+import { StreetSounds } from "../audio/street";
 import { Radio } from "../audio/radio";
 import { Bed } from "../audio/bed";
 import { audioLab } from "./audioLab";
@@ -54,7 +56,9 @@ declare global {
     /** Render sound offline and measure it (dev/audioLab.ts). */
     __audioLab: typeof audioLab;
     /** The sound layers, for building them in `__audioLab`. */
-    __audioLayers: { Bed: typeof Bed; Radio: typeof Radio };
+    __audioLayers: { Bed: typeof Bed; Radio: typeof Radio; StreetSounds: typeof StreetSounds };
+    /** The game's own cue functions (importing core/cues.ts from the console can give a second copy). */
+    __cues: { cue: typeof cue; onCue: typeof onCue };
   }
 }
 
@@ -62,7 +66,8 @@ export function installDevTools(game: GameHandle) {
   window.__game = game;
   window.__walkCheck = () => walkCheck(game.player.colliders);
   window.__audioLab = audioLab;
-  window.__audioLayers = { Bed, Radio };
+  window.__audioLayers = { Bed, Radio, StreetSounds };
+  window.__cues = { cue, onCue };
 
   window.__shot = async (name, spot = name, size = {}) => {
     const { width = 1600, height = 900 } = size;

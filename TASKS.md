@@ -173,7 +173,13 @@ motion; busy but walkable.
       dholak kaherwa, flute hook, synth sitar, strings, bass; ~95 s loop)
       through a small-speaker filter; heard up to ~55 m. Owner: "it looks good"
 - [x] Fixed: the chai in the chaiwala's pan flickered (level with the rim)
-- [ ] More street sounds, when the owner has thought about which
+- [x] Street sounds tied to what happens (`audio/street.ts`; cues from the
+      people and traffic via `core/cues.ts`): the temple bell as the old
+      woman rings it, bat on ball and bounces, chai glasses clinking as he
+      pours, the doodhwala's bicycle bell, oil sizzling at the kadhais.
+      Owner: "everything is perfect"; the sizzle carried too far, now it
+      fades out completely by 7 m (`reach` in `AudioEngine.place`)
+- [ ] More sounds only if the owner asks (not wanted: voice murmur, crows)
 
 ## 7. The cafe
 - [ ] Staircase up to the first floor

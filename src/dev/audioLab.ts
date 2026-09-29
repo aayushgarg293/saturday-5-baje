@@ -12,11 +12,14 @@ import { pointAt, yawAlong } from "../world/layout";
  *
  *   await __audioLab({ seconds: 20, s: 56, layers: (engine, ctx) => new Bed(engine, ctx) })
  *
+ * `during(ctx, player)` runs just before rendering: schedule things there,
+ * e.g. fire cues (core/cues.ts) near the player to measure one sound.
+ *
  * Loudness is in dBFS: 0 is the loudest possible, −20 is loud music, −40
  * quiet, below −60 near silence.
  */
 
-type Layer = { update(dt: number, player: THREE.Vector3): void };
+type Layer = { update(dt: number, player: THREE.Vector3): void; dispose?: () => void };
 
 export type AudioReport = {
   /** Loudness of each second, dBFS. */
@@ -33,6 +36,7 @@ export async function audioLab(opts: {
   s?: number;
   offset?: number;
   layers: (engine: AudioEngine, ctx: OfflineAudioContext) => Layer[] | Layer;
+  during?: (ctx: OfflineAudioContext, player: THREE.Vector3) => void;
 }): Promise<AudioReport> {
   const seconds = opts.seconds ?? 20;
   const rate = 44100;
@@ -55,6 +59,7 @@ export async function audioLab(opts: {
   // to let the layers schedule what comes next, as the game's frames would.
   const STEP = 0.25;
   for (const l of layers) l.update(STEP, player);
+  opts.during?.(ctx, player);
   for (let t = STEP; t < seconds; t += STEP) {
     void ctx.suspend(t).then(() => {
       for (const l of layers) l.update(STEP, player);
@@ -62,6 +67,7 @@ export async function audioLab(opts: {
     });
   }
   const buffer = await ctx.startRendering();
+  for (const l of layers) l.dispose?.();
 
   const perSecond: number[] = [];
   let peak = 0, clipped = 0;

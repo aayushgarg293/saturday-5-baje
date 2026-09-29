@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { cue, passed } from "../core/cues";
 import type { Rng } from "../core/rng";
 import type { Placement } from "../world/props/batch";
 import { type Actor, type Pose, makeActor, seenFrom, smooth, track, v } from "./actor";
@@ -176,12 +177,22 @@ export function buildCricket(where: Placement, rng: Rng): Cricket {
   group.add(theBat, ball, wicket);
 
   const hands = new THREE.Vector3(), tip = new THREE.Vector3(), dir = new THREE.Vector3();
+  // the sounds of the game: where in the world each happens, and when in the loop
+  group.updateMatrixWorld(true);
+  const sounds = [
+    { name: "ballBounce", at: T.bounce, where: group.localToWorld(BOUNCE.clone()) },
+    { name: "batHit", at: T.hit, where: group.localToWorld(HIT.clone()) },
+    { name: "ballBounce", at: T.lands, where: group.localToWorld(LANDS.clone()) },
+  ] as const;
+  let before = 0;
   return {
     group,
     standing: [BATTER, BOWLER, FIELD_A, FIELD_B],
     update(t, dt, player) {
       for (const p of Object.values(players)) p.update(t, dt, player);
       const u = t % LOOP;
+      for (const s of sounds) if (passed(before, u, s.at)) cue(s.name, s.where);
+      before = u;
 
       // the bat: from the top hand, toward where the pose says its end points
       players.batter.grip("L", hands);

@@ -92,15 +92,27 @@ export class AudioEngine {
    * returned node; it gets quieter with distance (`near`: full volume within
    * this many metres) and comes from the right direction, then goes to `bus`
    * (and a little to the echo, `wet`).
+   *
+   * By default it fades the way real sound does, never quite to nothing
+   * (right for a bell or a bat). `reach` instead fades it out completely by
+   * that many metres: for sounds that never stop (a sizzle, a hum), which
+   * would otherwise hang faintly over the whole street.
    */
-  place(bus: Bus, x: number, y: number, z: number, near = 2, wet = 0.2): PannerNode {
+  place(bus: Bus, x: number, y: number, z: number, near = 2, wet = 0.2, reach?: number): PannerNode {
     const ctx = this.ctx!;
     const p = ctx.createPanner();
     p.panningModel = "equalpower"; // cheap and clear; fine for a street's worth of sounds
-    p.distanceModel = "inverse";
-    p.refDistance = near;
-    p.rolloffFactor = 1.1;
-    p.maxDistance = 400;
+    if (reach) {
+      p.distanceModel = "linear"; // full at `near`, silent at `reach`
+      p.refDistance = near;
+      p.maxDistance = reach;
+      p.rolloffFactor = 1;
+    } else {
+      p.distanceModel = "inverse";
+      p.refDistance = near;
+      p.rolloffFactor = 1.1;
+      p.maxDistance = 400;
+    }
     setPosition(p, x, y, z);
     p.connect(this.buses[bus]);
     if (wet > 0) p.connect(gain(ctx, wet)).connect(this.echo);

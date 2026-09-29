@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { cue, passed } from "../core/cues";
 import { PAL, SKIN_TONES } from "../render/palette";
 import { toon } from "../render/toon";
 import { Parts } from "../world/kit";
@@ -113,6 +114,11 @@ const ACTIONS: { name: string; duration: number; pose: (u: number) => Pose }[] =
   },
 ];
 const LOOP = ACTIONS.reduce((sum, a) => sum + a.duration, 0);
+/**
+ * The glasses clink as the pan's lip knocks them, pouring along the row:
+ * when in the loop (the pour begins after the 6 s stir), and which glass.
+ */
+const CLINKS = [{ at: 6 + 1.25, x: 0.2 }, { at: 6 + 1.9, x: 0.4 }, { at: 6 + 2.45, x: 0.6 }];
 /** How long one action takes to blend into the next, seconds. */
 const BLEND = 0.6;
 
@@ -150,6 +156,7 @@ export function buildChaiwala(where: Placement): Chaiwala {
   let greeting = 0; // seconds left of the smile-and-nod when he first notices you
   let greeted = false;
   let blinkIn = 2; // seconds until the next blink
+  let before = 0; // where in the loop the last frame was (for the clinks)
   const playerHead = new THREE.Vector3();
   const local = new THREE.Vector3();
 
@@ -158,6 +165,10 @@ export function buildChaiwala(where: Placement): Chaiwala {
     update(t, dt, player) {
       // which action, and how far into it; blend into the next near its end
       let u = t % LOOP;
+      for (const c of CLINKS) {
+        if (passed(before, u, c.at)) cue("glassClink", group.localToWorld(v(c.x, GLASSES.y + 0.05, GLASSES.z)));
+      }
+      before = u;
       let i = 0;
       while (u > ACTIONS[i].duration) { u -= ACTIONS[i].duration; i++; }
       const now = ACTIONS[i].pose(u);

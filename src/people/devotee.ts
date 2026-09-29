@@ -1,9 +1,13 @@
 import * as THREE from "three";
+import { cue } from "../core/cues";
 import type { Rng } from "../core/rng";
 import type { WorldPeopleSpot } from "../world/street";
 import { type Action, makeActor, track, v } from "./actor";
 import { buildPerson } from "./body";
 import { recipeFor } from "./recipes";
+
+/** Moments in the bell action (seconds in) when the clapper strikes. */
+const RINGS = [0.8, 1.15, 1.5];
 
 /**
  * An old woman at the roadside temple (world/props/temple.ts), in front of
@@ -68,5 +72,18 @@ export function buildDevotee(spot: WorldPeopleSpot, rng: Rng): Devotee {
     },
   };
   const actor = makeActor({ person, at: { x: 0, z: 0, turn: 0 }, actions: [pray, bell, pray, touch], notice: "none", phase: 3 });
-  return { group, update: (t, dt, player) => actor.update(t, dt, player) };
+  // the bell rings each time her hand swings the clapper (see `bell` above)
+  const bellWorld = group.localToWorld(v(bx, by, bz));
+  let before = { name: "", u: 0 };
+  return {
+    group,
+    update(t, dt, player) {
+      actor.update(t, dt, player);
+      const { name, u } = actor.now;
+      if (name === "bell" && before.name === "bell") {
+        for (const at of RINGS) if (before.u < at && at <= u) cue("templeBell", bellWorld);
+      }
+      before = { name, u };
+    },
+  };
 }
