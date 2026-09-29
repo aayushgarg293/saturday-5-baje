@@ -4,6 +4,8 @@ import { makeRng } from "../core/rng";
 import type { SignSpot } from "./buildings/common";
 import { Parts } from "./kit";
 import { buildCrowd } from "../people/crowd";
+import { planLanes } from "../people/lanes";
+import { type Walkers, buildWalkers } from "../people/walkers";
 import { ANIMALS, PARKED, SLOTS } from "./layout";
 import { type Animal, buildCow, buildDog } from "./props/animals";
 import { type Placement, StaticBatch, placeOnStreet } from "./props/batch";
@@ -26,11 +28,16 @@ export type Life = {
   /** Stall boards, for world/signs.ts to paint. */
   signs: WorldSign[];
   traffic: Traffic;
+  walkers: Walkers;
   update(t: number, dt: number, player: THREE.Vector3): void;
 };
 
-/** `people`: the places the buildings offer for people (world/street.ts). */
-export function buildLife(people: WorldPeopleSpot[]): Life {
+/**
+ * `people`: the places the buildings offer for people (world/street.ts).
+ * `solid`: everything solid already on the street (buildings, poles), so the
+ * people walking it know where there's room.
+ */
+export function buildLife(people: WorldPeopleSpot[], solid: readonly Box[]): Life {
   const rng = makeRng(404);
   const group = new THREE.Group();
   group.name = "life";
@@ -101,13 +108,19 @@ export function buildLife(people: WorldPeopleSpot[]): Life {
   group.add(traffic.group);
   traffic.group.traverse((o) => { o.castShadow = true; });
 
+  // --- people walking the street (they need to know where everything solid is) --------
+  const walkers = buildWalkers(planLanes([...solid, ...colliders, ...crowd.colliders]));
+  group.add(walkers.group);
+  walkers.group.traverse((o) => { o.castShadow = true; });
+
   const local = new THREE.Vector3();
   const inverse = new THREE.Matrix4();
   return {
     group,
-    colliders: [...colliders, ...crowd.colliders, ...traffic.colliders],
+    colliders: [...colliders, ...crowd.colliders, ...traffic.colliders, ...walkers.colliders],
     signs,
     traffic,
+    walkers,
     update(t, dt, player) {
       for (const animal of animals) {
         // the player's position in the animal's own frame
@@ -115,7 +128,8 @@ export function buildLife(people: WorldPeopleSpot[]): Life {
         animal.update(t, dt, local);
       }
       crowd.update(t, dt, player);
-      traffic.update(dt, player);
+      walkers.update(t, dt, player, traffic.colliders);
+      traffic.update(dt, player, walkers.positions);
     },
   };
 }

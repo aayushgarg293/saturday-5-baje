@@ -131,7 +131,14 @@ motion; busy but walkable.
       all nine poles; `polePosters` in `wires.ts`, painted by `signs.ts`, words
       in `names.ts`): independent candidates with invented symbols, a college
       union election, a birthday, a minister's welcome
-- [ ] Walkers (4–6) along the verges, stepping aside for you
+- [x] Walkers (`walkers.ts`, lane plan in `lanes.ts`): five people walk the
+      road's edge keeping left, cross at the ends of their stretch (waiting
+      for traffic), pause to look at shops, swing round stalls and cows,
+      squeeze aside for vehicles, step round you; vehicles stop for them.
+      Walk cycle with planted feet, hips riding over the standing leg, four
+      arm styles. Tested: 5 simulated minutes, nobody stuck or inside
+      anything, no vehicle held up
+- [x] Owner watches the walkers: "looks good"
 - [ ] Replace the placeholder riders on the moving vehicles (`addRider` in
       `props/vehicles.ts`) with the proper figures
 - [ ] Maybe: a second look at the cow and dog alongside the people

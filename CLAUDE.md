@@ -10,8 +10,9 @@ Read both before starting work.
 
 Phases 0–4 done. Phase 5 (people) in progress: the people system, the
 chaiwala, clothing and role recipes, the men on the chai benches and the
-stall sellers are built (`src/people/`, placed by `people/crowd.ts`). Next:
-shopkeepers, the temple, cricket kids, walkers, riders (`TASKS.md`).
+stall sellers, shopkeepers, the temple, the cricket kids and the walkers are
+built (`src/people/`, placed by `people/crowd.ts` and `world/life.ts`).
+Next: real riders on the moving vehicles (`TASKS.md`).
 
 Baseline (2026-09-28, M4, Chrome, 1470×956): **~3.5 ms per frame at pixel
 ratio 1.5, ~5.3 ms at 2; 110–206 draw calls** depending on the view (shadow
@@ -160,3 +161,4 @@ Keep each entry short.)*
 | A seated man's kurta hangs down through the bench like a bucket | Kurta tails follow the hips joint, so they stay vertical when the thighs swing forward. Seated men wear shirts (`chaiCorner.ts`). |
 | The walk check's narrowest width jumps around between runs | The moving vehicles have colliders too: whatever's driving past at that moment narrows the street. For the street's own narrowest point, move `__game.life.traffic.colliders` far away (`cx += 5000`), check, then put them back. |
 | Speed measured in Claude's tab varies ±2× between runs | The background tab and the GPU's clock aren't steady. Compare with and without the thing being tested (e.g. hide `crowd`) in the same run, not against an old number. |
+| Two walkers stood frozen side by side for minutes | "Never step closer to anyone" blocked every step, because the small sidestep back to the usual lane brought them closer even while the step along the street took them apart. Try the step along the street alone before holding still (`think` in `walkers.ts`). Found by stepping the game for minutes and logging who hasn't moved. |

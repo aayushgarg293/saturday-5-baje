@@ -19,7 +19,8 @@ import { type VehicleKind, addRider, buildVehicle } from "./props/vehicles";
  * To keep it calm, and so they never meet head-on in a side road, only ONE
  * vehicle is on the move at a time, with a pause between them.
  *
- * They stop if you're in the way (and honk: a hook for phase 6's sound), and
+ * They stop if you're in the way, or someone walking is (and honk: a hook
+ * for phase 6's sound), and
  * you can't walk through them: each has a collider that moves with it.
  */
 
@@ -58,7 +59,8 @@ const GAP = 7;
 export type Traffic = {
   group: THREE.Group;
   colliders: Box[];
-  update(dt: number, player: THREE.Vector3): void;
+  /** `walkers`: where the people walking the street are (they stop for them too). */
+  update(dt: number, player: THREE.Vector3, walkers?: readonly THREE.Vector3[]): void;
   /** Called when a vehicle honks at the player (phase 6 plays the sound). */
   onHonk: (at: THREE.Vector3) => void;
 };
@@ -83,7 +85,7 @@ export function buildTraffic(): Traffic {
     group,
     colliders: movers.map((m) => m.collider),
     onHonk: () => {},
-    update(dt, player) {
+    update(dt, player, walkers = []) {
       for (const m of movers) m.wait = Math.max(0, m.wait - dt);
       if (!moving) {
         quietFor += dt;
@@ -95,7 +97,7 @@ export function buildTraffic(): Traffic {
         }
       }
       if (moving) {
-        if (drive(moving, dt, player, traffic.onHonk)) {
+        if (drive(moving, dt, [player, ...walkers], traffic.onHonk)) {
           moving.wait = rng.range(10, 30);
           moving = null;
           quietFor = 0;
@@ -235,7 +237,7 @@ function sAlong(p: THREE.Vector3, guess: number): number {
 }
 
 /** Drive one frame along the route. Returns true when the vehicle has arrived. */
-function drive(m: Mover, dt: number, player: THREE.Vector3, honk: (at: THREE.Vector3) => void): boolean {
+function drive(m: Mover, dt: number, people: readonly THREE.Vector3[], honk: (at: THREE.Vector3) => void): boolean {
   const route = m.route!;
   const u = Math.min(1, m.travelled / m.routeLength);
   const pos = route.getPointAt(u);
@@ -244,13 +246,15 @@ function drive(m: Mover, dt: number, player: THREE.Vector3, honk: (at: THREE.Vec
   // slow near both ends of the route (the side roads and their turns)
   const fromEnds = Math.min(m.travelled, m.routeLength - m.travelled);
   let target = fromEnds < 22 ? SLOW : m.cruise;
-  // stop for the player if they're in front of us, in our path
-  const toPlayer = new THREE.Vector3().subVectors(player, pos);
-  const ahead = toPlayer.x * dir.x + toPlayer.z * dir.z;
-  const across = Math.abs(toPlayer.x * dir.z - toPlayer.z * dir.x);
-  // (0.45 m: the player's body radius plus a little; more, and someone
-  // standing at the road's edge would hold traffic up forever)
-  const blocked = ahead > 0 && ahead < m.length / 2 + 3.5 && across < m.width / 2 + 0.45;
+  // stop for the player, or anyone walking, in front of us, in our path
+  // (0.45 m: a body's radius plus a little; more, and someone standing at
+  // the road's edge would hold traffic up forever)
+  const blocked = people.some((p) => {
+    const dx = p.x - pos.x, dz = p.z - pos.z;
+    const ahead = dx * dir.x + dz * dir.z;
+    const across = Math.abs(dx * dir.z - dz * dir.x);
+    return ahead > 0 && ahead < m.length / 2 + 3.5 && across < m.width / 2 + 0.45;
+  });
   if (blocked) target = 0;
   // ease toward the target speed: gentle pull-away, firmer braking
   const rate = target < m.speed ? 4 : 1.2;

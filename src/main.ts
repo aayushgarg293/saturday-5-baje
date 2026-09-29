@@ -39,7 +39,7 @@ const lights = addLights(scene);
 const street = buildStreet();
 const wires = buildWires();
 const sky = buildSky();
-const life = buildLife(street.people);
+const life = buildLife(street.people, [...street.colliders, ...wires.colliders]);
 scene.add(sky.group, street.group, life.group, buildSigns([...street.signs, ...life.signs, ...wires.signs]), wires.group, buildBackdrop());
 
 // --- the player ----------------------------------------------------------------
