@@ -44,6 +44,8 @@ export type Street = {
   colliders: Box[];
   /** Floors to stand on above the street (the cafe's stairs and first floor). */
   floors: Patch[];
+  /** The cafe building's frame (its matrix): for placing what moves inside it (world/cafe/room.ts). */
+  cafeFrame: THREE.Matrix4;
   signs: WorldSign[];
   /** Where the player starts, and the direction they face (yaw, radians). */
   spawn: { x: number; z: number; yaw: number };
@@ -73,6 +75,7 @@ export function buildStreet(): Street {
   const colliders: Box[] = [];
   const floors: Patch[] = [];
   const signs: WorldSign[] = [];
+  let cafeFrame = new THREE.Matrix4();
   const people: WorldPeopleSpot[] = [];
   const rng = makeRng(SEED);
 
@@ -119,6 +122,7 @@ export function buildStreet(): Street {
     }
 
     for (const sp of result.signs) addSign(sp, mesh, rot);
+    if (type === "cafe") cafeFrame = mesh.matrixWorld.clone();
     for (const { x, y, z, turn, ...rest } of spots) {
       people.push({ ...rest, position: new THREE.Vector3(x, y, z).applyMatrix4(mesh.matrixWorld), rotationY: rot + turn });
     }
@@ -219,7 +223,7 @@ export function buildStreet(): Street {
   // south to north, so whoever picks from them can space them out along the walk
   const along = (p: THREE.Vector3) => streetCoords(p.x, p.z).s;
   people.sort((a, b) => along(a.position) - along(b.position));
-  return { group, colliders, floors, signs, spawn: { ...pointAt(1.5, 0), yaw: yawAlong(1.5) }, people };
+  return { group, colliders, floors, cafeFrame, signs, spawn: { ...pointAt(1.5, 0), yaw: yawAlong(1.5) }, people };
 }
 
 /** A plain boundary wall with a coping on top (the ends of the side roads' back lanes). */

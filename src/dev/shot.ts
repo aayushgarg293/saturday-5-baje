@@ -1,3 +1,4 @@
+import type { Room } from "../world/cafe/room";
 import { cue, onCue } from "../core/cues";
 import { StreetSounds } from "../audio/street";
 import { Radio } from "../audio/radio";
@@ -39,6 +40,7 @@ export type GameHandle = {
   street: Street;
   /** Stalls, animals and traffic, for scripted checks. */
   life: Life;
+  cafeRoom: Room;
   /** The sound (for measuring levels: Claude can't listen). */
   audio: AudioEngine;
   /** Advance the game by `seconds` without rendering. */

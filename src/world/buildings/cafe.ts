@@ -1,6 +1,7 @@
 import { PAL } from "../../render/palette";
 import { PLOT_DEPTH } from "../layout";
 import { type BuildContext, type BuildResult, FACADE, type LocalBox, type LocalFloor, type SignSpot, ledge, roof } from "./common";
+import { furnish } from "../cafe/furniture";
 import { GROUND_TOP, PLINTH_H, shopfront } from "./shop";
 
 /**
@@ -184,6 +185,9 @@ export function buildCafe(c: BuildContext): BuildResult {
 
   const height = roof(c, ROOF_Y, face);
 
+  // the furniture (world/cafe/): booths, the counter, the fixtures
+  const furniture = furnish(p, floorY);
+
   // --- what you bump into, floor by floor, and what you stand on --------------------------------
   const DOWN = { y0: -1, y1: floorY - 0.1 }; // the ground floor (and the stair)
   const UP = { y0: floorY - 0.1, y1: 99 }; // the first floor
@@ -206,5 +210,6 @@ export function buildCafe(c: BuildContext): BuildResult {
     { x0: -half + WALL, x1: sx0, z0: back + WALL, z1: face - WALL, front: floorY, back: floorY }, // the room
   ];
 
-  return { height, signs: [shopSign, doorSign, mainSign, bladeSign, ...posters], colliders, floors };
+  colliders.push(...furniture.colliders);
+  return { height, signs: [shopSign, doorSign, mainSign, bladeSign, ...posters, ...furniture.signs], colliders, floors };
 }

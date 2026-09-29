@@ -10,6 +10,7 @@ import { PAL } from "./render/palette";
 import { Pipeline } from "./render/post";
 import { createRenderer, fitToWindow } from "./render/renderer";
 import { buildBackdrop } from "./world/backdrop";
+import { buildRoom } from "./world/cafe/room";
 import { buildLife } from "./world/life";
 import { buildSigns } from "./world/signs";
 import { buildSky } from "./world/sky";
@@ -44,6 +45,8 @@ const street = buildStreet();
 const wires = buildWires();
 const sky = buildSky();
 const life = buildLife(street.people, [...street.colliders, ...wires.colliders]);
+const cafeRoom = buildRoom(street.cafeFrame);
+scene.add(cafeRoom.group);
 scene.add(sky.group, street.group, life.group, buildSigns([...street.signs, ...life.signs, ...wires.signs]), wires.group, buildBackdrop());
 
 // --- the player ----------------------------------------------------------------
@@ -82,6 +85,7 @@ function update(dt: number) {
   time += dt;
   player.update(dt);
   life.update(time, dt, player.pos);
+  cafeRoom.update(dt);
   lights.followPlayer(player.pos);
   bed?.update(dt, player.pos);
   radio?.update(dt, player.pos);
@@ -124,6 +128,7 @@ if (import.meta.env.DEV) {
     player,
     street,
     life,
+    cafeRoom,
     audio,
     render,
     step(seconds) {

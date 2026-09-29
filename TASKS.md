@@ -193,8 +193,19 @@ motion; busy but walkable.
       small towns); the room is now a long hall, 12.7 m deep instead of 9
       (owner's choice), with the extra depth behind the row, out of sight
 - [x] Owner looks at the stone step and the long hall: "it is good now"
+- [x] Furnished (`world/cafe/`: `plan.ts` the floor plan as data,
+      `furniture.ts` still things merged into the building, `room.ts` what
+      moves or glows): 13 booths (left row 7, island 2×3), plywood
+      partitions, curtains, CRTs, towers, speakers, plastic chairs; the
+      owner's counter at the top of the stairs (PC, dial-up modem with
+      blinking lights, printer, register); 3 turning fans; tubelights and two
+      short-reach lamps (~0.5 ms); the AJANTHA wall clock (hands, ticking);
+      signs: rate list, notices, a Counter-Strake poster, a June 2007
+      calendar, booth numbers. Your booth: 2, with the clock in view
+- [x] Owner looks at the furnished hall: "it looks so good"; ½ hour is ₹15
+      (half an hour was dearer; the full hour was the deal)
 - [ ] The owner at the counter
-- [ ] Wooden cubicles with curtains; other customers with light animation
+- [ ] Other customers with light animation
 - [ ] Sitting down at the computer: the camera moves to the screen
 - [ ] The wall clock and the look-up control
 - [ ] Dial-up modem and room sounds

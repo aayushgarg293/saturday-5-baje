@@ -150,6 +150,112 @@ const PAINTERS: Partial<Record<WorldSign["kind"], PainterSpec>> = {
     }
   } },
 
+  // --- inside the cafe -------------------------------------------------------------------
+
+  /**
+   * The rate list at the top of the stairs: a printed flex board. (Half an
+   * hour costs more than half the hourly rate, as it did: the full hour was
+   * the deal.)
+   */
+  rateBoard: { ppm: 420, weather: 0.2, paint(ctx, w, h) {
+    background(ctx, w, h, "#fbf6ea", "#1f4f8f");
+    ctx.fillStyle = "#c0392b";
+    ctx.fillRect(0, 0, w, h * 0.2);
+    text(ctx, "RATE LIST  •  रेट लिस्ट", w / 2, h * 0.1, w * 0.85, h * 0.12, "#fbf6ea", LATIN);
+    const rows = [["Internet", "₹20 / hr"], ["½ hour", "₹15"], ["Games (LAN)", "₹15 / hr"], ["Printout (B/W)", "₹3 / page"], ["Scanning", "₹5"], ["CD Writing", "₹30"]];
+    rows.forEach(([item, price], k) => {
+      const y = h * (0.3 + k * 0.115);
+      ctx.textAlign = "left";
+      ctx.font = `bold ${h * 0.075}px ${LATIN_PLAIN}`;
+      ctx.fillStyle = "#1f1a17";
+      ctx.fillText(item, w * 0.08, y);
+      ctx.textAlign = "right";
+      ctx.fillStyle = "#1f4f8f";
+      ctx.fillText(price, w * 0.92, y);
+    });
+  } },
+
+  /** An A4 printout taped to the wall, a rule in bold capitals, taped crooked. */
+  notice: { ppm: 500, weather: 0.25, paint(ctx, w, h, _i, rng, sign) {
+    ctx.fillStyle = "#f7f4ec";
+    ctx.fillRect(0, 0, w, h);
+    const label = sign.label ?? "";
+    const hindi = /[\u0900-\u097F]/.test(label);
+    // wrap into two lines, near the middle
+    const words = label.split(" ");
+    const cut = Math.ceil(words.length / 2);
+    const lines = words.length > 2 ? [words.slice(0, cut).join(" "), words.slice(cut).join(" ")] : [label];
+    lines.forEach((line, k) => text(ctx, line, w / 2, h * (lines.length === 1 ? 0.5 : 0.36 + k * 0.3), w * 0.88, h * 0.24, k === 0 ? "#c0392b" : "#1f1a17", hindi ? DEVANAGARI : LATIN));
+    // bits of clear tape at the top corners
+    ctx.fillStyle = "rgba(210,205,190,0.8)";
+    ctx.fillRect(0, 0, w * 0.14, h * 0.07);
+    ctx.fillRect(w * 0.86, 0, w * 0.14, h * 0.07);
+    weather(ctx, w, h, rng, 0.3);
+  } },
+
+  /** A gaming poster (a look-alike): two soldier silhouettes, the game's name, "LAN". */
+  gamePoster: { ppm: 420, weather: 0.35, paint(ctx, w, h) {
+    const g = ctx.createLinearGradient(0, 0, 0, h);
+    g.addColorStop(0, "#d9822b");
+    g.addColorStop(1, "#3a2a1c");
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, w, h);
+    // two soldiers: heads, bodies, rifles, as dark shapes
+    ctx.fillStyle = "#1c1612";
+    for (const [cx, s] of [[w * 0.33, 1], [w * 0.68, 0.85]] as const) {
+      const base = h * 0.78;
+      ctx.beginPath();
+      ctx.arc(cx, base - h * 0.42 * s, w * 0.06 * s, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillRect(cx - w * 0.09 * s, base - h * 0.36 * s, w * 0.18 * s, h * 0.36 * s);
+      ctx.fillRect(cx - w * 0.2 * s, base - h * 0.28 * s, w * 0.3 * s, h * 0.03 * s); // the rifle
+    }
+    text(ctx, "COUNTER-STRAKE", w / 2, h * 0.12, w * 0.9, h * 0.1, "#f2e6c8", LATIN);
+    text(ctx, "1.6", w / 2, h * 0.22, w * 0.3, h * 0.08, "#f2c542", LATIN);
+    text(ctx, "LAN GAMING HERE", w / 2, h * 0.88, w * 0.85, h * 0.07, "#f2e6c8", LATIN);
+  } },
+
+  /** A 2007 wall calendar: a mountain lake on top, the month below. */
+  calendar: { ppm: 420, weather: 0.3, paint(ctx, w, h) {
+    ctx.fillStyle = "#f7f4ec";
+    ctx.fillRect(0, 0, w, h);
+    // the picture: sky, snowy mountains, a blue lake, green shore
+    const ph = h * 0.52;
+    ctx.fillStyle = "#9cc3e0";
+    ctx.fillRect(w * 0.05, h * 0.04, w * 0.9, ph);
+    ctx.fillStyle = "#6f7f96";
+    ctx.beginPath();
+    ctx.moveTo(w * 0.05, h * 0.04 + ph * 0.7);
+    ctx.lineTo(w * 0.3, h * 0.04 + ph * 0.25);
+    ctx.lineTo(w * 0.5, h * 0.04 + ph * 0.6);
+    ctx.lineTo(w * 0.7, h * 0.04 + ph * 0.2);
+    ctx.lineTo(w * 0.95, h * 0.04 + ph * 0.65);
+    ctx.lineTo(w * 0.95, h * 0.04 + ph);
+    ctx.lineTo(w * 0.05, h * 0.04 + ph);
+    ctx.fill();
+    ctx.fillStyle = "#3f7fb8";
+    ctx.fillRect(w * 0.05, h * 0.04 + ph * 0.72, w * 0.9, ph * 0.18);
+    ctx.fillStyle = "#4f8a57";
+    ctx.fillRect(w * 0.05, h * 0.04 + ph * 0.9, w * 0.9, ph * 0.1);
+    text(ctx, "JUNE 2007", w / 2, h * 0.63, w * 0.7, h * 0.06, "#c0392b", LATIN);
+    // the grid of dates
+    ctx.fillStyle = "#1f1a17";
+    ctx.font = `${h * 0.035}px ${LATIN_PLAIN}`;
+    ctx.textAlign = "center";
+    for (let d = 1; d <= 30; d++) {
+      const k = d + 4; // June 2007 began on a Friday
+      ctx.fillStyle = k % 7 === 0 ? "#c0392b" : "#1f1a17"; // Sundays in red
+      ctx.fillText(String(d), w * (0.12 + (k % 7) * 0.126), h * (0.7 + Math.floor(k / 7) * 0.055));
+    }
+  } },
+
+  /** A booth's number, stencilled in paint on a little plate. */
+  boothNumber: { ppm: 600, weather: 0.2, paint(ctx, w, h, _i, _rng, sign) {
+    ctx.fillStyle = "#f2e6c8";
+    ctx.fillRect(0, 0, w, h);
+    text(ctx, sign.label ?? "", w / 2, h * 0.54, w * 0.8, h * 0.78, "#1f1a17", LATIN);
+  } },
+
   /** An election (or birthday, or welcome) poster pasted on an electricity pole. */
   polePoster: { ppm: 700, weather: 0.45, cutout: true, paint(ctx, w, h, i, rng) {
     // five designs round and round the poles: the same face on every pole, as it always was

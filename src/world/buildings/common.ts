@@ -52,7 +52,10 @@ export type PeopleSpot = {
 
 /** Where a signboard is, so phase 3 can paint text onto it. Local frame. */
 export type SignSpot = {
-  kind: "shop" | "stdShop" | "cafe" | "cafeBlade" | "cafeDoor" | "wallAd" | "posters" | "stallSign" | "polePoster";
+  kind:
+    | "shop" | "stdShop" | "cafe" | "cafeBlade" | "cafeDoor" | "wallAd" | "posters" | "stallSign" | "polePoster"
+    // inside the cafe (world/cafe/furniture.ts)
+    | "rateBoard" | "notice" | "gamePoster" | "calendar" | "boothNumber";
   /** The word(s) on a stall's board. */
   label?: string;
   /** Which entry of SHOP_NAMES (world/names.ts) a shop board shows. */
