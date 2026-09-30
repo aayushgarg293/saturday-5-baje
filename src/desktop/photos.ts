@@ -116,6 +116,25 @@ const PAINTERS: Record<string, Painter> = {
     const shirts = ["#222", "#c43d2c", "#2f5fae", "#f4f4f4"];
     for (let k = 0; k < 4; k++) boy(ctx, 70 + k * 60, 200, 1, shirts[k], false);
   },
+  /** A cricket ground on TV (a MeToob video's frame): the green field, the crowd, the pitch. */
+  stadium(ctx) {
+    ctx.fillStyle = "#26324a"; // the stands, full of people (dots)
+    ctx.fillRect(0, 0, W, 90);
+    for (let k = 0; k < 900; k++) {
+      ctx.fillStyle = ["#e0c0a0", "#3b6fb6", "#f4f4f4", "#e0b43a"][k % 4];
+      ctx.fillRect((k * 37) % W, 10 + ((k * 13) % 76), 2, 2);
+    }
+    ctx.fillStyle = "#3f8f3a";
+    ctx.fillRect(0, 90, W, H);
+    ctx.fillStyle = "#c9b27a"; // the pitch
+    ctx.beginPath();
+    ctx.moveTo(145, 110);
+    ctx.lineTo(175, 110);
+    ctx.lineTo(200, 240);
+    ctx.lineTo(120, 240);
+    ctx.fill();
+    boy(ctx, 160, 200, 0.8, "#2f5fae", true);
+  },
   /** Priya's profile picture: pink flowers (few girls put up their own photo). */
   flowers(ctx) {
     ctx.fillStyle = "#fde4ec";

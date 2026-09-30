@@ -263,13 +263,16 @@ motion; busy but walkable.
       strangers' comments, Priya's profile and communities, the testimonial
       (pick, type, submit or cancel; she reacts if she's still online),
       "Bad, bad server. No donut for you." for everything else
-- [ ] MeToob: videos that buffer forever
-- [ ] Background detail: icons, tabs, pop-ups
+- [x] MeToob (`sites/metoob.ts`): plays a few seconds, "Loading...",
+      creeps on, stalls; Rohan sends you to the T20 final's last over
+- [x] Small extras: the cafe's timer strip, "CyberTime · Booth 2 · Used
+      1:05 · ₹30" (`cafeTimer.ts`: the wall's rates, and `charge()` for
+      paying in phase 9); the "DialNet is now connected" balloon
 - [ ] Log off
 
 The story is settled (`BRIEF.md`, "The story on the computer"); the plan's
 order: shell (done) → Yaaho! with Priya's thread (done) → the song for Priya
-(done) → Rohan + the photo by mail (done) → Yorkut (done) → MeToob and extras → log off
+(done) → Rohan + the photo by mail (done) → Yorkut (done) → MeToob and extras (done) → log off
 for real. The owner chose the tasks (a song, a photo), woven into the chats.
 
 ## 9. The walk home

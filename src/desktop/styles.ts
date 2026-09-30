@@ -57,7 +57,7 @@ export const CSS = /* css */ `
 
 /* a balloon above the tray */
 .xp-toast { position: absolute; right: 8px; bottom: 38px; z-index: 960; padding: 8px 12px; border-radius: 6px;
-  background: #ffffe1; border: 1px solid #888; box-shadow: 2px 2px 5px rgba(0,0,0,0.3); font-weight: bold; }
+  background: #ffffe1; border: 1px solid #888; box-shadow: 2px 2px 5px rgba(0,0,0,0.3); font-weight: bold; white-space: pre-line; }
 
 /* the Start menu */
 .xp-menu { position: absolute; left: 0; bottom: 30px; width: 380px; z-index: 950; border-radius: 6px 6px 0 0; overflow: hidden;

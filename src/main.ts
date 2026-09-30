@@ -72,10 +72,15 @@ const seat = new Seat(camera, player, input, yourSeat(street.cafeFrame));
 seat.onSit = () => {
   // the first time you sit down, the computer dials up (and every time, it's connected after)
   yourScreen.connect();
-  if (!connected) cue("modem", seat.spots.screen);
+  if (!connected) {
+    cue("modem", seat.spots.screen);
+    sessionStart = gameClock.minutes; // (the cafe's timer starts)
+  }
   connected = true;
 };
 let connected = false;
+/** When your time at the computer began (game minutes), for the cafe's timer. */
+let sessionStart = 0;
 /** Up in the cafe (the only place above the street): where T can look at the clock. */
 const inCafe = () => player.pos.y > 4;
 
@@ -154,6 +159,7 @@ function update(dt: number) {
   yourScreen.update(dt, gameClock.label());
   desktop.update(dt);
   desktop.setTime(gameClock.label());
+  if (connected) desktop.setUsed(gameClock.minutes - sessionStart);
   showPrompt(prompt());
   cafePeople.update(time, dt, player.pos);
   lights.followPlayer(player.pos);

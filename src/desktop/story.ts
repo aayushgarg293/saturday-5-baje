@@ -225,6 +225,12 @@ const rohan: Thread = {
     { buzz: true },
     { they: "aa gaya" },
     { mark: "rohanBack" },
+    { they: "metoob pe T20 final ka last over dekh, abhi bhi goosebumps" },
+    { you: [
+      { say: "dekh raha hu... load ho raha hai", then: [{ they: "lol cafe ka net" }] },
+      { say: "100 baar dekh chuka hu" },
+      { say: "cafe me nahi chalta, bahut slow hai", then: [{ they: "yahan bhi same :(" }] },
+    ] },
     { they: "diwali pe ajmer aaunga shayad!!" },
     { you: [
       { say: "sachii??? pakka aana", then: [{ they: "papa se baat karunga" }] },

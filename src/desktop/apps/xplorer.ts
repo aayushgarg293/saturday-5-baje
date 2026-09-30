@@ -1,5 +1,6 @@
 import { addStyles } from "../css";
 import type { Kit } from "../kit";
+import { metoob } from "../sites/metoob";
 import { portal } from "../sites/portal";
 import { rediffit } from "../sites/rediffit";
 import { songz } from "../sites/songz";
@@ -37,6 +38,7 @@ const SITES: Record<string, Site> = {
   "www.songzpk.com": songz,
   "mail.rediffit.com": rediffit,
   "www.yorkut.com": yorkut,
+  "www.metoob.com": metoob,
 };
 
 /** The page it opens on: the cafe owner set the portal as the home page. */

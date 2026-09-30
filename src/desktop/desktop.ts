@@ -1,7 +1,9 @@
 import type { AudioEngine } from "../audio/engine";
+import { YOUR_BOOTH } from "../world/cafe/plan";
 import { ICONS, messageBox, openFolder, openMyComputer, openMyDocuments, openRecycleBin } from "./apps/basic";
 import { Xplorer } from "./apps/xplorer";
 import { Yaaho } from "./apps/yaaho";
+import { CafeTimer } from "./cafeTimer";
 import { Files } from "./files";
 import { type Kit, Tasks } from "./kit";
 import { type DesktopSounds, desktopSounds } from "./sounds";
@@ -35,6 +37,8 @@ export class Desktop {
   readonly kit: Kit;
   readonly yaaho: Yaaho;
   readonly xplorer: Xplorer;
+  /** The cafe's timer strip, top right. */
+  private timer = new CafeTimer(YOUR_BOOTH);
   /** Things moved on every frame while the desktop is up (downloads, pages loading, the chats). */
   private tickers = new Set<(dt: number) => void>();
   readonly sounds: DesktopSounds;
@@ -105,6 +109,7 @@ export class Desktop {
     taskbar.append(start, this.tasks, tray);
     this.screen.append(taskbar);
 
+    this.screen.append(this.timer.el);
     this.menu = this.buildMenu();
     this.screen.append(this.menu);
     start.addEventListener("click", (e) => {
@@ -139,6 +144,7 @@ export class Desktop {
     if (!this.chimed) {
       this.chimed = true;
       this.sounds.play("chime");
+      this.toast("DialNet is now connected\nSpeed: 48.0 Kbps");
     }
   }
 
@@ -163,6 +169,11 @@ export class Desktop {
     if (!this.isOpen) return;
     this.yaaho.update(dt);
     for (const fn of this.tickers) fn(dt);
+  }
+
+  /** Game minutes used since you first sat down (the cafe's timer). */
+  setUsed(minutes: number) {
+    this.timer.set(minutes);
   }
 
   /** The time in the tray. */
