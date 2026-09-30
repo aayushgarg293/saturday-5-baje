@@ -49,6 +49,8 @@ export type GameHandle = {
   audio: AudioEngine;
   /** The game's clock: set `minutes` to see another time of day (18 * 60 + 20 = 6:20 pm). */
   clock: GameClock;
+  /** A point on the street: `s` metres along it, `offset` to the side (left negative): world x/z. */
+  at(s: number, offset: number): { x: number; z: number };
   /** Advance the game by `seconds` without rendering. */
   step(seconds: number): void;
   /** Render one frame now. */

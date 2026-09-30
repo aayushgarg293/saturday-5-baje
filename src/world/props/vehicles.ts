@@ -2,6 +2,7 @@ import * as THREE from "three";
 import type { Rng } from "../../core/rng";
 import { PAL } from "../../render/palette";
 import { Parts } from "../kit";
+import type { Mark } from "./vehicleMarks";
 
 /**
  * The street's vehicles, from the period: a Chetak-style scooter, a
@@ -13,6 +14,10 @@ import { Parts } from "../kit";
  *
  * Parked vehicles have their wheels merged in; moving ones (world/traffic.ts)
  * get their wheels back as a list, so they can be separate meshes that spin.
+ *
+ * Each also lists its `marks`: number plates, makers' names, what's painted
+ * on it (painted in vehicleMarks.ts). No random choices for those: the
+ * street's vehicles stay exactly as they were.
  */
 
 export type Wheel = { x: number; y: number; z: number; radius: number; width: number };
@@ -25,6 +30,8 @@ export type Vehicle = {
   wheels: Wheel[];
   /** Where a rider (or driver) sits, holds on and rests their feet (people/riders.ts). */
   ride?: Ride;
+  /** What's painted on it (vehicleMarks.ts). */
+  marks: Mark[];
 };
 
 /**
@@ -64,8 +71,15 @@ export function buildVehicle(kind: VehicleKind, rng: Rng, separateWheels = false
       p.box(0.22, 0.18, 0.14, 0.57, 0.3, 0, colour); // front mudguard
       wheel(0.57, 0.19, 0, 0.19, 0.11);
       wheel(-0.4, 0.19, 0, 0.19, 0.11);
+      const marks: Mark[] = [
+        { what: "plate", x: -0.632, y: 0.46, z: 0, w: 0.2, h: 0.075, facing: "back" },
+        { what: "plate", x: 0.682, y: 0.3, z: 0, w: 0.12, h: 0.045, facing: "front" }, // on the front mudguard
+        { what: "chetak", x: -0.34, y: 0.56, z: 0.252, w: 0.38, h: 0.1, facing: "right" },
+        { what: "chetak", x: -0.34, y: 0.56, z: -0.252, w: 0.38, h: 0.1, facing: "left" },
+        { what: "bajaaj", x: 0.551, y: 0.714, z: 0, w: 0.18, h: 0.045, facing: "front", rz: -0.25 }, // on the sloping apron
+      ];
       return {
-        parts: p, size: [1.5, 0.7], wheels,
+        parts: p, size: [1.5, 0.7], wheels, marks,
         // Sitting at the front of the seat, leaning forward, as you must to
         // reach a scooter's handlebar; feet wide apart on the floorboard (a
         // child often stands between them).
@@ -82,10 +96,19 @@ export function buildVehicle(kind: VehicleKind, rng: Rng, separateWheels = false
       p.cylinder(0.08, 0.08, 0.1, 0.44, 0.92, 0, PAL.chrome, { rz: Math.PI / 2, segments: 10 }); // headlight
       p.strut({ x: -0.2, y: 0.45, z: 0.12 }, { x: -0.72, y: 0.4, z: 0.12 }, 0.035, PAL.chrome); // exhaust
       p.box(0.4, 0.06, 0.2, -0.65, 0.72, 0, colour); // rear mudguard
+      p.box(0.02, 0.1, 0.19, -0.84, 0.63, 0, PAL.bikeBlack); // the plate's holder under the mudguard
+      p.box(0.34, 0.03, 0.13, 0.64, 0.67, 0, colour, { rz: -0.15 }); // front mudguard, over the front wheel
+      p.box(0.02, 0.08, 0.16, 0.8, 0.62, 0, PAL.bikeBlack); // …and the front plate's holder at its tip
       wheel(0.62, 0.31, 0, 0.31, 0.09);
       wheel(-0.65, 0.31, 0, 0.31, 0.09);
+      const marks: Mark[] = [
+        { what: "plate", x: -0.852, y: 0.63, z: 0, w: 0.17, h: 0.075, facing: "back" },
+        { what: "plate", x: 0.812, y: 0.62, z: 0, w: 0.14, h: 0.06, facing: "front" },
+        { what: "heroHondo", x: 0.1, y: 0.84, z: 0.142, w: 0.34, h: 0.08, facing: "right", rz: -0.1 },
+        { what: "heroHondo", x: 0.1, y: 0.84, z: -0.142, w: 0.34, h: 0.08, facing: "left", rz: -0.1 },
+      ];
       return {
-        parts: p, size: [1.95, 0.75], wheels,
+        parts: p, size: [1.95, 0.75], wheels, marks,
         ride: { seat: { x: -0.2, y: 0.86 }, grip: { x: 0.32, y: 1.03, z: 0.3 }, foot: { x: -0.02, y: 0.38, z: 0.2 }, lean: 0.4 },
       };
     }
@@ -104,10 +127,12 @@ export function buildVehicle(kind: VehicleKind, rng: Rng, separateWheels = false
       p.box(0.06, 0.03, 0.56, 0.34, 1.03, 0, PAL.bikeBlack); // handlebar
       p.box(0.22, 0.06, 0.12, -0.2, 0.9, 0, PAL.seatDark); // saddle
       p.box(0.34, 0.03, 0.2, -0.5, 0.72, 0, PAL.bikeBlack); // carrier over the back wheel
+      p.box(0.46, 0.09, 0.008, -0.27, 0.33, 0.065, PAL.bikeBlack); // the chain guard, on its right
       wheel(0.52, 0.34, 0, 0.34, 0.035, true);
       wheel(-0.52, 0.34, 0, 0.34, 0.035, true);
+      const marks: Mark[] = [{ what: "heero", x: -0.27, y: 0.33, z: 0.07, w: 0.36, h: 0.07, facing: "right" }];
       return {
-        parts: p, size: [1.75, 0.55], wheels,
+        parts: p, size: [1.75, 0.55], wheels, marks,
         ride: { seat: { x: -0.2, y: 0.93 }, grip: { x: 0.33, y: 1.04, z: 0.26 }, foot: { crank: { x: crank.x, y: crank.y }, radius: 0.17, z: 0.12 }, lean: 0.3 },
       };
     }
@@ -125,12 +150,21 @@ export function buildVehicle(kind: VehicleKind, rng: Rng, separateWheels = false
       hood.rotateX(Math.PI / 2);
       hood.rotateZ(Math.PI / 2);
       p.add(hood, -0.62, 1.2, 0, 0x6b2f2f); // folded hood, maroon canvas
+      p.box(0.02, 0.12, 0.27, -0.855, 0.43, 0, PAL.woodLight); // the board its number plate is nailed to
+      p.box(0.02, 0.09, 0.22, 0.85, 0.8, 0, PAL.woodLight); // …and the one on the front fork, for the front plate
       p.box(0.9, 0.3, 0.04, -0.4, 0.4, 0.5, PAL.scooterBlue); // painted side panels
       p.box(0.9, 0.3, 0.04, -0.4, 0.4, -0.5, PAL.scooterBlue);
       wheel(0.95, 0.34, 0, 0.34, 0.035, true);
       wheel(-0.45, 0.34, 0.55, 0.34, 0.035, true);
       wheel(-0.45, 0.34, -0.55, 0.34, 0.035, true);
-      return { parts: p, size: [2.0, 1.25], wheels };
+      const marks: Mark[] = [
+        { what: "jaiMataDi", x: -0.4, y: 0.4, z: 0.522, w: 0.86, h: 0.27, facing: "right" },
+        { what: "jaiMataDi", x: -0.4, y: 0.4, z: -0.522, w: 0.86, h: 0.27, facing: "left" },
+        // the tin plate, hung low at the back of the carriage (on the backrest, the folded hood hid it)
+        { what: "plate", x: -0.868, y: 0.43, z: 0, w: 0.24, h: 0.09, facing: "back" },
+        { what: "plate", x: 0.862, y: 0.8, z: 0, w: 0.2, h: 0.075, facing: "front" },
+      ];
+      return { parts: p, size: [2.0, 1.25], wheels, marks };
     }
     case "auto": {
       // the three-wheeler: black lower body, yellow canvas top
@@ -152,8 +186,16 @@ export function buildVehicle(kind: VehicleKind, rng: Rng, separateWheels = false
       wheel(1.0, 0.22, 0, 0.22, 0.12);
       wheel(-0.85, 0.22, 0.58, 0.22, 0.12);
       wheel(-0.85, 0.22, -0.58, 0.22, 0.12);
+      const marks: Mark[] = [
+        { what: "autoBack", x: -1.202, y: 0.66, z: 0, w: 1.0, h: 0.4, facing: "back" },
+        { what: "plate", x: -1.205, y: 0.45, z: 0, w: 0.26, h: 0.1, facing: "back" },
+        { what: "plate", x: 1.122, y: 0.64, z: 0, w: 0.2, h: 0.078, facing: "front", rz: 0.15 }, // on the sloping cowl
+        { what: "bajaaj", x: 1.078, y: 0.935, z: 0, w: 0.26, h: 0.065, facing: "front", rz: 0.15 },
+        { what: "maaKa", x: -0.45, y: 0.62, z: 0.602, w: 0.8, h: 0.14, facing: "right" },
+        { what: "maaKa", x: -0.45, y: 0.62, z: -0.602, w: 0.8, h: 0.14, facing: "left" },
+      ];
       return {
-        parts: p, size: [2.6, 1.35], wheels,
+        parts: p, size: [2.6, 1.35], wheels, marks,
         ride: { seat: { x: 0.33, y: 1.0 }, grip: { x: 0.6, y: 1.21, z: 0.32 }, foot: { x: 0.74, y: 0.86, z: 0.13 }, lean: 0.12 },
       };
     }

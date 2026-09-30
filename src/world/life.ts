@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 import { type WorldLamp, lampToWorld } from "./evening";
 import type { Box } from "../core/colliders";
 import { makeRng } from "../core/rng";
@@ -11,6 +12,7 @@ import { ANIMALS, PARKED, SLOTS } from "./layout";
 import { type Animal, buildCow, buildDog } from "./props/animals";
 import { type Placement, StaticBatch, placeOnStreet } from "./props/batch";
 import { RADIO_AT, chaiTapri, golgappaCart, iceGolaCart, jalebiStall, kachoriStall } from "./props/stalls";
+import { marksGeometry, marksMaterial } from "./props/vehicleMarks";
 import { type VehicleKind, buildVehicle } from "./props/vehicles";
 import type { WorldPeopleSpot, WorldSign } from "./street";
 import { type Traffic, buildTraffic } from "./traffic";
@@ -68,6 +70,7 @@ export function buildLife(people: WorldPeopleSpot[], solid: readonly Box[]): Lif
   }
 
   // --- parked vehicles ---------------------------------------------------------------
+  const parkedMarks: THREE.BufferGeometry[] = [];
   for (const spot of PARKED) {
     const side = spot.side === "left" ? -1 : 1;
     const kind: VehicleKind = spot.kind ?? rng.pick(["scooter", "scooter", "motorcycle", "motorcycle", "bicycle"] as const);
@@ -83,10 +86,14 @@ export function buildLife(people: WorldPeopleSpot[], solid: readonly Box[]): Lif
     prop.addParts(v.parts, new THREE.Matrix4().makeRotationY(turn));
     batch.add(prop, where);
     batch.collide(where, v.size[0], v.size[1], 0, 0, turn);
+    const marks = marksGeometry(kind, v.marks, where.matrix.clone().multiply(new THREE.Matrix4().makeRotationY(turn)));
+    if (marks) parkedMarks.push(marks);
   }
 
   const statics = batch.build("streetLife");
   group.add(statics);
+  // their plates and paintwork, all in one mesh (world/props/vehicleMarks.ts)
+  if (parkedMarks.length) group.add(new THREE.Mesh(mergeGeometries(parkedMarks)!, marksMaterial()));
 
   // --- animals ------------------------------------------------------------------------
   const animals: Animal[] = [];

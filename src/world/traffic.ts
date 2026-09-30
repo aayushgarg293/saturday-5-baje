@@ -8,6 +8,7 @@ import { Parts } from "./kit";
 import { PLOT_DEPTH, SIDE_ROADS, SIDE_ROAD_SETBACK, pointAt } from "./layout";
 import { type Riders, buildRiders } from "../people/riders";
 import { addHeadlight } from "./evening";
+import { marksGeometry, marksMaterial } from "./props/vehicleMarks";
 import { type VehicleKind, buildVehicle } from "./props/vehicles";
 
 /**
@@ -175,6 +176,9 @@ function makeMover(kind: VehicleKind, slot: number, start: End, wait: number, rn
   const g = new THREE.Group();
   g.name = `mover:${kind}`;
   g.add(v.parts.build(kind));
+  // its number plate and paintwork (world/props/vehicleMarks.ts)
+  const marks = marksGeometry(kind, v.marks);
+  if (marks) g.add(new THREE.Mesh(marks, marksMaterial()));
   const riders = buildRiders(kind, v.ride!, rng);
   g.add(riders.group);
   // its headlight (lit in the evening: world/evening.ts)

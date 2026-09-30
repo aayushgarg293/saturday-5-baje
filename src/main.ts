@@ -29,6 +29,7 @@ import { buildYourScreen } from "./world/cafe/yourScreen";
 import { buildLife } from "./world/life";
 import { buildSigns } from "./world/signs";
 import { buildSky } from "./world/sky";
+import { pointAt } from "./world/layout";
 import { buildStreet } from "./world/street";
 import { buildWires } from "./world/wires";
 
@@ -311,6 +312,7 @@ if (import.meta.env.DEV) {
     audio,
     render,
     clock: gameClock,
+    at: pointAt,
     step(seconds) {
       // fixed 1/60 s steps, like real frames, so results match normal play
       for (let t = 0; t < seconds; t += 1 / 60) update(1 / 60);
