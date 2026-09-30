@@ -32,7 +32,18 @@ export type BuildContext = {
   people: PeopleSpot[];
   /** …and where lights come on in the evening (world/evening.ts). No random choices here: evening.ts makes those. */
   lamps: LampSpot[];
+  /** …and where a nameplate or a painted blessing goes (world/nameplates.ts says which, and paints it). */
+  plates: PlateSpot[];
 };
+
+/**
+ * A place for a house's nameplate or blessing, in the builder's frame:
+ *   name      beside a house's door, at eye level ("चौधरी सदन", "The Agrawals"…)
+ *   haveli    beside a haveli's arched door (a carved stone one)
+ *   blessing  painted on the wall over a door ("॥ श्री गणेशाय नमः ॥", "शुभ लाभ"…)
+ * `x, y, z`: its middle, on the wall's face; `w, h`: its size.
+ */
+export type PlateSpot = { kind: "name" | "haveli" | "blessing"; x: number; y: number; z: number; w: number; h: number };
 
 /**
  * A light that comes on in the evening, in the builder's frame (world/evening.ts

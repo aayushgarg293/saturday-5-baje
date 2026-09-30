@@ -27,6 +27,8 @@ export function buildHaveli(c: BuildContext): BuildResult {
   // arched doorway, slightly off-centre
   const doorX = r.range(-c.w / 6, c.w / 6);
   archedDoor(c, doorX, face);
+  // its carved stone nameplate, to the right of the door's frame
+  if (doorX + 1.3 + 0.35 < c.w / 2) c.plates.push({ kind: "haveli", x: doorX + 1.3, y: 1.75, z: face + 0.02, w: 0.5, h: 0.32 });
   // small ground-floor windows either side of the door
   for (const side of [-1, 1]) {
     const x = doorX + side * Math.min(2.2, c.w / 3);

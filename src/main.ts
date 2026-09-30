@@ -23,6 +23,7 @@ import { playEnding } from "./ui/ending";
 import { showPrompt } from "./ui/prompt";
 import { buildBackdrop } from "./world/backdrop";
 import { buildEvening } from "./world/evening";
+import { buildNameplates } from "./world/nameplates";
 import { HALL, PAY_SPOT, STAIR, STAIR_TOP, yourSeat } from "./world/cafe/plan";
 import { buildRoom } from "./world/cafe/room";
 import { buildYourScreen } from "./world/cafe/yourScreen";
@@ -67,6 +68,8 @@ const cafeRoom = buildRoom(street.cafeFrame);
 const cafePeople = buildCafePeople(street.cafeFrame, makeRng(2007));
 const yourScreen = buildYourScreen(street.cafeFrame);
 scene.add(cafeRoom.group, cafePeople.group, yourScreen.mesh, evening.group);
+const nameplates = buildNameplates(street.plates); // (the houses' nameplates and blessings: one mesh)
+if (nameplates) scene.add(nameplates);
 scene.add(sky.group, street.group, life.group, buildSigns([...street.signs, ...life.signs, ...wires.signs]), wires.group, backdrop.group);
 
 // --- the player ----------------------------------------------------------------

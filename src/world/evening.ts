@@ -153,6 +153,13 @@ export function buildEvening(spots: WorldLamp[]): Evening {
   for (const mesh of [bodies, glows, pools, panes]) {
     mesh.instanceMatrix.needsUpdate = true;
     mesh.setColorAt(0, OFF); // (makes the colour buffer)
+    // Everything starts off (a new colour buffer is all white: before the first
+    // frame's update, every window and glow would flash bright).
+    const colours = mesh.instanceColor!.array as Float32Array;
+    for (let i = 0; i < colours.length; i += 3) {
+      if (mesh === bodies) colours.set([OFF.r, OFF.g, OFF.b], i);
+      else colours.fill(0, i, i + 3);
+    }
   }
 
   const c = new THREE.Color();

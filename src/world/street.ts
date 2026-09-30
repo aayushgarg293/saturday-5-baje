@@ -4,8 +4,9 @@ import type { Patch } from "../core/floors";
 import { type Rng, makeRng, shuffled } from "../core/rng";
 import { PAL, WALL_COLOURS } from "../render/palette";
 import { buildCafe } from "./buildings/cafe";
-import { type BuildContext, type BuildResult, type LampSpot, type PeopleSpot, type SignSpot } from "./buildings/common";
+import { type BuildContext, type BuildResult, type LampSpot, type PeopleSpot, type PlateSpot, type SignSpot } from "./buildings/common";
 import { type WorldLamp, lampToWorld } from "./evening";
+import type { WorldPlate } from "./nameplates";
 import { buildHaveli } from "./buildings/haveli";
 import { buildHome } from "./buildings/home";
 import { buildHouse } from "./buildings/house";
@@ -55,6 +56,8 @@ export type Street = {
   people: WorldPeopleSpot[];
   /** The buildings' evening lights (world/evening.ts). */
   lamps: WorldLamp[];
+  /** The houses' nameplates and blessings (world/nameplates.ts). */
+  plates: WorldPlate[];
   /** Just in front of home's door (world/buildings/home.ts): where the walk ends. */
   homeDoor: THREE.Vector3;
 };
@@ -85,6 +88,7 @@ export function buildStreet(): Street {
   let cafeFrame = new THREE.Matrix4();
   const people: WorldPeopleSpot[] = [];
   const lamps: WorldLamp[] = [];
+  const plates: WorldPlate[] = [];
   let homeDoor = new THREE.Vector3();
   const rng = makeRng(SEED);
 
@@ -103,7 +107,8 @@ export function buildStreet(): Street {
     const wall = type === "cafe" ? PAL.limeWhite : rng.pick(WALL_COLOURS);
     const spots: PeopleSpot[] = [];
     const lampSpots: LampSpot[] = [];
-    const result = BUILDERS[type]({ parts, w, rng: forkRng(rng), wall, shopName, people: spots, lamps: lampSpots });
+    const plateSpots: PlateSpot[] = [];
+    const result = BUILDERS[type]({ parts, w, rng: forkRng(rng), wall, shopName, people: spots, lamps: lampSpots, plates: plateSpots });
 
     const mesh = parts.build(name);
     // Turn the building so its local +z (its front) points along `normal`.
@@ -133,6 +138,7 @@ export function buildStreet(): Street {
 
     for (const sp of result.signs) addSign(sp, mesh, rot);
     for (const sp of lampSpots) lamps.push(lampToWorld(sp, mesh.matrixWorld, rot));
+    for (const sp of plateSpots) plates.push({ kind: sp.kind, w: sp.w, h: sp.h, rotationY: rot, position: new THREE.Vector3(sp.x, sp.y, sp.z).applyMatrix4(mesh.matrixWorld) });
     if (type === "cafe") cafeFrame = mesh.matrixWorld.clone();
     for (const { x, y, z, turn, ...rest } of spots) {
       // doors aren't places for people: only home's is kept (the walk ends there)
@@ -240,7 +246,7 @@ export function buildStreet(): Street {
   // south to north, so whoever picks from them can space them out along the walk
   const along = (p: THREE.Vector3) => streetCoords(p.x, p.z).s;
   people.sort((a, b) => along(a.position) - along(b.position));
-  return { group, colliders, floors, cafeFrame, signs, spawn: { ...pointAt(1.5, 0), yaw: yawAlong(1.5) }, people, lamps, homeDoor };
+  return { group, colliders, floors, cafeFrame, signs, spawn: { ...pointAt(1.5, 0), yaw: yawAlong(1.5) }, people, lamps, plates, homeDoor };
 }
 
 /** A plain boundary wall with a coping on top (the ends of the side roads' back lanes). */

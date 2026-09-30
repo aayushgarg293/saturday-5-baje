@@ -11,7 +11,10 @@ import { buildHouse } from "./house";
  */
 export function buildHome(c: BuildContext): BuildResult {
   const windowsBefore = c.lamps.length;
+  const platesBefore = c.plates.length;
   const result = buildHouse(c);
+  // (his home has its own blessing, below: none of a plain house's plates)
+  c.plates.length = platesBefore;
   const door = c.people.find((s) => s.kind === "door")!;
   // someone's home: its windows light up for sure
   for (const lamp of c.lamps.slice(windowsBefore)) lamp.always = true;
