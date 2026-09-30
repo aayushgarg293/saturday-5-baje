@@ -238,14 +238,21 @@ motion; busy but walkable.
 - [ ] Before release: Shift speed back from 10 m/s (testing) to ~3.6 (`FAST_SPEED` in `core/player.ts`)
 
 ## 8. The computer
-- [ ] Windows XP look-alike desktop: wallpaper, taskbar, Start menu, windows, sounds
+- [x] Windows XP look-alike desktop: wallpaper, taskbar, Start menu, windows, sounds
+      (`src/desktop/`, an HTML page over the game). Seated and connected, a
+      click leans you in until the desktop fills the view (in the monitor's
+      bezel, faint CRT lines); Esc or a click on the bezel leans you back.
+      The 3D room isn't drawn meanwhile. Locked-down cafe: Paint, games and
+      Control Panel say "restrictions". Log Off only leans you back, for now.
 - [ ] Yorkut: profile, scraps, a friend's post, communities
 - [ ] Yaaho! Messenger: chat with friends
 - [ ] MeToob: videos that buffer forever
 - [ ] Background detail: icons, tabs, pop-ups
 - [ ] Log off
 
-Needs first: **the story on the computer** (open question in `BRIEF.md`).
+The story is settled (`BRIEF.md`, "The story on the computer"); the plan's
+order: shell (done) → Yaaho! with Priya's thread → Rohan's thread → Internet
+Xplorer + Yorkut → MeToob and extras → log off for real.
 
 ## 9. The walk home
 - [ ] Same street at dusk: sky, lighting, tubelights flickering on

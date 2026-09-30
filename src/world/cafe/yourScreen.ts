@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { paintWallpaper } from "../../desktop/wallpaper";
 import { flat } from "../../render/toon";
 import { BOOTHS, DESK, HALL, YOUR_BOOTH, boothPoint } from "./plan";
 
@@ -28,6 +29,8 @@ export type YourScreen = {
   connect(): void;
   /** Every frame: move through the connecting stages; keep the desktop's clock right. */
   update(dt: number, time: string): void;
+  /** Connected, the desktop up: you can lean in and use it. */
+  ready(): boolean;
 };
 
 /** When each connecting stage begins, seconds after sitting down (the modem's sound is timed to match: audio/cafe.ts). */
@@ -55,6 +58,7 @@ export function buildYourScreen(frame: THREE.Matrix4): YourScreen {
     connect() {
       if (connecting < 0) connecting = 0;
     },
+    ready: () => connecting >= STAGES[STAGES.length - 1][0],
     update(dt, time) {
       if (connecting < 0) return;
       connecting += dt;
@@ -95,7 +99,7 @@ function welcome(ctx: CanvasRenderingContext2D) {
 
 /** The desktop, with the dial-up box open in the middle. */
 function dialUp(ctx: CanvasRenderingContext2D, stage: ScreenStage) {
-  wallpaper(ctx);
+  paintWallpaper(ctx, W, H);
   taskbar(ctx, "");
   // the box: a blue title bar, grey inside
   const x = 96, y = 110, w = 320, h = 150;
@@ -132,7 +136,7 @@ function dialUp(ctx: CanvasRenderingContext2D, stage: ScreenStage) {
 
 /** The desktop: the hill, a few icons, the taskbar, the time, the connected balloon. */
 function desktop(ctx: CanvasRenderingContext2D, time: string) {
-  wallpaper(ctx);
+  paintWallpaper(ctx, W, H);
   ctx.font = `11px ${SANS}`;
   ctx.textAlign = "center";
   ctx.textBaseline = "top";
@@ -156,32 +160,6 @@ function desktop(ctx: CanvasRenderingContext2D, time: string) {
   ctx.fillText("DialNet is now connected", bx + 10, by + 10);
   ctx.font = `11px ${SANS}`;
   ctx.fillText("Speed: 48.0 Kbps", bx + 10, by + 30);
-}
-
-/** The famous hill: a blue sky with soft clouds over a rolling green field. */
-function wallpaper(ctx: CanvasRenderingContext2D) {
-  const sky = ctx.createLinearGradient(0, 0, 0, H * 0.6);
-  sky.addColorStop(0, "#2f6fd6");
-  sky.addColorStop(1, "#9cc8f0");
-  ctx.fillStyle = sky;
-  ctx.fillRect(0, 0, W, H);
-  ctx.fillStyle = "rgba(255,255,255,0.7)";
-  for (const [x, y, r] of [[120, 70, 30], [150, 60, 38], [190, 72, 28], [360, 50, 26], [390, 44, 32]]) {
-    ctx.beginPath();
-    ctx.arc(x, y, r, 0, Math.PI * 2);
-    ctx.fill();
-  }
-  const hill = ctx.createLinearGradient(0, H * 0.45, 0, H);
-  hill.addColorStop(0, "#6fbf3a");
-  hill.addColorStop(1, "#3f8a1c");
-  ctx.fillStyle = hill;
-  ctx.beginPath();
-  ctx.moveTo(0, H * 0.62);
-  ctx.quadraticCurveTo(W * 0.35, H * 0.38, W * 0.7, H * 0.55);
-  ctx.quadraticCurveTo(W * 0.88, H * 0.62, W, H * 0.58);
-  ctx.lineTo(W, H);
-  ctx.lineTo(0, H);
-  ctx.fill();
 }
 
 /** The blue taskbar, its green start button, and the time. */

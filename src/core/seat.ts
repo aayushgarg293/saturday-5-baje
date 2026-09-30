@@ -14,7 +14,11 @@ import type { Player } from "./player";
  * see how much time has gone), then back to where you were looking. Works
  * seated or standing.
  *
- * While either is happening the player is `frozen` and this moves the
+ * LEANING IN. Seated, once the computer is connected, a click leans you in
+ * until the screen fills your view; then the desktop (an HTML page, see
+ * desktop/desktop.ts) takes over. Esc leans you back.
+ *
+ * While any of this is happening the player is `frozen` and this moves the
  * camera itself.
  */
 
@@ -42,13 +46,19 @@ const SIT_TIME = 0.9;
 const GLANCE = { turn: 0.6, hold: 2.6 };
 /** Looking at the clock, the view narrows onto it (a zoom), so its hands can be read from across the hall: field of view, degrees. */
 const GLANCE_FOV = 26;
+/** Leaning in, your eyes stop this far from the screen (metres): close enough that it fills the view. */
+const LEAN_GAP = 0.3;
 
 type Move = { from: THREE.Vector3; to: THREE.Vector3; fromLook: [number, number]; toLook: [number, number]; t: number; done: () => void };
 
 export class Seat {
   seated = false;
+  /** Leaned in to the screen (the desktop is up). */
+  leaned = false;
   /** Called the moment you've sat down (the computer connects). */
   onSit: () => void = () => {};
+  /** Called once you've leaned in close (the desktop shows). */
+  onLeanIn: () => void = () => {};
   private move: Move | null = null;
   private yaw = 0;
   private pitch = 0;
@@ -86,7 +96,7 @@ export class Seat {
   }
 
   standUp() {
-    if (!this.seated || this.move || this.glance >= 0) return;
+    if (!this.seated || this.leaned || this.move || this.glance >= 0) return;
     this.seated = false;
     const standEye = this.spots.stand.clone().setY(this.spots.stand.y + 1.55);
     const [yaw] = look(this.spots.eye, this.spots.screen);
@@ -97,9 +107,29 @@ export class Seat {
     });
   }
 
+  /** Lean in to the screen (seated). */
+  leanIn() {
+    if (!this.seated || this.leaned || this.move || this.glance >= 0) return;
+    const { eye, screen } = this.spots;
+    const to = eye.clone().sub(screen).setLength(LEAN_GAP).add(screen);
+    this.start(to, look(eye, screen), () => {
+      this.leaned = true;
+      this.onLeanIn();
+    });
+  }
+
+  /** Lean back into the chair, facing the screen. */
+  leanBack() {
+    if (!this.leaned || this.move) return;
+    this.leaned = false;
+    this.yaw = this.baseYaw;
+    this.pitch = this.basePitch;
+    this.start(this.spots.eye, [this.baseYaw, this.basePitch], () => {});
+  }
+
   /** Look up at the clock for a moment. */
   lookAtClock() {
-    if (this.move || this.glance >= 0) return;
+    if (this.move || this.glance >= 0 || this.leaned) return;
     if (!this.seated) {
       // standing: take over from the player for the glance
       this.player.frozen = true;
@@ -127,6 +157,7 @@ export class Seat {
       return;
     }
     if (!this.seated && this.glance < 0) return; // the player is in charge
+    if (this.leaned) return; // (held close to the screen, where leaning in left the camera)
 
     // seated: the mouse turns your head, within limits
     if (this.seated && this.glance < 0) {

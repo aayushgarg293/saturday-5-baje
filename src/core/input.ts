@@ -46,7 +46,10 @@ export class Input {
 
   /** Capture the mouse. Browsers only allow this in response to a click. */
   lock() {
-    this.canvas.requestPointerLock();
+    // Newer browsers return a promise that fails if the lock is refused (say,
+    // too soon after Esc); then the start screen simply stays up for a click.
+    const p = this.canvas.requestPointerLock() as unknown as Promise<void> | undefined;
+    p?.catch?.(() => {});
   }
 
   isDown(...codes: string[]): boolean {

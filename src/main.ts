@@ -10,6 +10,7 @@ import { Input } from "./core/input";
 import { Player } from "./core/player";
 import { makeRng } from "./core/rng";
 import { Seat } from "./core/seat";
+import { Desktop } from "./desktop/desktop";
 import { buildCafePeople } from "./people/cafePeople";
 import { addLights } from "./render/lights";
 import { PAL } from "./render/palette";
@@ -91,8 +92,36 @@ audio.onStart((ctx) => {
   streetSounds = new StreetSounds(audio, ctx);
   cafeSounds = new CafeSounds(audio, ctx, street.cafeFrame);
 });
+// --- the computer's desktop ---------------------------------------------------------
+// Seated and connected, a click leans you in; once close, the desktop takes
+// over the view and the mouse is set free to use it. Esc leans you back.
+const desktop = new Desktop(audio);
+seat.onLeanIn = () => {
+  desktop.show();
+  document.exitPointerLock();
+};
+desktop.onLeave = (byClick) => {
+  desktop.hide();
+  seat.leanBack();
+  // The mouse goes back to turning your head. Browsers only allow capturing
+  // it on a click, not a key: after Esc, your next click does it (below).
+  if (byClick) input.lock();
+};
+// Log Off, for now, just leans you back (the full log off comes later in phase 8)
+desktop.onLogOff = () => {
+  desktop.reset();
+  desktop.onLeave(true);
+};
+document.addEventListener("mousedown", () => {
+  if (input.locked && seat.seated && yourScreen.ready()) seat.leanIn();
+});
+// Back in the booth with the mouse free (after Esc on the desktop): a click on the view captures it again
+canvas.addEventListener("click", () => {
+  if (!input.locked && !desktop.isOpen) input.lock();
+});
+
 window.addEventListener("keydown", (e) => {
-  if (e.code === "KeyM") audio.toggleMute();
+  if (e.code === "KeyM" && !desktop.isOpen) audio.toggleMute();
   if (!input.locked || e.repeat) return;
   // E: sit down at your computer, or get up; T: look up at the clock
   if (e.code === "KeyE") (seat.seated ? seat.standUp() : seat.sitDown());
@@ -105,7 +134,8 @@ startScreen.addEventListener("click", () => {
   input.lock();
 });
 input.onLockChange = (locked) => {
-  startScreen.hidden = locked;
+  // (on the desktop the mouse is free on purpose: no start screen then)
+  startScreen.hidden = locked || desktop.isOpen;
 };
 
 // --- game loop ---------------------------------------------------------------------
@@ -120,13 +150,22 @@ function update(dt: number) {
   cafeRoom.update(dt);
   cafeRoom.setClock(gameClock.hours, gameClock.minute);
   yourScreen.update(dt, gameClock.label());
-  showPrompt(seat.seated ? "[E] get up    [T] look at the clock" : seat.canSit() ? "[E] sit down" : null);
+  desktop.setTime(gameClock.label());
+  showPrompt(prompt());
   cafePeople.update(time, dt, player.pos);
   lights.followPlayer(player.pos);
   bed?.update(dt, player.pos);
   radio?.update(dt, player.pos);
   streetSounds?.update(dt, player.pos);
   cafeSounds?.update(dt, player.pos);
+}
+
+/** The hint at the bottom of the screen: what you can do right now. */
+function prompt(): string | null {
+  if (desktop.isOpen || seat.leaned) return null;
+  if (!input.locked && seat.seated) return "[Click] to look around again";
+  if (seat.seated) return `${yourScreen.ready() ? "[Click] use the computer    " : ""}[E] get up    [T] look at the clock`;
+  return seat.canSit() ? "[E] sit down" : null;
 }
 
 // Frames are drawn through the post-processing pipeline (ink, colour grade, smoothing).
@@ -154,6 +193,7 @@ if (import.meta.env.DEV) {
     if (code === "KeyG") pipeline.enabled.grade = !pipeline.enabled.grade;
   };
   afterFrame = (dt) => stats.update(dt);
+  Object.assign(window, { __desktop: desktop }); // (to drive the desktop from the console)
   if (new URLSearchParams(location.search).has("lineup")) {
     const { addLineup } = await import("./dev/lineup");
     addLineup(scene);
@@ -184,7 +224,8 @@ renderer.setAnimationLoop((time) => {
   // huge gap, and one giant step could carry the player through a wall.
   const dt = Math.min(clock.getDelta(), 0.1);
   update(dt);
-  render();
+  // (while the desktop covers the view, the 3D room isn't drawn: it can't be seen)
+  if (!desktop.isOpen) render();
   audio.listen(camera); // after drawing: the camera's matrix is up to date
   // Climbing the cafe's stairs, the street's sounds fade away: from the
   // doorstep (0.45 m up) to the first floor (4.8 m), the only place above it.
