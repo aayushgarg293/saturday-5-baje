@@ -96,6 +96,8 @@ export const PAY_SPOT = { x: 2.65, z: -8.9 };
 export const STAIR = { x0: 3.0, x1: 4.2, top: -7.0 };
 /** Where you're stopped if you try to leave without paying: the landing, just off the top step. */
 export const STAIR_TOP = { x: 3.6, z: -7.7 };
+/** The owner's CRT is turned this far (radians) from facing −x, round toward his seat, so its screen faces him. */
+export const OWNER_PC_TURN = 0.6;
 /** (A tall seat: behind a counter this high, he sits up on a revolving stool.) */
 export const OWNER_SEAT = { x: 1.1, z: -8.9, turn: FACE_RAILING, seat: 0.74 };
 

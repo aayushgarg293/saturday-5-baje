@@ -2,7 +2,7 @@ import * as THREE from "three";
 import { PAL } from "../../render/palette";
 import type { LocalBox, SignSpot } from "../buildings/common";
 import type { Parts } from "../kit";
-import { BOOTH, BOOTHS, type Booth, CLOCK, COUNTER, DESK, FANS, HALL, OWNER_SEAT, TUBES, YOUR_BOOTH, boothPoint } from "./plan";
+import { OWNER_PC_TURN, BOOTH, BOOTHS, type Booth, CLOCK, COUNTER, DESK, FANS, HALL, OWNER_SEAT, TUBES, YOUR_BOOTH, boothPoint } from "./plan";
 
 /**
  * The cafe's furniture that never moves, built into the cafe building's own
@@ -130,7 +130,7 @@ function booth(p: Parts, b: Booth, i: number, floorY: number, colliders: LocalBo
   at(0, BOOTH.deskTop + 0.22, crtV + 0.14, 0.28, 0.26, 0.12, C.beigeDark); // the back
   at(0, DESK.screen.y, crtV - 0.152, 0.32, 0.25, 0.01, C.screenOff); // the screen, off (lit ones: world/cafe/screens.ts)
   at(0, DESK.keyboard.y, DESK.keyboard.v, 0.44, 0.025, 0.15, C.beige, -0.08); // keyboard
-  at(DESK.mouse.u, DESK.mouse.y, DESK.mouse.v, 0.06, 0.03, 0.1, C.beige); // mouse, on the right
+  mouse(p, b, floorY);
   for (const u of [-0.32, 0.32]) at(u, BOOTH.deskTop + 0.1, crtV + 0.05, 0.1, 0.17, 0.1, C.black); // speakers
   at(-0.38, 0.22, deskBack - 0.25, 0.19, 0.42, 0.42, C.beige); // the tower on the floor
 
@@ -155,7 +155,7 @@ function counter(p: Parts, floorY: number, colliders: LocalBox[], UP: { y0: numb
   const y = floorY + top;
   // His CRT at the far end, turned toward him: not between him and the
   // stairs, so he sees who comes up (and you see him). Its keyboard in front.
-  const crtTurn = 0.6; // turned from facing −x round toward his seat (his screen faces him)
+  const crtTurn = OWNER_PC_TURN; // turned from facing −x round toward his seat (his screen faces him; hardware.ts paints its faces)
   p.box(0.3, 0.36, 0.4, x0 + 0.33, y + 0.2, z0 + 0.35, C.beige, { ry: crtTurn });
   p.box(0.01, 0.25, 0.32, x0 + 0.33 - 0.155 * Math.cos(crtTurn), y + 0.21, z0 + 0.35 + 0.155 * Math.sin(crtTurn), C.screenOff, { ry: crtTurn });
   p.box(0.15, 0.02, 0.42, x0 + 0.08, y + 0.02, z0 + 0.62, C.beige, { ry: crtTurn, rz: 0.06 });
@@ -174,6 +174,38 @@ function counter(p: Parts, floorY: number, colliders: LocalBox[], UP: { y0: numb
   p.cylinder(0.03, 0.03, s.seat - 0.1, s.x, floorY + (s.seat - 0.1) / 2 + 0.03, s.z, PAL.metal, { segments: 6 });
   p.add(new THREE.TorusGeometry(0.2, 0.012, 5, 16).rotateX(Math.PI / 2), s.x, floorY + 0.3, s.z, PAL.metal);
   p.cylinder(0.3, 0.3, 0.03, s.x, floorY + 0.05, s.z, C.black, { segments: 5 });
+}
+
+/**
+ * The mouse, on the right of the keyboard, on its pad (the pad's print is in
+ * hardware.ts): a rounded body, the seam between its two buttons, the scroll
+ * wheel, and its cable running back behind the monitor.
+ */
+function mouse(p: Parts, b: Booth, floorY: number) {
+  const { u, v } = DESK.mouse;
+  const surface = floorY + BOOTH.deskTop + 0.017; // (the pad on the desk's top)
+  const q = boothPoint(b, u, v);
+  // the body: the top half of a ball, squashed long and low
+  const body = new THREE.SphereGeometry(1, 28, 10, 0, Math.PI * 2, 0, Math.PI / 2).scale(0.031, 0.026, 0.055); // (many small facets: the cafe is flat-shaded, and a few big ones made it look like a cut gem)
+  body.rotateY(b.turn);
+  p.add(body, q.x, surface, q.z, C.beige);
+  // the seam between the buttons, and the wheel, toward its front (the screen's way)
+  const front = boothPoint(b, u, v + 0.03);
+  const seam = new THREE.BoxGeometry(0.0025, 0.004, 0.03).rotateX(-0.35).rotateY(b.turn);
+  p.add(seam, front.x, surface + 0.022, front.z, 0x8f8672);
+  const wheel = new THREE.CylinderGeometry(0.007, 0.007, 0.005, 10).rotateZ(Math.PI / 2).rotateY(b.turn);
+  p.add(wheel, front.x, surface + 0.023, front.z, 0x55504a);
+  // the cable: out of its nose, across the desk, and away behind the monitor
+  const at = (du: number, y: number, dv: number) => {
+    const c = boothPoint(b, du, dv);
+    return new THREE.Vector3(c.x, floorY + y, c.z);
+  };
+  const top = BOOTH.deskTop + 0.016;
+  const cable = new THREE.CatmullRomCurve3([
+    at(u, top + 0.006, v + 0.056), at(u + 0.01, top + 0.003, v + 0.13),
+    at(u + 0.06, top + 0.003, DESK.crt - 0.12), at(-0.2, top + 0.003, DESK.crt + 0.02), at(-0.16, top + 0.02, DESK.crt + 0.2),
+  ]);
+  p.add(new THREE.TubeGeometry(cable, 24, 0.0022, 4), 0, 0, 0, 0x6f6a5e);
 }
 
 function pushBox(colliders: LocalBox[], a: { x: number; z: number }, b: { x: number; z: number }, band: { y0: number; y1: number }) {

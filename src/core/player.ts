@@ -23,8 +23,10 @@ const EYE_HEIGHT = 1.55;
 const RADIUS = 0.3;
 /** Walking and faster-walking speeds, metres per second. */
 const WALK_SPEED = 2.0;
-// (Shift: a brisk walk, not a run. It was 10 while building, to reach the cafe quickly for testing.)
-const FAST_SPEED = 3.6;
+// Shift: a brisk walk, not a run (3.6). While developing (`npm run dev`) it's
+// 10, to get to the cafe quickly for testing; the finished build (itch.io)
+// always gets the brisk walk, so there's nothing to remember before uploading.
+const FAST_SPEED = import.meta.env.DEV ? 10 : 3.6;
 /**
  * How quickly speed catches up with the keys. Higher is snappier. Stopping is
  * a little quicker than starting, which feels natural on foot.
