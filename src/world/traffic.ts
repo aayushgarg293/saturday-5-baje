@@ -7,6 +7,7 @@ import { toon } from "../render/toon";
 import { Parts } from "./kit";
 import { PLOT_DEPTH, SIDE_ROADS, SIDE_ROAD_SETBACK, pointAt } from "./layout";
 import { type Riders, buildRiders } from "../people/riders";
+import { addHeadlight } from "./evening";
 import { type VehicleKind, buildVehicle } from "./props/vehicles";
 
 /**
@@ -176,6 +177,8 @@ function makeMover(kind: VehicleKind, slot: number, start: End, wait: number, rn
   g.add(v.parts.build(kind));
   const riders = buildRiders(kind, v.ride!, rng);
   g.add(riders.group);
+  // its headlight (lit in the evening: world/evening.ts)
+  addHeadlight(g, v.size[0] / 2, kind === "auto" ? 0.85 : 0.95, kind === "bicycle" ? 0.35 : 0.6);
   const wheels = v.wheels.map((w) => {
     const p = new Parts();
     p.cylinder(w.radius, w.radius, w.width, 0, 0, 0, PAL.tyre, { rx: Math.PI / 2, segments: 14 });

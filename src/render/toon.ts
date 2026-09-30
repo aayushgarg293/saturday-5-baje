@@ -187,3 +187,17 @@ export function flat(color: number, opts: FlatOptions = {}): THREE.MeshBasicMate
   if (!map) flatCache.set(key, mat);
   return mat;
 }
+
+/**
+ * Light that ADDS to what's behind it: a lamp's glow, a pool of light on the
+ * ground, a lit window (world/evening.ts). Black adds nothing, so a lamp
+ * that's off is simply coloured black. No haze (the haze would tint a glow
+ * toward the sky's colour instead of fading it), and it doesn't hide what's
+ * behind it (no depth written).
+ */
+export function glow(map: THREE.Texture | null): THREE.MeshBasicMaterial {
+  return new THREE.MeshBasicMaterial({
+    color: 0xffffff, map, fog: false, transparent: true, depthWrite: false,
+    blending: THREE.AdditiveBlending, side: THREE.DoubleSide,
+  });
+}

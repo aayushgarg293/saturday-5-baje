@@ -30,6 +30,31 @@ export type BuildContext = {
   shopName?: number;
   /** Builders add places where a person could be (a shopkeeper's stool, the temple). */
   people: PeopleSpot[];
+  /** …and where lights come on in the evening (world/evening.ts). No random choices here: evening.ts makes those. */
+  lamps: LampSpot[];
+};
+
+/**
+ * A light that comes on in the evening, in the builder's frame (world/evening.ts
+ * decides when, and draws it):
+ *   tube    a tubelight along x (`w` long), at the top of a shop's opening; its
+ *           room's back wall is `back` metres behind it and `h` high
+ *   bulb    a bare bulb (at a stall, on a pole, over a door)
+ *   fire    a stove's fire (always burning; it just shows more as it gets dark)
+ *   window  a window that may light up: `w` by `h`
+ * `ry`: which way it faces (radians about the vertical, 0 = +z); `ground`: the
+ * height of the ground below, for its pool of light.
+ */
+export type LampSpot = {
+  kind: "tube" | "bulb" | "fire" | "window";
+  x: number;
+  y: number;
+  z: number;
+  w?: number;
+  h?: number;
+  back?: number;
+  ry?: number;
+  ground?: number;
 };
 
 /**
@@ -113,6 +138,7 @@ export function body(c: BuildContext, y0: number, y1: number, zFront: number) {
  */
 export function windowAt(c: BuildContext, x: number, y: number, zFace: number, w = 0.9, h = 1.25) {
   const p = c.parts;
+  c.lamps.push({ kind: "window", x, y, z: zFace + 0.09, w, h });
   p.box(w + 0.16, h + 0.16, 0.05, x, y, zFace + 0.025, PAL.wood);
   p.box(w, h, 0.05, x, y, zFace + 0.06, PAL.windowDark);
   p.box(w + 0.3, 0.08, 0.2, x, y - h / 2 - 0.1, zFace + 0.1, PAL.stoneTrim);

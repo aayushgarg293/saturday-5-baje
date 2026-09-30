@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import type { WorldLamp } from "./evening";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 import { type Box, boxAt } from "../core/colliders";
 import { makeRng } from "../core/rng";
@@ -38,13 +39,18 @@ const POLE_OFFSET = 2.65;
 const POLE_HEIGHT = 8.5;
 const WIRE_RADIUS = 0.013;
 
-export function buildWires(): { group: THREE.Group; colliders: Box[]; signs: WorldSign[] } {
+/** Every other pole carries a street lamp: a bulb on a short arm reaching out over the street, this high. */
+const LAMP_HEIGHT = 6.2;
+const LAMP_REACH = 1.3;
+
+export function buildWires(): { group: THREE.Group; colliders: Box[]; signs: WorldSign[]; lamps: WorldLamp[] } {
   const rng = makeRng(99);
   const group = new THREE.Group();
   group.name = "wires";
   const parts = new Parts();
   const colliders: Box[] = [];
   const wires: THREE.BufferGeometry[] = [];
+  const lamps: WorldLamp[] = [];
 
   // --- poles, each with a crossarm near the top ---------------------------------
   const tops: THREE.Vector3[][] = []; // the points on each crossarm where wires hang
@@ -57,6 +63,14 @@ export function buildWires(): { group: THREE.Group; colliders: Box[]; signs: Wor
     colliders.push(boxAt(at.x, at.z, 0.35, 0.35));
 
     const across = new THREE.Vector3(Math.cos(heading), 0, Math.sin(heading));
+    // the street lamp (on every other pole): an arm toward the middle of the street, a bulb at its end
+    if (POLES.indexOf(pole) % 2 === 0) {
+      const toMiddle = across.clone().multiplyScalar(-pole.side);
+      const end = new THREE.Vector3(at.x, LAMP_HEIGHT, at.z).addScaledVector(toMiddle, LAMP_REACH);
+      parts.strut({ x: at.x, y: LAMP_HEIGHT - 0.25, z: at.z }, { x: end.x, y: LAMP_HEIGHT + 0.05, z: end.z }, 0.03, PAL.metal);
+      parts.box(0.22, 0.05, 0.14, end.x, LAMP_HEIGHT + 0.05, end.z, PAL.metal, { ry: -heading }); // its little shade
+      lamps.push({ kind: "bulb", position: end.clone().setY(LAMP_HEIGHT - 0.03), rotationY: -heading, w: 1, h: 1, back: 0, ground: 0, pole: true });
+    }
     tops.push([-0.7, -0.25, 0.25, 0.7].map((k) =>
       new THREE.Vector3(at.x, POLE_HEIGHT - 0.45, at.z).addScaledVector(across, k)));
   }
@@ -96,7 +110,7 @@ export function buildWires(): { group: THREE.Group; colliders: Box[]; signs: Wor
   wireMesh.name = "wires";
   group.add(wireMesh);
   wires.forEach((w) => w.dispose());
-  return { group, colliders, signs: polePosters() };
+  return { group, colliders, signs: polePosters(), lamps };
 }
 
 /** A poster's size, metres: about A3, the size these were printed. */

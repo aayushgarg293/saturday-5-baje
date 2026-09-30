@@ -91,6 +91,10 @@ export function shopfront(
     const bottom = shutter === "closed" ? PLINTH_H : r.range(1.6, 2.4);
     p.slab(x0 + pillar, x1 - pillar, bottom, OPENING_TOP - 0.45, face - 0.24, face - 0.2, PAL.shutter);
   }
+  // the tubelight across the top of the opening, just inside (a closed shop's stays dark)
+  if (shutter !== "closed") {
+    c.lamps.push({ kind: "tube", x: mid, y: OPENING_TOP - 0.55, z: face - 0.45, w: Math.min(1.2, inner - 0.4), back: ROOM_DEPTH - 0.55, h: OPENING_TOP - PLINTH_H, ground: PLINTH_H });
+  }
 
   // awning: high against the wall, sloping down toward the street
   const awningColour = r.next() < 0.6 ? PAL.tin : PAL.tarp;

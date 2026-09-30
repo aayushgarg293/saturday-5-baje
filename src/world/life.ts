@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { type WorldLamp, lampToWorld } from "./evening";
 import type { Box } from "../core/colliders";
 import { makeRng } from "../core/rng";
 import type { SignSpot } from "./buildings/common";
@@ -31,6 +32,8 @@ export type Life = {
   walkers: Walkers;
   /** Where the chai tapri's radio is (audio/radio.ts plays from here). */
   radioAt: THREE.Vector3;
+  /** The stalls' bulbs and stove fires (world/evening.ts). */
+  lamps: WorldLamp[];
   update(t: number, dt: number, player: THREE.Vector3): void;
 };
 
@@ -45,6 +48,7 @@ export function buildLife(people: WorldPeopleSpot[], solid: readonly Box[]): Lif
   group.name = "life";
   const batch = new StaticBatch();
   const signs: WorldSign[] = [];
+  const lamps: WorldLamp[] = [];
 
   // --- the food stalls ----------------------------------------------------------
   const stalls = [
@@ -60,6 +64,7 @@ export function buildLife(people: WorldPeopleSpot[], solid: readonly Box[]): Lif
     batch.add(stall.parts, where);
     batch.collide(where, stall.size[0], stall.size[1]);
     for (const sp of stall.signs) signs.push(toWorld(sp, where));
+    for (const sp of stall.lamps ?? []) lamps.push(lampToWorld(sp, where.matrix, where.rot));
   }
 
   // --- parked vehicles ---------------------------------------------------------------
@@ -121,6 +126,7 @@ export function buildLife(people: WorldPeopleSpot[], solid: readonly Box[]): Lif
     group,
     colliders: [...colliders, ...crowd.colliders, ...traffic.colliders, ...walkers.colliders],
     signs,
+    lamps,
     traffic,
     walkers,
     // the radio's speaker, in the world: the tapri's frame applied to its spot on the counter

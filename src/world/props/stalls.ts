@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import type { Rng } from "../../core/rng";
 import { PAL } from "../../render/palette";
-import type { SignSpot } from "../buildings/common";
+import type { LampSpot, SignSpot } from "../buildings/common";
 import { Parts } from "../kit";
 
 /**
@@ -18,7 +18,16 @@ export type Stall = {
   /** Footprint for the collider, metres (x along the street, z across). */
   size: [number, number];
   signs: SignSpot[];
+  /** Its bulb, its stove's fire (world/evening.ts). */
+  lamps?: LampSpot[];
 };
+
+/** A bare bulb on a bamboo stick tied to the cart, for the evening (world/evening.ts lights it). */
+function bulbOnStick(p: Parts, x: number, z: number, from: number, top = 1.95): LampSpot {
+  p.cylinder(0.018, 0.02, top - from, x, from + (top - from) / 2, z, PAL.bamboo, { segments: 5 });
+  p.box(0.12, 0.02, 0.02, x + 0.05, top, z, PAL.bamboo); // the little arm the bulb hangs from
+  return { kind: "bulb", x: x + 0.1, y: top - 0.08, z, ground: 0 };
+}
 
 /** A small painted board with a word on it (painted by world/signs.ts). */
 function board(label: string, x: number, y: number, z: number, w: number, h: number, ry = 0): SignSpot {
@@ -104,6 +113,8 @@ export function chaiTapri(rng: Rng): Stall {
   return {
     parts: p,
     size: [3.4, 1.6],
+    // a bulb hanging under the tarp; the stove's fire under the pan
+    lamps: [{ kind: "bulb", x: 0.3, y: 2.0, z: 0.1, ground: 0 }, { kind: "fire", x: -0.45, y: top + 0.08, z: 0.05, ground: 0 }],
     signs: [
       board("चाय", 0, 0.55, 0.36, 1.1, 0.4),
       board("शादी पार्टी के ऑर्डर बुक किए जाते हैं", 0, 1.84, 0.93, 2.1, 0.28),
@@ -128,7 +139,8 @@ export function golgappaCart(_rng: Rng): Stall {
   p.cylinder(0.21, 0.21, 0.08, 0.52, deck + 0.22, 0, PAL.crateRed, { segments: 12 });
   p.add(bowl(0.15, 0.08), 0.5, deck + 0.1, 0.3, PAL.steel);
   p.add(bowl(0.12, 0.07), -0.2, deck + 0.1, 0.32, PAL.steel);
-  return { parts: p, size: [2.2, 1.0], signs: [board("गोलगप्पे", -0.05, deck + 0.3, 0.21, 0.8, 0.22)] };
+  const lamps = [bulbOnStick(p, 0.95, -0.35, deck)];
+  return { parts: p, size: [2.2, 1.0], signs: [board("गोलगप्पे", -0.05, deck + 0.3, 0.21, 0.8, 0.22)], lamps };
 }
 
 /** Kachori and samosa: a brick stove with a big kadhai of hot oil, and a table of trays. */
@@ -155,7 +167,9 @@ export function kachoriStall(_rng: Rng): Stall {
     }
   }
   p.slab(-0.15, 1.05, 0.84, 1.2, -0.35, -0.05, PAL.glassPale);
-  return { parts: p, size: [2.6, 1.0], signs: [board("कचौरी • समोसा", 0.45, 0.55, 0.42, 1.2, 0.3)] };
+  // the fire in the stove's mouth, and a bulb over the table
+  const lamps = [{ kind: "fire", x: -0.8, y: 0.22, z: 0.44, ground: 0 } as LampSpot, bulbOnStick(p, 1.15, -0.35, 0.75)];
+  return { parts: p, size: [2.6, 1.0], signs: [board("कचौरी • समोसा", 0.45, 0.55, 0.42, 1.2, 0.3)], lamps };
 }
 
 /** Jalebi: a wide flat kadhai with orange spirals frying, and trays stacked with them. */
@@ -177,7 +191,8 @@ export function jalebiStall(_rng: Rng): Stall {
   // a stacked tray of finished jalebis
   p.cylinder(0.3, 0.28, 0.04, 0.5, 0.78, 0, PAL.steel, { segments: 16 });
   for (let i = 0; i < 9; i++) coil(0.35 + (i % 3) * 0.15, 0.83 + Math.floor(i / 3) * 0.04, -0.15 + ((i * 7) % 3) * 0.15, 0.065);
-  return { parts: p, size: [2.2, 1.0], signs: [board("जलेबी", 0.3, 0.45, 0.41, 0.9, 0.3)] };
+  const lamps = [{ kind: "fire", x: -0.5, y: 0.78, z: 0.32, ground: 0 } as LampSpot, bulbOnStick(p, 0.95, -0.35, 0.75)];
+  return { parts: p, size: [2.2, 1.0], signs: [board("जलेबी", 0.3, 0.45, 0.41, 0.9, 0.3)], lamps };
 }
 
 /** The ice gola cart: a block of ice, a row of bright syrup bottles, and a striped umbrella. */
@@ -204,5 +219,6 @@ export function iceGolaCart(_rng: Rng): Stall {
     p.add(wedge, 0.4, deck + 1.55, -0.25, k % 2 ? PAL.boardYellow : PAL.crateRed);
     p.add(lining, 0.4, deck + 1.55, -0.25, k % 2 ? PAL.crateRed : PAL.boardYellow);
   }
-  return { parts: p, size: [2.0, 1.0], signs: [board("बर्फ़ का गोला", -0.2, deck - 0.2, 0.46, 0.9, 0.24)] };
+  const lamps = [bulbOnStick(p, -0.85, -0.35, deck, 1.8)];
+  return { parts: p, size: [2.0, 1.0], signs: [board("बर्फ़ का गोला", -0.2, deck - 0.2, 0.46, 0.9, 0.24)], lamps };
 }

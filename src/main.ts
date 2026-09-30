@@ -20,6 +20,7 @@ import { Pipeline } from "./render/post";
 import { createRenderer, fitToWindow } from "./render/renderer";
 import { showPrompt } from "./ui/prompt";
 import { buildBackdrop } from "./world/backdrop";
+import { buildEvening } from "./world/evening";
 import { HALL, PAY_SPOT, STAIR, STAIR_TOP, yourSeat } from "./world/cafe/plan";
 import { buildRoom } from "./world/cafe/room";
 import { buildYourScreen } from "./world/cafe/yourScreen";
@@ -58,10 +59,11 @@ const wires = buildWires();
 const sky = buildSky();
 const backdrop = buildBackdrop();
 const life = buildLife(street.people, [...street.colliders, ...wires.colliders]);
+const evening = buildEvening([...street.lamps, ...life.lamps, ...wires.lamps]);
 const cafeRoom = buildRoom(street.cafeFrame);
 const cafePeople = buildCafePeople(street.cafeFrame, makeRng(2007));
 const yourScreen = buildYourScreen(street.cafeFrame);
-scene.add(cafeRoom.group, cafePeople.group, yourScreen.mesh);
+scene.add(cafeRoom.group, cafePeople.group, yourScreen.mesh, evening.group);
 scene.add(sky.group, street.group, life.group, buildSigns([...street.signs, ...life.signs, ...wires.signs]), wires.group, backdrop.group);
 
 // --- the player ----------------------------------------------------------------
@@ -230,6 +232,7 @@ function timeOfDay() {
   backdrop.setLook(look);
   (scene.fog as THREE.Fog).color.copy(look.haze);
   pipeline.setGrade(look);
+  evening.update(gameClock.minutes, look.evening, time);
   // once the sun is down its shadows can't be seen: stop redrawing them
   renderer.shadowMap.autoUpdate = lights.shadowsVisible;
 }

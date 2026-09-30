@@ -4,7 +4,8 @@ import type { Patch } from "../core/floors";
 import { type Rng, makeRng, shuffled } from "../core/rng";
 import { PAL, WALL_COLOURS } from "../render/palette";
 import { buildCafe } from "./buildings/cafe";
-import { type BuildContext, type BuildResult, type PeopleSpot, type SignSpot } from "./buildings/common";
+import { type BuildContext, type BuildResult, type LampSpot, type PeopleSpot, type SignSpot } from "./buildings/common";
+import { type WorldLamp, lampToWorld } from "./evening";
 import { buildHaveli } from "./buildings/haveli";
 import { buildHouse } from "./buildings/house";
 import { buildShop } from "./buildings/shop";
@@ -51,6 +52,8 @@ export type Street = {
   spawn: { x: number; z: number; yaw: number };
   /** Places for people (shopkeepers, the temple), in world terms, south to north. */
   people: WorldPeopleSpot[];
+  /** The buildings' evening lights (world/evening.ts). */
+  lamps: WorldLamp[];
 };
 
 /** A `PeopleSpot` placed in the world: its position, and which way it faces (rotation about the vertical). */
@@ -77,6 +80,7 @@ export function buildStreet(): Street {
   const signs: WorldSign[] = [];
   let cafeFrame = new THREE.Matrix4();
   const people: WorldPeopleSpot[] = [];
+  const lamps: WorldLamp[] = [];
   const rng = makeRng(SEED);
 
   group.add(buildGround());
@@ -93,7 +97,8 @@ export function buildStreet(): Street {
     const parts = new Parts();
     const wall = type === "cafe" ? PAL.limeWhite : rng.pick(WALL_COLOURS);
     const spots: PeopleSpot[] = [];
-    const result = BUILDERS[type]({ parts, w, rng: forkRng(rng), wall, shopName, people: spots });
+    const lampSpots: LampSpot[] = [];
+    const result = BUILDERS[type]({ parts, w, rng: forkRng(rng), wall, shopName, people: spots, lamps: lampSpots });
 
     const mesh = parts.build(name);
     // Turn the building so its local +z (its front) points along `normal`.
@@ -122,6 +127,7 @@ export function buildStreet(): Street {
     }
 
     for (const sp of result.signs) addSign(sp, mesh, rot);
+    for (const sp of lampSpots) lamps.push(lampToWorld(sp, mesh.matrixWorld, rot));
     if (type === "cafe") cafeFrame = mesh.matrixWorld.clone();
     for (const { x, y, z, turn, ...rest } of spots) {
       people.push({ ...rest, position: new THREE.Vector3(x, y, z).applyMatrix4(mesh.matrixWorld), rotationY: rot + turn });
@@ -223,7 +229,7 @@ export function buildStreet(): Street {
   // south to north, so whoever picks from them can space them out along the walk
   const along = (p: THREE.Vector3) => streetCoords(p.x, p.z).s;
   people.sort((a, b) => along(a.position) - along(b.position));
-  return { group, colliders, floors, cafeFrame, signs, spawn: { ...pointAt(1.5, 0), yaw: yawAlong(1.5) }, people };
+  return { group, colliders, floors, cafeFrame, signs, spawn: { ...pointAt(1.5, 0), yaw: yawAlong(1.5) }, people, lamps };
 }
 
 /** A plain boundary wall with a coping on top (the ends of the side roads' back lanes). */
