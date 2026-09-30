@@ -258,14 +258,18 @@ motion; busy but walkable.
       a slow attachment). The threads take turns with `mark` and
       `start.when`; a chat that isn't in front opens behind and its taskbar
       button flashes; "is now online" balloons
-- [ ] Yorkut: profile, scraps, a friend's post, communities
+- [x] Yorkut (`sites/yorkut.ts`): sign in, your profile and scrapbook
+      (Rohan's old scrap), Rohan's "new city new life :)" album with
+      strangers' comments, Priya's profile and communities, the testimonial
+      (pick, type, submit or cancel; she reacts if she's still online),
+      "Bad, bad server. No donut for you." for everything else
 - [ ] MeToob: videos that buffer forever
 - [ ] Background detail: icons, tabs, pop-ups
 - [ ] Log off
 
 The story is settled (`BRIEF.md`, "The story on the computer"); the plan's
 order: shell (done) → Yaaho! with Priya's thread (done) → the song for Priya
-(done) → Rohan + the photo by mail (done) → Yorkut → MeToob and extras → log off
+(done) → Rohan + the photo by mail (done) → Yorkut (done) → MeToob and extras → log off
 for real. The owner chose the tasks (a song, a photo), woven into the chats.
 
 ## 9. The walk home

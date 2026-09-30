@@ -67,7 +67,8 @@ export class Yaaho implements Chat {
     // a few things you do get a quick reaction (sending the wrong file…: story.ts)
     kit.tasks.onPost.add((task) => {
       const r = REACTIONS[task];
-      if (r) setTimeout(() => this.receive(r.buddy, r.says), 2500);
+      // (only from someone still online: after 6, Priya won't see your testimonial till later)
+      if (r && this.person(r.buddy).presence !== "offline") setTimeout(() => this.receive(r.buddy, r.says), 2500);
     });
     this.listBody.className = "ym-list";
   }

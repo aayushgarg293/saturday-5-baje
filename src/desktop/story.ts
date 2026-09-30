@@ -183,6 +183,12 @@ const rohan: Thread = {
       { say: "nahi, ghar pe cable nahi aata", then: [{ they: "cd le le, yahan sab ke paas hai" }] },
       { say: "spoiler mat dena!!", then: [{ they: "lol ok" }] },
     ] },
+    { they: "yorkut pe pune ki photos daali hai, dekhi?" },
+    { you: [
+      { say: "haan dekhi", then: [{ they: "school wali mast hai na" }] },
+      { say: "abhi dekhta hu" },
+      { say: "wo sab kaun hai photo me?", then: [{ they: "school ke log" }] },
+    ] },
     { time: "5:35" },
     { they: "aur team kaisi hai mere bina? :P" },
     { you: [
@@ -259,4 +265,5 @@ export const REACTIONS: Record<string, { buddy: string; says: string }> = {
   "wrongFile:priya_cute_angel": { buddy: "priya_cute_angel", says: "ye kaunsa gaana hai?? :P" },
   "wrongFile:sunny_4_six": { buddy: "sunny_4_six", says: "ye kya bheja?" },
   wrongPhoto: { buddy: "rohan_rockstar", says: "ye kaunsi photo hai lol. team wali bhej na" },
+  testimonial: { buddy: "priya_cute_angel", says: "testimonial?!?! :) :) thanks!!!" },
 };

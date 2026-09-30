@@ -79,6 +79,60 @@ const PAINTERS: Record<string, Painter> = {
     ctx.fillRect(120, 130, 80, 8);
     boy(ctx, 250, 180, 1, "#2f5fae", false);
   },
+  /** Rohan's album: his new building in Pune, tall, under a grey monsoon sky. */
+  pune(ctx) {
+    ctx.fillStyle = "#9aa3ad";
+    ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = "#e8e2d6"; // the tower
+    ctx.fillRect(100, 20, 130, 220);
+    ctx.fillStyle = "#6f8aa8";
+    for (let y = 34; y < 230; y += 26) for (let x = 112; x < 220; x += 28) ctx.fillRect(x, y, 16, 14);
+    ctx.fillStyle = "#4f7a3a"; // trees
+    ctx.beginPath();
+    ctx.arc(50, 220, 50, 0, Math.PI * 2);
+    ctx.arc(280, 225, 45, 0, Math.PI * 2);
+    ctx.fill();
+  },
+  /** Rohan's album: the new school, and boys in its uniform. */
+  school(ctx) {
+    ctx.fillStyle = "#cfe0ee";
+    ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = "#c9785a"; // red-brick building
+    ctx.fillRect(0, 40, W, 130);
+    ctx.fillStyle = "#f1ece0";
+    for (let x = 16; x < W; x += 40) ctx.fillRect(x, 60, 22, 30);
+    ctx.fillStyle = "#b9b09a";
+    ctx.fillRect(0, 170, W, 70);
+    for (let k = 0; k < 4; k++) boy(ctx, 70 + k * 60, 225, 0.9, "#dfe8f5", false);
+  },
+  /** Rohan's album: "with new friends": boys he never mentions, at a mall. */
+  friends(ctx) {
+    ctx.fillStyle = "#e9e4f0";
+    ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = "#b8a0d0"; // shop signs behind
+    ctx.fillRect(0, 30, W, 40);
+    ctx.fillStyle = "#d8d0c0";
+    ctx.fillRect(0, 170, W, 70);
+    const shirts = ["#222", "#c43d2c", "#2f5fae", "#f4f4f4"];
+    for (let k = 0; k < 4; k++) boy(ctx, 70 + k * 60, 200, 1, shirts[k], false);
+  },
+  /** Priya's profile picture: pink flowers (few girls put up their own photo). */
+  flowers(ctx) {
+    ctx.fillStyle = "#fde4ec";
+    ctx.fillRect(0, 0, W, H);
+    for (const [x, y, r] of [[90, 100, 40], [200, 80, 50], [230, 180, 34], [110, 190, 30]] as const) {
+      ctx.fillStyle = "#e86a9a";
+      for (let a = 0; a < 5; a++) {
+        ctx.beginPath();
+        ctx.arc(x + Math.cos(a * 1.26) * r * 0.55, y + Math.sin(a * 1.26) * r * 0.55, r * 0.5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.fillStyle = "#ffd84a";
+      ctx.beginPath();
+      ctx.arc(x, y, r * 0.3, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  },
 };
 
 /** One boy: a head and a shirt (`bat`: holding one). */
