@@ -131,8 +131,10 @@ const PAINTERS: Partial<Record<WorldSign["kind"], PainterSpec>> = {
   stallSign: { ppm: 260, weather: 0.4, paint(ctx, w, h, _i, rng, sign) {
     const [bg, fg, border] = BOARD_STYLES[Math.floor(rng.next() * BOARD_STYLES.length)];
     background(ctx, w, h, bg, border);
-    tilted(ctx, w / 2, h * 0.53, rng.range(-0.02, 0.02), () =>
-      text(ctx, sign.label ?? "", 0, 0, w * 0.86, h * 0.72, fg, DEVANAGARI));
+    // (a label with a line break is painted as two lines: the kachori cart's slogan)
+    const lines = (sign.label ?? "").split("\n");
+    tilted(ctx, w / 2, h * 0.53, rng.range(-0.02, 0.02), () => lines.forEach((line, k) =>
+      text(ctx, line, 0, (k - (lines.length - 1) / 2) * h * 0.42, w * 0.9, (h * 0.72) / lines.length, fg, DEVANAGARI)));
     weather(ctx, w, h, rng, 0.6);
   } },
 

@@ -169,7 +169,11 @@ export function kachoriStall(_rng: Rng): Stall {
   p.slab(-0.15, 1.05, 0.84, 1.2, -0.35, -0.05, PAL.glassPale);
   // the fire in the stove's mouth, and a bulb over the table
   const lamps = [{ kind: "fire", x: -0.8, y: 0.22, z: 0.44, ground: 0 } as LampSpot, bulbOnStick(p, 1.15, -0.35, 0.75)];
-  return { parts: p, size: [2.6, 1.0], signs: [board("कचौरी • समोसा", 0.45, 0.55, 0.42, 1.2, 0.3)], lamps };
+  // the slogan: a board held up behind the table, between the bulb's stick and a second one
+  p.cylinder(0.018, 0.02, 0.9, -0.2, 0.75 + 0.45, -0.35, PAL.bamboo, { segments: 5 });
+  p.slab(-0.22, 1.17, 1.19, 1.63, -0.4, -0.37, PAL.wood);
+  const slogan = board("1 कचौरी 2 समोसा,\nइस जीवन का क्या भरोसा", 0.475, 1.41, -0.365, 1.35, 0.4);
+  return { parts: p, size: [2.6, 1.0], signs: [board("कचौरी • समोसा", 0.45, 0.55, 0.42, 1.2, 0.3), slogan], lamps };
 }
 
 /** Jalebi: a wide flat kadhai with orange spirals frying, and trays stacked with them. */
