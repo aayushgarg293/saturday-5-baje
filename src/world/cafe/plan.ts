@@ -101,6 +101,9 @@ export const OWNER_PC_TURN = 0.6;
 /** (A tall seat: behind a counter this high, he sits up on a revolving stool.) */
 export const OWNER_SEAT = { x: 1.1, z: -8.9, turn: FACE_RAILING, seat: 0.74 };
 
+/** The water cooler, in the back corner; it faces down the hall (+z). (world/cafe/cooler.ts) */
+export const COOLER = { x: HALL.x0 + 0.45, z: HALL.z0 + 0.45 };
+
 /** Ceiling fans down the middle of the hall. */
 export const FANS = [
   { x: -1.1, z: -3.2 },

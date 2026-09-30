@@ -117,6 +117,11 @@ export type ToonOptions = {
    * aren't drawn at all (for torn posters and wall paintings). 0 = off.
    */
   alphaTest?: number;
+  /**
+   * See-through, 0–1 (1: solid, the default). For the water cooler's plastic
+   * jug and the water in it. It doesn't hide what's behind it (no depth written).
+   */
+  opacity?: number;
 };
 
 const toonCache = new Map<string, THREE.MeshToonMaterial>();
@@ -129,14 +134,15 @@ const toonCache = new Map<string, THREE.MeshToonMaterial>();
 export function toon(opts: ToonOptions): THREE.MeshToonMaterial {
   const {
     color, bands = 3, tint = PAL.shadowTint, flatShading = true,
-    vertexColors = false, map, paint = 1, alphaTest = 0,
+    vertexColors = false, map, paint = 1, alphaTest = 0, opacity = 1,
   } = opts;
-  const key = [color, bands, tint, flatShading, vertexColors, paint].join("|");
+  const key = [color, bands, tint, flatShading, vertexColors, paint, opacity].join("|");
   const cached = map ? undefined : toonCache.get(key);
   if (cached) return cached;
 
   const mat = new THREE.MeshToonMaterial({
     color, gradientMap: gradientMap(bands), vertexColors, map: map ?? null, alphaTest,
+    ...(opacity < 1 ? { transparent: true, opacity, depthWrite: false } : {}),
   });
   // The renderer honours `flatShading` on any material, but Three.js's type
   // definitions don't list it for toon materials, so it's set this way.

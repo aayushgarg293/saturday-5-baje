@@ -2,14 +2,14 @@ import * as THREE from "three";
 import { PAL } from "../../render/palette";
 import type { LocalBox, SignSpot } from "../buildings/common";
 import type { Parts } from "../kit";
-import { OWNER_PC_TURN, BOOTH, BOOTHS, type Booth, CLOCK, COUNTER, DESK, FANS, HALL, OWNER_SEAT, TUBES, YOUR_BOOTH, boothPoint } from "./plan";
+import { COOLER, OWNER_PC_TURN, BOOTH, BOOTHS, type Booth, CLOCK, COUNTER, DESK, FANS, HALL, OWNER_SEAT, TUBES, YOUR_BOOTH, boothPoint } from "./plan";
 
 /**
  * The cafe's furniture that never moves, built into the cafe building's own
  * mesh (so it costs nothing extra to draw): the booths (desks, plywood
  * partitions, curtains, CRT monitors, towers, keyboards, plastic chairs),
  * the owner's counter with his PC, the modem and the printer, the fans'
- * rods, the tubelights' battens, the clock's rim, the water cooler.
+ * rods, the tubelights' battens, the clock's rim. (The water cooler is in cooler.ts.)
  *
  * What moves or glows (the fan blades, the lit tubes, the clock's hands, the
  * screens) is in world/cafe/room.ts. Positions come from plan.ts.
@@ -58,12 +58,8 @@ export function furnish(p: Parts, floorY: number): Furnished {
   // the clock's case (its face and hands: room.ts)
   p.cylinder(CLOCK.radius + 0.025, CLOCK.radius + 0.025, 0.05, CLOCK.x + Math.sin(CLOCK.turn) * 0.01, floorY + CLOCK.y, CLOCK.z + Math.cos(CLOCK.turn) * 0.01, 0x7a2f2a, { rz: Math.PI / 2, ry: CLOCK.turn + Math.PI / 2, segments: 24 });
 
-  // at the back: a water cooler with a big blue jug, and a steel glass on a chain
-  const wx = HALL.x0 + 0.45, wz = HALL.z0 + 0.45;
-  p.box(0.4, 0.9, 0.4, wx, floorY + 0.45, wz, 0xe9e4d8);
-  p.cylinder(0.15, 0.15, 0.42, wx, floorY + 1.12, wz, 0x6fa3c9, { segments: 12 }); // the jug
-  p.cylinder(0.05, 0.08, 0.08, wx, floorY + 1.37, wz, 0x6fa3c9, { segments: 10 });
-  colliders.push({ x0: wx - 0.25, x1: wx + 0.25, z0: wz - 0.25, z1: wz + 0.25, ...UP });
+  // at the back: the water cooler (built in cooler.ts: its jug is see-through); here, only what you bump into
+  colliders.push({ x0: COOLER.x - 0.22, x1: COOLER.x + 0.22, z0: COOLER.z - 0.22, z1: COOLER.z + 0.26, ...UP });
   // a dustbin by the counter
   p.cylinder(0.14, 0.12, 0.35, COUNTER.x0 - 0.2, floorY + 0.175, COUNTER.z0 - 0.3, 0x3f6b4a, { segments: 10 });
 

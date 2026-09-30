@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { buildCooler } from "./cooler";
 import { buildHardware } from "./hardware";
 import { flat, toon } from "../../render/toon";
 import { Parts } from "../kit";
@@ -40,6 +41,8 @@ export function buildRoom(frame: THREE.Matrix4): Room {
   group.applyMatrix4(frame);
   // the computers' faces: keys, brands, drives, grilles (hardware.ts: one mesh for every booth)
   group.add(buildHardware());
+  // the water cooler (cooler.ts: its jug is see-through, so it's its own meshes)
+  group.add(buildCooler());
   const floorY = HALL.floor;
 
   // --- fans: a motor housing and three blades, one mesh each, turning ------------------------
