@@ -10,6 +10,7 @@ import { Input } from "./core/input";
 import { Player } from "./core/player";
 import { makeRng } from "./core/rng";
 import { Seat } from "./core/seat";
+import { charge } from "./desktop/cafeTimer";
 import { Desktop } from "./desktop/desktop";
 import { buildCafePeople } from "./people/cafePeople";
 import { addLights } from "./render/lights";
@@ -70,7 +71,8 @@ player.place(street.spawn.x, street.spawn.z, street.spawn.yaw);
 const gameClock = new GameClock();
 const seat = new Seat(camera, player, input, yourSeat(street.cafeFrame));
 seat.onSit = () => {
-  // the first time you sit down, the computer dials up (and every time, it's connected after)
+  // the first time you sit down, the computer dials up (and every time, it's connected after; not after logging off)
+  if (loggedOff) return;
   yourScreen.connect();
   if (!connected) {
     cue("modem", seat.spots.screen);
@@ -81,6 +83,9 @@ seat.onSit = () => {
 let connected = false;
 /** When your time at the computer began (game minutes), for the cafe's timer. */
 let sessionStart = 0;
+/** Logged off: the computer's done with (it won't connect again), and how long you used it. */
+let loggedOff = false;
+let visitMinutes = 0;
 /** Up in the cafe (the only place above the street): where T can look at the clock. */
 const inCafe = () => player.pos.y > 4;
 
@@ -113,10 +118,17 @@ desktop.onLeave = (byClick) => {
   // it on a click, not a key: after Esc, your next click does it (below).
   if (byClick) input.lock();
 };
-// Log Off, for now, just leans you back (the full log off comes later in phase 8)
+// Log Off: your time here is over. The computer goes back to its welcome screen
+// (for the next customer), you lean back, and the cafe's timer stops: that's
+// your bill (paying at the counter: phase 9).
 desktop.onLogOff = () => {
+  loggedOff = true;
+  visitMinutes = gameClock.minutes - sessionStart;
   desktop.reset();
-  desktop.onLeave(true);
+  desktop.hide();
+  seat.leanBack();
+  yourScreen.logOff();
+  input.lock(); // (may be refused, after the wait: then a click on the view does it)
 };
 document.addEventListener("mousedown", () => {
   if (input.locked && seat.seated && yourScreen.ready()) seat.leanIn();
@@ -159,7 +171,7 @@ function update(dt: number) {
   yourScreen.update(dt, gameClock.label());
   desktop.update(dt);
   desktop.setTime(gameClock.label());
-  if (connected) desktop.setUsed(gameClock.minutes - sessionStart);
+  if (connected && !loggedOff) desktop.setUsed(gameClock.minutes - sessionStart);
   showPrompt(prompt());
   cafePeople.update(time, dt, player.pos);
   lights.followPlayer(player.pos);
@@ -173,6 +185,7 @@ function update(dt: number) {
 function prompt(): string | null {
   if (desktop.isOpen || seat.leaned) return null;
   if (!input.locked && seat.seated) return "[Click] to look around again";
+  if (seat.seated && loggedOff) return `[E] get up    (₹${charge(visitMinutes)} to pay at the counter)`;
   if (seat.seated) return `${yourScreen.ready() ? "[Click] use the computer    " : ""}[E] get up    [T] look at the clock`;
   return seat.canSit() ? "[E] sit down" : null;
 }

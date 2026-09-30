@@ -6,6 +6,7 @@ import { filter, gain, noiseSource } from "../audio/synth";
  * (original, made in code: in the spirit of the era's sounds, not copies):
  *
  *   chime   the desktop coming up: a short, warm rising phrase
+ *   logoff  logging off: the same warmth, falling
  *   click   a button pressed
  *   ding    a new message
  *   knock   a friend comes online (the messenger's "door")
@@ -15,7 +16,7 @@ import { filter, gain, noiseSource } from "../audio/synth";
  * front of the speakers.
  */
 
-type Sound = "chime" | "click" | "ding" | "knock" | "buzz";
+type Sound = "chime" | "logoff" | "click" | "ding" | "knock" | "buzz";
 
 export function desktopSounds(engine: AudioEngine) {
   const play = (sound: Sound) => {
@@ -46,6 +47,11 @@ export function desktopSounds(engine: AudioEngine) {
         // a rising phrase over a held chord (E♭ major, then up to the octave)
         [311.1, 392.0, 466.2].forEach((f) => note(f, t, 2.8, 0.05));
         [622.3, 466.2, 784.0, 932.3].forEach((f, k) => note(f, t + 0.15 + k * 0.28, 1.6, 0.09));
+        break;
+      }
+      case "logoff": {
+        [466.2, 392.0, 311.1].forEach((f, k) => note(f, t + k * 0.3, 1.4, 0.08));
+        [155.6, 233.1].forEach((f) => note(f, t + 0.6, 2.2, 0.05));
         break;
       }
       case "click":

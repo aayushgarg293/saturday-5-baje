@@ -137,9 +137,10 @@ new starting, in the same hour. Bittersweet and hopeful at once.
 **Chat style:** as people typed then: lowercase, Hinglish in Roman letters,
 "wat r u doin", "kk", "brb", "gtg", "lol", ":P", "hiii", too many "!!!".
 
-**To decide in phase 8:** chat pacing against the 10× clock (6 pm arrives
-only a few real minutes after sitting down), so the beats may follow the
-story rather than the exact time.
+**Chat pacing (settled in phase 8):** at the desk the story moves the clock:
+it stands still, and jumps to each moment the story names (Priya says hi at
+4:48, Rohan comes online at 5:25, Priya leaves at 6:00). Away from the desk
+it runs at 10× as before.
 
 ### Pop culture
 

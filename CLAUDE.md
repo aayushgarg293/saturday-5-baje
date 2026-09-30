@@ -8,11 +8,15 @@ Read both before starting work.
 
 ## Status
 
-Phases 0–7 done: the street (30 people, traffic, animals, sound), and the
-cafe: the stair, the long hall with 13 booths, the owner and four customers,
-the cafe's own sounds, sitting down at your computer in booth 2 (E), the
-dial-up modem, the game clock (T to look at it). Next: phase 8, the XP
-desktop (it needs the story on the computer first: BRIEF.md, open questions).
+Phases 0–8 done: the street (30 people, traffic, animals, sound); the cafe
+(the stair, the hall with 13 booths, the owner and four customers, sitting
+down in booth 2, the dial-up modem, the game clock); and the computer:
+`src/desktop/`, an HTML Windoze XP look-alike over the game (lean in with a
+click, Esc to lean back), with Yaaho! Messenger (Priya and Rohan, the story
+as data in `desktop/story.ts`), Internet Xplorer (Rediffit portal, SongzPK,
+Rediffit Mail, Yorkut, MeToob), two tasks woven into the chats (a song for
+Priya, a photo for Rohan), the cafe timer, and Log Off. Next: phase 9,
+paying the owner and the walk home at dusk.
 The owner prefers a spare soundscape: add sounds only when asked.
 
 Baseline (2026-09-28, M4, Chrome, 1470×956): **~3.5 ms per frame at pixel

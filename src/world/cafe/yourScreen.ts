@@ -31,6 +31,8 @@ export type YourScreen = {
   update(dt: number, time: string): void;
   /** Connected, the desktop up: you can lean in and use it. */
   ready(): boolean;
+  /** Logged off: back to the welcome screen, for good (the next customer's). */
+  logOff(): void;
 };
 
 /** When each connecting stage begins, seconds after sitting down (the modem's sound is timed to match: audio/cafe.ts). */
@@ -59,6 +61,10 @@ export function buildYourScreen(frame: THREE.Matrix4): YourScreen {
       if (connecting < 0) connecting = 0;
     },
     ready: () => connecting >= STAGES[STAGES.length - 1][0],
+    logOff() {
+      connecting = -1;
+      screen.show("welcome");
+    },
     update(dt, time) {
       if (connecting < 0) return;
       connecting += dt;

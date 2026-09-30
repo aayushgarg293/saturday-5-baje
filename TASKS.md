@@ -268,11 +268,14 @@ motion; busy but walkable.
 - [x] Small extras: the cafe's timer strip, "CyberTime · Booth 2 · Used
       1:05 · ₹30" (`cafeTimer.ts`: the wall's rates, and `charge()` for
       paying in phase 9); the "DialNet is now connected" balloon
-- [ ] Log off
+- [x] Log off: Start › Log Off › "Are you sure?" › XP's blue "Logging
+      off..." screen and a falling sound › you lean back; the monitor shows
+      its welcome screen for good, the cafe's timer stops, and the hint
+      shows the bill ("₹40 to pay at the counter") for phase 9
 
 The story is settled (`BRIEF.md`, "The story on the computer"); the plan's
 order: shell (done) → Yaaho! with Priya's thread (done) → the song for Priya
-(done) → Rohan + the photo by mail (done) → Yorkut (done) → MeToob and extras (done) → log off
+(done) → Rohan + the photo by mail (done) → Yorkut (done) → MeToob and extras (done) → log off (done). **Phase 8 done.**
 for real. The owner chose the tasks (a song, a photo), woven into the chats.
 
 ## 9. The walk home

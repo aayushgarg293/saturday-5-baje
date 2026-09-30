@@ -59,6 +59,13 @@ export const CSS = /* css */ `
 .xp-toast { position: absolute; right: 8px; bottom: 38px; z-index: 960; padding: 8px 12px; border-radius: 6px;
   background: #ffffe1; border: 1px solid #888; box-shadow: 2px 2px 5px rgba(0,0,0,0.3); font-weight: bold; white-space: pre-line; }
 
+/* logging off: XP's blue screen with its lighter band */
+.xp-logoff { position: absolute; inset: 0; z-index: 990; display: flex; align-items: center; background: #5a7edc; }
+.xp-logoff .band { width: 100%; padding: 40px 0; display: flex; gap: 30px; align-items: baseline; justify-content: center;
+  color: #fff; background: linear-gradient(90deg, #5a7edc, #7a9ae4 50%, #5a7edc); border-top: 2px solid #f09a3e; border-bottom: 2px solid #9ab4ee; }
+.xp-logoff b { font: italic bold 30px Tahoma, sans-serif; }
+.xp-logoff span { font: 18px Tahoma, sans-serif; }
+
 /* the Start menu */
 .xp-menu { position: absolute; left: 0; bottom: 30px; width: 380px; z-index: 950; border-radius: 6px 6px 0 0; overflow: hidden;
   box-shadow: 2px 2px 8px rgba(0,0,0,0.5); background: #fff; display: none; }

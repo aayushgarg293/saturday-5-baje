@@ -30,7 +30,7 @@ export class Desktop {
   isOpen = false;
   /** You want to lean back out: Esc (`byClick` false), or a click on the bezel (true). */
   onLeave: (byClick: boolean) => void = () => {};
-  /** You chose Log Off. */
+  /** You logged off (after the "Logging off..." screen). */
   onLogOff: () => void = () => {};
 
   readonly windows: WindowManager;
@@ -50,6 +50,8 @@ export class Desktop {
   private clock: HTMLSpanElement;
   private scale = 1;
   private chimed = false;
+  /** Logging off (Esc does nothing meanwhile). */
+  private leaving = false;
   /** The apps, by name (later steps add Yaaho! Messenger, Internet Xplorer…). */
   readonly apps: Record<string, App> = {};
 
@@ -122,6 +124,7 @@ export class Desktop {
     window.addEventListener("resize", () => this.fit());
     window.addEventListener("keydown", (e) => {
       if (!this.isOpen) return;
+      if (this.leaving) return;
       if (e.code === "Escape") this.onLeave(false);
       // other keys go to the window in front (typing a reply, a search…)
       else if (this.windows.focused()?.onKey?.(e)) e.preventDefault();
@@ -291,6 +294,20 @@ export class Desktop {
     return menu;
   }
 
+  /** The blue "Logging off..." screen for a moment, the falling sound; then you're done here. */
+  private loggingOff() {
+    const screen = div("xp-logoff");
+    screen.innerHTML = `<div class="band"><b>Windoze</b><span>Logging off...</span></div>`;
+    this.screen.append(screen);
+    this.sounds.play("logoff");
+    this.leaving = true;
+    setTimeout(() => {
+      screen.remove();
+      this.leaving = false;
+      this.onLogOff();
+    }, 2600);
+  }
+
   /** "Log Off Windoze": are you sure? */
   private confirmLogOff() {
     const box = document.createElement("div");
@@ -302,7 +319,7 @@ export class Desktop {
     box.querySelector(".no")!.addEventListener("click", () => this.windows.close(win));
     box.querySelector(".yes")!.addEventListener("click", () => {
       this.windows.close(win);
-      this.onLogOff();
+      this.loggingOff();
     });
   }
 }
