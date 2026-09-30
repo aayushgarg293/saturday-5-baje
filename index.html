@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Cyber Cafe</title>
+    <title>Saturday, 5 Baje</title>
     <style>
       html, body { margin: 0; height: 100%; overflow: hidden; background: #e9dcc3; }
       canvas { display: block; }
@@ -17,15 +17,36 @@
       #start h1 { margin: 0 0 12px; font-size: 28px; letter-spacing: 0.04em; }
       #start p { margin: 0; opacity: 0.85; }
       #start[hidden] { display: none; }
+      #start .title { margin: 0 0 18px; font: italic 20px Georgia, serif; opacity: 0.9; }
+
+      /* On a phone or tablet (no mouse, no keyboard) the game can't be played: say so instead */
+      #phone { display: none; }
+      @media (hover: none) and (pointer: coarse) {
+        #start { display: none; }
+        #phone {
+          position: fixed; inset: 0; display: grid; place-items: center; padding: 24px;
+          background: rgba(40, 28, 20, 0.8); color: #fff8ec; text-align: center;
+          font: 17px/1.6 system-ui, sans-serif;
+        }
+        #phone h1 { margin: 0 0 12px; font: italic 26px Georgia, serif; }
+      }
     </style>
   </head>
   <body>
     <canvas id="view"></canvas>
     <div id="start">
       <div>
+        <p class="title">Saturday, 5 Baje</p>
         <h1>Click to walk</h1>
         <p>W A S D to move &middot; mouse to look &middot; Shift to walk faster</p>
         <p>Esc to release the mouse &middot; M to mute the sound</p>
+      </div>
+    </div>
+    <div id="phone">
+      <div>
+        <h1>Saturday, 5 Baje</h1>
+        <p>This game needs a computer: a keyboard and a mouse (or trackpad).</p>
+        <p>Open this link on a laptop or desktop, in Chrome or Safari.</p>
       </div>
     </div>
     <script type="module" src="/src/main.ts"></script>
