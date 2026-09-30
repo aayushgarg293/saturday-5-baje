@@ -8,6 +8,7 @@ import { Bed } from "../audio/bed";
 import { audioLab } from "./audioLab";
 import type { AudioEngine } from "../audio/engine";
 import type * as THREE from "three";
+import type { GameClock } from "../core/clock";
 import type { Player } from "../core/player";
 import type { Life } from "../world/life";
 import type { Street } from "../world/street";
@@ -46,6 +47,8 @@ export type GameHandle = {
   seat: Seat;
   /** The sound (for measuring levels: Claude can't listen). */
   audio: AudioEngine;
+  /** The game's clock: set `minutes` to see another time of day (18 * 60 + 20 = 6:20 pm). */
+  clock: GameClock;
   /** Advance the game by `seconds` without rendering. */
   step(seconds: number): void;
   /** Render one frame now. */

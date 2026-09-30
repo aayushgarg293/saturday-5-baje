@@ -1,7 +1,6 @@
 import * as THREE from "three";
 import { makeRng } from "../core/rng";
-import { sunDirection } from "../render/lights";
-import { PAL } from "../render/palette";
+import type { Look } from "../render/daylight";
 import { flat } from "../render/toon";
 
 /**
@@ -15,6 +14,7 @@ import { flat } from "../render/toon";
  *   cream tops over violet-grey undersides, the way cel animation shades them.
  *
  * Both follow the camera, so the sky always stays "infinitely" far away.
+ * Their colours follow the time of day (`setLook`: render/daylight.ts).
  *
  * The dome is one of the two places with a hand-written shader (the other is
  * render/post.ts): a sky gradient isn't a surface that light falls on, so
@@ -23,14 +23,27 @@ import { flat } from "../render/toon";
 
 const DOME_RADIUS = 1000;
 
-export function buildSky(): { group: THREE.Group; follow(camera: THREE.Camera): void } {
+export type Sky = { group: THREE.Group; follow(camera: THREE.Camera): void; setLook(look: Look): void };
+
+export function buildSky(): Sky {
   const group = new THREE.Group();
   group.name = "sky";
-  group.add(buildDome(), buildClouds());
+  const dome = buildDome();
+  const clouds = buildClouds();
+  group.add(dome, clouds);
+  const u = (dome.material as THREE.ShaderMaterial).uniforms;
   return {
     group,
     follow(camera) {
       group.position.copy(camera.position);
+    },
+    setLook(look) {
+      u.uTop.value.copy(look.skyTop);
+      u.uMid.value.copy(look.skyMid);
+      u.uHorizon.value.copy(look.skyHorizon);
+      u.uSunGlow.value.copy(look.sunGlow);
+      u.uSunDir.value.copy(look.toSun);
+      for (const card of clouds.children) ((card as THREE.Mesh).material as THREE.MeshBasicMaterial).color.copy(look.clouds);
     },
   };
 }
@@ -41,11 +54,12 @@ function buildDome(): THREE.Mesh {
     depthWrite: false,
     fog: false,
     uniforms: {
-      uTop: { value: new THREE.Color(PAL.skyTop) },
-      uMid: { value: new THREE.Color(PAL.skyMid) },
-      uHorizon: { value: new THREE.Color(PAL.skyHorizon) },
-      uSunGlow: { value: new THREE.Color(PAL.sunGlow) },
-      uSunDir: { value: sunDirection() },
+      // (set every frame from the time of day: setLook)
+      uTop: { value: new THREE.Color() },
+      uMid: { value: new THREE.Color() },
+      uHorizon: { value: new THREE.Color() },
+      uSunGlow: { value: new THREE.Color() },
+      uSunDir: { value: new THREE.Vector3(0, 1, 0) },
       uBands: { value: 24 },
     },
     vertexShader: /* glsl */ `

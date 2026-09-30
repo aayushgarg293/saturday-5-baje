@@ -13,6 +13,7 @@ import { Seat } from "./core/seat";
 import { charge } from "./desktop/cafeTimer";
 import { Desktop } from "./desktop/desktop";
 import { buildCafePeople } from "./people/cafePeople";
+import { lookAt } from "./render/daylight";
 import { addLights } from "./render/lights";
 import { PAL } from "./render/palette";
 import { Pipeline } from "./render/post";
@@ -55,12 +56,13 @@ const lights = addLights(scene);
 const street = buildStreet();
 const wires = buildWires();
 const sky = buildSky();
+const backdrop = buildBackdrop();
 const life = buildLife(street.people, [...street.colliders, ...wires.colliders]);
 const cafeRoom = buildRoom(street.cafeFrame);
 const cafePeople = buildCafePeople(street.cafeFrame, makeRng(2007));
 const yourScreen = buildYourScreen(street.cafeFrame);
 scene.add(cafeRoom.group, cafePeople.group, yourScreen.mesh);
-scene.add(sky.group, street.group, life.group, buildSigns([...street.signs, ...life.signs, ...wires.signs]), wires.group, buildBackdrop());
+scene.add(sky.group, street.group, life.group, buildSigns([...street.signs, ...life.signs, ...wires.signs]), wires.group, backdrop.group);
 
 // --- the player ----------------------------------------------------------------
 const input = new Input(canvas);
@@ -179,6 +181,19 @@ function update(dt: number) {
   radio?.update(dt, player.pos);
   streetSounds?.update(dt, player.pos);
   cafeSounds?.update(dt, player.pos);
+  timeOfDay();
+}
+
+/** The light, the sky, the haze and the grade follow the clock (render/daylight.ts). */
+function timeOfDay() {
+  const look = lookAt(gameClock.minutes);
+  lights.setLook(look);
+  sky.setLook(look);
+  backdrop.setLook(look);
+  (scene.fog as THREE.Fog).color.copy(look.haze);
+  pipeline.setGrade(look);
+  // once the sun is down its shadows can't be seen: stop redrawing them
+  renderer.shadowMap.autoUpdate = lights.shadowsVisible;
 }
 
 /** The hint at the bottom of the screen: what you can do right now. */
@@ -232,6 +247,7 @@ if (import.meta.env.DEV) {
     seat,
     audio,
     render,
+    clock: gameClock,
     step(seconds) {
       // fixed 1/60 s steps, like real frames, so results match normal play
       for (let t = 0; t < seconds; t += 1 / 60) update(1 / 60);

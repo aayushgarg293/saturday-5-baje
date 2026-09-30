@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import type { Look } from "../render/daylight";
 import { makeRng } from "../core/rng";
 import { PAL } from "../render/palette";
 import { flat } from "../render/toon";
@@ -28,7 +29,12 @@ const RINGS: Ring[] = [
 /** The fort stands on the middle ring. */
 const FORT_RING = 1;
 
-export function buildBackdrop(): THREE.Group {
+/** How dark each ring goes at dusk, against the sky's haze: far rings stay paler (distance), near ones darker. */
+const DUSK_SHADE = [0.85, 0.7, 0.55];
+
+export type Backdrop = { group: THREE.Group; setLook(look: Look): void };
+
+export function buildBackdrop(): Backdrop {
   const group = new THREE.Group();
   group.name = "backdrop";
   // rings are centred on the middle of the street
@@ -49,6 +55,7 @@ export function buildBackdrop(): THREE.Group {
     mesh.position.set(mid.x, 0, mid.z);
     mesh.renderOrder = -1; // behind everything else
     group.add(mesh);
+    tintable.push(...own(mesh, i));
     if (i === FORT_RING) {
       const y = height(FORT_BEARING) - 2; // sunk a little into the hilltop
       // the fort's outer walls follow the hill down, so it needs the ground height either side
@@ -61,9 +68,45 @@ export function buildBackdrop(): THREE.Group {
       );
       fort.rotation.y = -FORT_BEARING; // face the town
       group.add(fort);
+      tintable.push(...own(fort, i));
     }
   });
-  return group;
+  const target = new THREE.Color();
+  return {
+    group,
+    /**
+     * The hills are painted, not lit, so the time of day recolours them: from
+     * their afternoon colours toward the haze, darkened, as the evening comes,
+     * until they're dusky silhouettes against the sky.
+     */
+    setLook(look) {
+      const k = THREE.MathUtils.smoothstep(look.evening, 0, 0.8);
+      for (const t of tintable) {
+        target.copy(look.haze).multiplyScalar(DUSK_SHADE[t.ring]);
+        t.material.color.copy(t.day).lerp(target, k);
+      }
+    },
+  };
+}
+
+type Tintable = { material: THREE.MeshBasicMaterial; day: THREE.Color; ring: number };
+const tintable: Tintable[] = [];
+
+/**
+ * Give everything in `object` its own copy of its material (flat() shares one
+ * per colour across the game; recolouring a shared one would recolour other
+ * things too), and remember its afternoon colour.
+ */
+function own(object: THREE.Object3D, ring: number): Tintable[] {
+  const out: Tintable[] = [];
+  object.traverse((o) => {
+    const mesh = o as THREE.Mesh;
+    if (!(mesh.material instanceof THREE.MeshBasicMaterial)) return;
+    const material = mesh.material.clone();
+    mesh.material = material;
+    out.push({ material, day: material.color.clone(), ring });
+  });
+  return out;
 }
 
 /**

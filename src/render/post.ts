@@ -163,6 +163,9 @@ const GRADE = {
   vignette: 0.18, // corners darken slightly
   grain: 0.022, // faint paper grain
 };
+/** The grade's tints and warmth follow the time of day (render/daylight.ts; Pipeline.setGrade). */
+export type GradeLook = { gradeLight: THREE.Color; gradeShadow: THREE.Color; warmth: number };
+
 /** The same pass doing nothing but the conversion to screen colours (grade toggled off). */
 const NEUTRAL: typeof GRADE = {
   shadowTint: 0xffffff, lightTint: 0xffffff, saturation: 1, lift: 0, warmth: 0, vignette: 0, grain: 0,
@@ -182,6 +185,13 @@ function pass(fragmentShader: string, uniforms: Record<string, THREE.IUniform>) 
 export class Pipeline {
   /** Switch passes off to compare (dev keys O and G). */
   readonly enabled = { ink: true, grade: true };
+  /** The time of day's tints (set every frame; until then, GRADE's afternoon ones). */
+  private gradeLook: GradeLook | null = null;
+
+  /** Lean the grade toward the time of day's colours (render/daylight.ts). */
+  setGrade(look: GradeLook) {
+    this.gradeLook = look;
+  }
 
   private readonly sceneTarget: THREE.WebGLRenderTarget;
   private readonly inkTarget: THREE.WebGLRenderTarget;
@@ -281,6 +291,11 @@ export class Pipeline {
     u.uSaturation.value = g.saturation;
     u.uLift.value = g.lift;
     u.uWarmth.value = g.warmth;
+    if (this.enabled.grade && this.gradeLook) {
+      u.uShadowTint.value.copy(this.gradeLook.gradeShadow);
+      u.uLightTint.value.copy(this.gradeLook.gradeLight);
+      u.uWarmth.value = this.gradeLook.warmth;
+    }
     u.uVignette.value = g.vignette;
     u.uGrain.value = g.grain;
     r.setRenderTarget(this.gradeTarget);
