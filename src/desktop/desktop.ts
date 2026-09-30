@@ -1,6 +1,9 @@
 import type { AudioEngine } from "../audio/engine";
-import { ICONS, messageBox, openMyComputer, openMyDocuments, openRecycleBin } from "./apps/basic";
+import { ICONS, messageBox, openFolder, openMyComputer, openMyDocuments, openRecycleBin } from "./apps/basic";
+import { Xplorer } from "./apps/xplorer";
 import { Yaaho } from "./apps/yaaho";
+import { Files } from "./files";
+import { type Kit, Tasks } from "./kit";
 import { type DesktopSounds, desktopSounds } from "./sounds";
 import { CSS, SCREEN } from "./styles";
 import { wallpaperImage } from "./wallpaper";
@@ -29,7 +32,11 @@ export class Desktop {
   onLogOff: () => void = () => {};
 
   readonly windows: WindowManager;
+  readonly kit: Kit;
   readonly yaaho: Yaaho;
+  readonly xplorer: Xplorer;
+  /** Things moved on every frame while the desktop is up (downloads, pages loading, the chats). */
+  private tickers = new Set<(dt: number) => void>();
   readonly sounds: DesktopSounds;
   private overlay: HTMLDivElement;
   private glass: HTMLDivElement;
@@ -58,17 +65,30 @@ export class Desktop {
     bezel.append(this.glass);
     this.overlay.append(bezel);
     document.body.append(this.overlay);
-    // a click on the bezel (not on the screen) leans you back
+    // a click on the bezel or round it (not on the screen) leans you back. (Checked by what was
+    // clicked, not by "is it outside the screen": a link's page is gone by the time its click gets here.)
     this.overlay.addEventListener("click", (e) => {
-      if (this.isOpen && !this.glass.contains(e.target as Node)) this.onLeave(true);
+      if (this.isOpen && (e.target === this.overlay || e.target === bezel)) this.onLeave(true);
     });
 
     this.windows = new WindowManager(this.screen, () => this.scale, this.sounds);
     this.windows.onChange = () => this.drawTasks();
 
+    this.kit = {
+      wm: this.windows,
+      sounds: this.sounds,
+      files: new Files(),
+      tasks: new Tasks(),
+      tick: (fn) => {
+        this.tickers.add(fn);
+        return () => this.tickers.delete(fn);
+      },
+    };
+    this.yaaho = new Yaaho(this.kit);
+    this.xplorer = new Xplorer(this.kit);
     this.addApp("computer", "My Computer", ICONS.computer, () => openMyComputer(this.windows));
-    this.addApp("documents", "My Documents", ICONS.documents, () => openMyDocuments(this.windows));
-    this.yaaho = new Yaaho(this.windows, this.sounds);
+    this.addApp("documents", "My Documents", ICONS.documents, () => openMyDocuments(this.kit));
+    this.addApp("xplorer", "Internet Xplorer", ICONS.xplorer, () => this.xplorer.open());
     this.addApp("yaaho", "Yaaho! Messenger", ICONS.yaaho, () => this.yaaho.openList());
     this.addApp("recycle", "Recycle Bin", ICONS.recycle, () => openRecycleBin(this.windows));
 
@@ -97,8 +117,8 @@ export class Desktop {
     window.addEventListener("keydown", (e) => {
       if (!this.isOpen) return;
       if (e.code === "Escape") this.onLeave(false);
-      // other keys go to the chat in front (typing your reply)
-      else if (this.yaaho.key(e)) e.preventDefault();
+      // other keys go to the window in front (typing a reply, a search…)
+      else if (this.windows.focused()?.onKey?.(e)) e.preventDefault();
     });
     this.drawIcons();
   }
@@ -131,7 +151,9 @@ export class Desktop {
 
   /** Every frame. The desktop's life (the chats) only moves on while you're on it. */
   update(dt: number) {
-    if (this.isOpen) this.yaaho.update(dt);
+    if (!this.isOpen) return;
+    this.yaaho.update(dt);
+    for (const fn of this.tickers) fn(dt);
   }
 
   /** The time in the tray. */
@@ -220,6 +242,7 @@ export class Desktop {
     );
     right.append(
       item(ICONS.documents, "My Documents", byName("documents")),
+      item(ICONS.music, "My Music", () => openFolder(this.kit, "music")),
       item(ICONS.computer, "My Computer", byName("computer")),
       item(ICONS.control, "Control Panel", denied),
     );

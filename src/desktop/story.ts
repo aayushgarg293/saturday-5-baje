@@ -14,6 +14,12 @@ import type { Thread } from "./thread";
  *   { time: "5:05" }          the clock moves on to 5:05 pm
  *   { status: "offline" }     they go offline / idle / online
  *   { buzz: true }            BUZZ! (the window shakes)
+ *   { waitFor: "songSent", … } wait until you've done a task (Priya has the
+ *                             song), with nudges meanwhile, then `done` plays;
+ *                             or after `giveUpAfter` seconds, `notDone`
+ *
+ * The tasks: "songSent" (a Jab We Mate song sent to Priya with Yaaho!'s
+ * Send File; the songs come from SongzPK in Internet Xplorer).
  *
  * Chat style, as people typed then: lowercase, Hinglish in Roman letters,
  * "kk", "brb", "gtg", "lol", ":P", "hiii", too many "!!!".
@@ -78,6 +84,19 @@ const priya: Thread = {
       { say: "mere paas mp3 hai, pen drive me de dunga", then: [{ they: "sachii?? thanks!!" }] },
       { say: "tumhe kaunsa pasand hai?", then: [{ they: "sab :P" }] },
     ] },
+    { wait: 4 },
+    // the song: he has to find it, download it, and send it (a task: see the top)
+    { they: "wo train wala gaana hai tumhare paas?" },
+    { they: "yaaho pe bhej do na plzzz" },
+    { you: [
+      { say: "haan abhi bhejta hu" },
+      { say: "ruk, dhundhta hu" },
+      { say: "rail gaadi wala? haan", then: [{ they: "haan wahi!!" }] },
+    ] },
+    { they: "songzpk pe sab milta hai" },
+    { waitFor: "songSent", nudges: ["??", "mila?", "hello"], giveUpAfter: 300,
+      done: [{ they: "mil gaya!!! thanks :D" }, { they: "repeat pe sun rahi hu" }],
+      notDone: [{ they: "koi nahi, tuition me pen drive me de dena :)" }] },
     { wait: 6 },
     { they: "acha sunn" },
     { hesitate: 5 },

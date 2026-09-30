@@ -86,6 +86,33 @@ export const CSS = /* css */ `
 .xp-body { flex: 1; overflow: auto; background: #fff; border: 3px solid #0050ee; border-top: 0; }
 .xp-window.inactive .xp-body { border-color: #7e9ee3; }
 
+/* a dialog's grey body; a sunken text field; the green-block progress bar */
+.xp-dialog { height: 100%; box-sizing: border-box; padding: 12px 14px; background: #ece9d8; line-height: 1.5; }
+.xp-dialog .buttons { margin-top: 12px; text-align: right; }
+.xp-dialog .facts, .xp-dialog .facts2 { display: flex; gap: 10px; margin: 6px 0; }
+.xp-dialog .facts2 { display: block; color: #333; }
+.xp-dialog .facts .pic { width: 32px; height: 32px; flex: none; border-radius: 3px; }
+.xp-dialog .what { font-weight: bold; }
+.xp-dialog .from { color: #555; margin-bottom: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.xp-field { display: inline-block; min-height: 15px; padding: 2px 5px; background: #fff; border: 1px solid #7f9db9; vertical-align: middle; }
+.xp-progress { height: 14px; padding: 1px; background: #fff; border: 1px solid #7f9db9; border-radius: 2px; }
+.xp-progress > div { height: 100%; width: 0; background: repeating-linear-gradient(90deg, #37c037 0 7px, transparent 7px 9px); }
+/* the Open box: folders down the left, files, the name, the buttons */
+.xp-openbox { display: flex; gap: 8px; padding: 8px; }
+.xp-openbox .places { width: 96px; padding: 4px 0; background: #7a96df; border-radius: 3px; }
+.xp-openbox .place { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 2px; color: #fff; text-align: center; }
+.xp-openbox .place .pic { width: 26px; height: 22px; border-radius: 2px; }
+.xp-openbox .place.here { background: rgba(255,255,255,0.25); }
+.xp-openbox .main { flex: 1; display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+.xp-openbox .files { flex: 1; overflow: auto; background: #fff; border: 1px solid #7f9db9; }
+.xp-openbox .file { display: flex; align-items: center; gap: 6px; padding: 2px 5px; }
+.xp-openbox .file .pic { width: 16px; height: 16px; flex: none; border-radius: 2px; }
+.xp-openbox .file span { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.xp-openbox .file i { color: #888; font-style: normal; }
+.xp-openbox .file.chosen { color: #fff; background: #316ac5; }
+.xp-openbox .name .xp-field { width: 70%; }
+.xp-openbox .buttons { margin: 0; }
+
 /* a plain XP dialog button */
 .xp-button { display: inline-block; min-width: 70px; padding: 3px 10px; text-align: center; border: 1px solid #003c74;
   border-radius: 3px; background: linear-gradient(#fff, #ece9d8 85%, #d6d0c5); }

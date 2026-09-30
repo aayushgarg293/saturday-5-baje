@@ -244,15 +244,25 @@ motion; busy but walkable.
       bezel, faint CRT lines); Esc or a click on the bezel leans you back.
       The 3D room isn't drawn meanwhile. Locked-down cafe: Paint, games and
       Control Panel say "restrictions". Log Off only leans you back, for now.
+- [x] Yaaho! Messenger: friends list, chat windows, typing…, pick-and-type
+      replies (`typing.ts`); the story as data (`story.ts`, played by
+      `thread.ts`); at the desk the story moves the clock (`core/clock.ts`)
+- [x] The song for Priya: Internet Xplorer (`apps/xplorer.ts`, pages
+      arrive top to bottom), SongzPK (`sites/songz.ts`), the XP download
+      box (`download.ts`, `progress.ts`: dial-up numbers at 10× speed),
+      Send File (`openBox.ts`); her thread waits on it (`waitFor`, with
+      nudges and a way on if you don't)
+- [ ] Rohan's thread (two chats at once, brb, BUZZ) and the photo for him:
+      the pen drive, Rediffit Mail with a slow attachment
 - [ ] Yorkut: profile, scraps, a friend's post, communities
-- [ ] Yaaho! Messenger: chat with friends
 - [ ] MeToob: videos that buffer forever
 - [ ] Background detail: icons, tabs, pop-ups
 - [ ] Log off
 
 The story is settled (`BRIEF.md`, "The story on the computer"); the plan's
-order: shell (done) → Yaaho! with Priya's thread → Rohan's thread → Internet
-Xplorer + Yorkut → MeToob and extras → log off for real.
+order: shell (done) → Yaaho! with Priya's thread (done) → the song for Priya
+(done) → Rohan + the photo by mail → Yorkut → MeToob and extras → log off
+for real. The owner chose the tasks (a song, a photo), woven into the chats.
 
 ## 9. The walk home
 - [ ] Same street at dusk: sky, lighting, tubelights flickering on

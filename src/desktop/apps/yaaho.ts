@@ -1,14 +1,19 @@
-import type { DesktopSounds } from "../sounds";
+import { addStyles } from "../css";
+import { sizeLabel, type VFile } from "../files";
+import type { Kit } from "../kit";
+import { openBox } from "../openBox";
+import { Transfer, progressBar } from "../progress";
 import { BUDDIES, type Presence, THREADS, YOU } from "../story";
 import { type Chat, ThreadRunner } from "../thread";
 import { ReplyBox } from "../typing";
-import type { WindowManager, XpWindow } from "../windows";
-import { ICONS } from "./basic";
+import type { XpWindow } from "../windows";
+import { ICONS, messageBox } from "./basic";
 
 /**
  * Yaaho! Messenger (a look-alike): the friends list, and a chat window per
  * friend. It signs in by itself a moment after the desktop comes up, as it
- * did at every cafe.
+ * did at every cafe. "Send File" in a chat sends them a file from this PC,
+ * slowly (the song Priya asks for).
  *
  * The conversations themselves are in `story.ts`; each is played by a
  * `ThreadRunner`, which tells this what to show through the `Chat` methods
@@ -25,9 +30,13 @@ type Person = {
   typing: boolean;
   /** Your turn: the replies on offer, and who to tell which you sent. */
   ask: { replies: string[]; answer: (k: number) => void } | null;
+  /** A file on its way to them (one at a time). */
+  sending: boolean;
   win: { xp: XpWindow; log: HTMLDivElement; status: HTMLDivElement; box: ReplyBox } | null;
 };
 
+/** Sending a file: your line's upload speed, KB per second (see progress.ts for how fast that really runs). */
+const UP_SPEED = 7;
 /** Seconds after the desktop comes up before Yaaho! starts signing in, and how long signing in takes. */
 const AUTOSTART = 1.5;
 const SIGNING_IN = 2.5;
@@ -44,9 +53,14 @@ export class Yaaho implements Chat {
   private signIn = -1; // seconds since signing in began (−1: not yet)
   private chats = 0; // chat windows opened so far (each opens a little further along)
 
-  constructor(private wm: WindowManager, private sounds: DesktopSounds) {
-    injectStyles();
-    for (const b of BUDDIES) this.people.set(b.id, { ...b, log: [], typing: false, ask: null, win: null });
+  private wm: Kit["wm"];
+  private sounds: Kit["sounds"];
+
+  constructor(private kit: Kit) {
+    this.wm = kit.wm;
+    this.sounds = kit.sounds;
+    addStyles("yaaho", CSS);
+    for (const b of BUDDIES) this.people.set(b.id, { ...b, log: [], typing: false, ask: null, sending: false, win: null });
     this.runners = THREADS.map((t) => new ThreadRunner(t, this));
     this.listBody.className = "ym-list";
   }
@@ -73,13 +87,6 @@ export class Yaaho implements Chat {
       this.list = this.wm.open({ id: "yaaho", title: "Yaaho! Messenger", icon: ICONS.yaaho, x: 566, y: 16, w: 218, h: 430, content: this.listBody });
     } else this.wm.restore(this.list);
     this.drawList();
-  }
-
-  /** A key pressed on the desktop: it goes to the chat window in front, if any. */
-  key(e: KeyboardEvent): boolean {
-    const front = this.wm.focused();
-    for (const p of this.people.values()) if (p.win && p.win.xp === front) return p.win.box.key(e);
-    return false;
   }
 
   // --- what a conversation can do (the Chat interface) ---------------------------------
@@ -127,6 +134,10 @@ export class Yaaho implements Chat {
     return !!this.win(this.person(id));
   }
 
+  isDone(task: string): boolean {
+    return this.kit.tasks.isDone(task);
+  }
+
   // --- the windows -----------------------------------------------------------------
 
   /** Open (or bring forward) the chat with `id`. */
@@ -139,7 +150,8 @@ export class Yaaho implements Chat {
     }
     const root = document.createElement("div");
     root.className = "ym-chat";
-    root.innerHTML = `<div class="ym-tools"><span>☺ Emoticons</span><span>♫ Audibles</span><span>BUZZ!</span></div>`;
+    root.innerHTML = `<div class="ym-tools"><span>☺ Emoticons</span><span>♫ Audibles</span><span class="file">⇪ Send File</span></div>`;
+    root.querySelector(".file")!.addEventListener("click", () => this.chooseFile(p));
     const log = document.createElement("div");
     log.className = "ym-log";
     const status = document.createElement("div");
@@ -154,12 +166,46 @@ export class Yaaho implements Chat {
     root.append(log, status, box.el);
     const n = this.chats++ % 4;
     const xp = this.wm.open({ id: `chat-${id}`, title: `${id} - Instant Message`, icon: ICONS.yaaho, x: 150 + n * 24, y: 70 + n * 24, w: 390, h: 380, content: root });
+    xp.onKey = (e) => box.key(e); // (typing goes to this chat while it's in front)
     p.win = { xp, log, status, box };
     for (const line of p.log) log.append(lineEl(line, id));
     if (p.presence === "offline" && !p.log.length) log.append(lineEl({ from: "system", text: `${id} is offline. Your messages will be delivered when they sign in.` }, id));
     log.scrollTop = log.scrollHeight;
     if (p.ask) box.offer(p.ask.replies);
     this.drawStatus(p);
+  }
+
+  /** "Send File": pick a file, then send it (slowly). */
+  private chooseFile(p: Person) {
+    if (p.presence === "offline") return messageBox(this.wm, "ym-nofile", "Yaaho! Messenger", `You can only send files to friends who are online.`);
+    if (p.sending) return messageBox(this.wm, "ym-nofile", "Yaaho! Messenger", `Please wait: a file is already being sent to ${p.id}.`);
+    openBox(this.kit, { title: `Send a File to ${p.id}`, folder: "music", onPick: (file) => this.sendFile(p, file) });
+  }
+
+  private sendFile(p: Person, file: VFile) {
+    p.sending = true;
+    this.add(p, { from: "system", text: `Sending "${file.name}" (${sizeLabel(file.size)})...` });
+    const bar = progressBar();
+    const label = document.createElement("span");
+    const row = document.createElement("div");
+    row.className = "ym-transfer";
+    row.append(bar.el, label);
+    this.win(p)?.log.append(row);
+    const transfer = new Transfer(file.size, UP_SPEED, () => {
+      stop();
+      row.remove();
+      p.sending = false;
+      this.add(p, { from: "system", text: `${p.id} has received the file "${file.name}".` });
+      this.sounds.play("ding");
+      if (file.tag === "jabWeMate") this.kit.tasks.complete("songSent");
+      // (anything else: they wonder what it is)
+      else setTimeout(() => this.receive(p.id, "ye kaunsa gaana hai?? :P"), 2500);
+    });
+    const stop = this.kit.tick((dt) => {
+      transfer.update(dt);
+      bar.set(transfer.fraction);
+      label.textContent = ` ${Math.floor(transfer.fraction * 100)}%  (${transfer.leftLabel} left)`;
+    });
   }
 
   private add(p: Person, line: Line) {
@@ -229,15 +275,6 @@ function lineEl(line: Line, them: string): HTMLDivElement {
   return d;
 }
 
-let styled = false;
-function injectStyles() {
-  if (styled) return;
-  styled = true;
-  const s = document.createElement("style");
-  s.textContent = CSS;
-  document.head.append(s);
-}
-
 const CSS = /* css */ `
 .ym-list { height: 100%; display: flex; flex-direction: column; background: #fff; }
 .ym-brand { height: 34px; flex: none; display: flex; align-items: center; gap: 5px; padding: 0 10px; color: #fff;
@@ -273,6 +310,9 @@ const CSS = /* css */ `
 .ym-log .they b { color: #c01818; }
 .ym-log .system { color: #888; font-style: italic; }
 .ym-log .buzz { color: #c01818; font-weight: bold; }
+.ym-tools .file:hover { text-decoration: underline; }
+.ym-transfer { display: flex; align-items: center; gap: 6px; margin: 3px 0; color: #555; font-size: 11px; }
+.ym-transfer .xp-progress { width: 140px; }
 .ym-status { height: 15px; flex: none; padding: 0 8px; color: #556; font-size: 10px; }
 .ym-reply { flex: none; padding: 0 4px 4px; }
 .ym-choices { display: flex; flex-direction: column; gap: 2px; margin-bottom: 4px; }

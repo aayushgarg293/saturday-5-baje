@@ -32,6 +32,8 @@ export type XpWindow = {
   setTitle(title: string): void;
   /** Shake it (a BUZZ!). */
   shake(): void;
+  /** Keys pressed while this window is in front (typing): return true if used. */
+  onKey?: (e: KeyboardEvent) => boolean;
 };
 
 export class WindowManager {

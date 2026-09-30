@@ -1,3 +1,5 @@
+import { FOLDERS, type Folder, sizeLabel } from "../files";
+import type { Kit } from "../kit";
 import type { WindowManager } from "../windows";
 
 /**
@@ -20,6 +22,8 @@ export const ICONS = {
   logoff: "radial-gradient(circle, #f2c542 55%, #b8860b 56%)",
   power: "radial-gradient(circle, #e74c3c 55%, #8e1f14 56%)",
   disc: "radial-gradient(circle, #fff 12%, #9aa7ad 13% 18%, #e0e6ea 19% 45%, #b8c4cc 46% 69%, transparent 70%)",
+  music: "linear-gradient(135deg, #9cc8ff, #2a5caa)",
+  photo: "linear-gradient(#7fb2e5 55%, #5a9a3c 55%)",
   info: "radial-gradient(circle, #3c8cfe 60%, #1a4fb0 61%)",
 };
 
@@ -44,11 +48,28 @@ export function openMyComputer(wm: WindowManager) {
   });
 }
 
-export function openMyDocuments(wm: WindowManager) {
-  wm.open({
-    id: "documents", title: "My Documents", icon: ICONS.documents, x: 160, y: 90, w: 460, h: 300,
-    content: listing([[ICONS.folder, "My Music"], [ICONS.folder, "My Pictures"], [ICONS.folder, "New Folder (2)"], [ICONS.file, "resume_final_FINAL.doc"], [ICONS.file, "Copy of desktop.ini"]]),
-  });
+export function openMyDocuments(kit: Kit) {
+  const body = listing([[ICONS.folder, "My Music"], [ICONS.folder, "My Pictures"], [ICONS.folder, "New Folder (2)"], [ICONS.file, "resume_final_FINAL.doc"], [ICONS.file, "Copy of desktop.ini"]]);
+  // the two real folders open
+  const items = body.firstElementChild!.children;
+  items[0].addEventListener("dblclick", () => openFolder(kit, "music"));
+  items[1].addEventListener("dblclick", () => openFolder(kit, "pictures"));
+  kit.wm.open({ id: "documents", title: "My Documents", icon: ICONS.documents, x: 160, y: 90, w: 460, h: 300, content: body });
+}
+
+/** A folder's window: its files, kept up to date (a download appears when it finishes). */
+export function openFolder(kit: Kit, folder: Folder) {
+  const body = document.createElement("div");
+  body.style.height = "100%";
+  const draw = () => {
+    body.innerHTML = "";
+    const files = kit.files.list(folder);
+    body.append(listing(files.map((f) => [f.kind === "mp3" ? ICONS.music : ICONS.photo, `${f.name}<br><small style="color:#888">${sizeLabel(f.size)}</small>`])));
+  };
+  draw();
+  kit.files.onChange.add(draw);
+  kit.wm.open({ id: `folder-${folder}`, title: FOLDERS[folder], icon: ICONS.folder, x: 190, y: 120, w: 480, h: 300, content: body,
+    onClose: () => kit.files.onChange.delete(draw) });
 }
 
 export function openRecycleBin(wm: WindowManager) {

@@ -17,7 +17,22 @@ export type Step =
   | { hesitate: number }
   | { time: string }
   | { status: Presence }
-  | { buzz: true };
+  | { buzz: true }
+  | WaitFor;
+
+/**
+ * Wait until you've done something (a task: "songSent"), while the rest of
+ * the desktop goes on. Meanwhile they nudge now and then ("??"); if you
+ * still haven't after `giveUpAfter` seconds, they let it go. Then `done`
+ * or `notDone` plays.
+ */
+export type WaitFor = {
+  waitFor: string;
+  nudges?: string[];
+  giveUpAfter?: number;
+  done?: Step[];
+  notDone?: Step[];
+};
 
 export type Thread = {
   /** Whose conversation (their Yaaho! ID). */
@@ -39,6 +54,8 @@ export type Chat = {
   time(minutes: number): void;
   /** Is their chat window open? */
   isOpen(buddy: string): boolean;
+  /** Have you done this task yet? */
+  isDone(task: string): boolean;
 };
 
 /** Seconds they "type" a line: a little per letter, within limits (people then typed slowly). */
@@ -58,6 +75,8 @@ export class ThreadRunner {
   private timer = 0;
   private after: (() => void) | null = null;
   private waitingForYou = false;
+  /** Waiting for a task: the step, seconds so far, nudges sent. */
+  private task: { step: WaitFor; t: number; nudged: number } | null = null;
 
   constructor(readonly thread: Thread, private chat: Chat) {
     this.stack = [{ steps: thread.steps, i: 0 }];
@@ -81,6 +100,7 @@ export class ThreadRunner {
       return;
     }
     if (this.waitingForYou) return;
+    if (this.task) return this.waitForTask(dt);
 
     const step = this.next();
     if (!step) {
@@ -117,6 +137,32 @@ export class ThreadRunner {
     } else if ("buzz" in step) {
       chat.buzz(b);
       this.wait(GAP);
+    } else if ("waitFor" in step) {
+      this.task = { step, t: 0, nudged: 0 };
+    }
+  }
+
+  private waitForTask(dt: number) {
+    const w = this.task!, step = w.step, b = this.thread.buddy;
+    w.t += dt;
+    const give = step.giveUpAfter ?? Infinity;
+    const finished = this.chat.isDone(step.waitFor);
+    if (finished || w.t >= give) {
+      this.task = null;
+      const then = finished ? step.done : step.notDone;
+      if (then) this.stack.push({ steps: then, i: 0 });
+      this.wait(READING);
+      return;
+    }
+    // the nudges, spread evenly through the wait
+    const nudges = step.nudges ?? [];
+    if (w.nudged < nudges.length && w.t >= ((w.nudged + 1) * give) / (nudges.length + 1)) {
+      const text = nudges[w.nudged++];
+      this.chat.typing(b, true);
+      this.wait(typingTime(text), () => {
+        this.chat.typing(b, false);
+        this.chat.receive(b, text);
+      });
     }
   }
 

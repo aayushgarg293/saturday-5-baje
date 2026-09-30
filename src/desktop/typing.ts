@@ -124,3 +124,42 @@ function caret(): HTMLSpanElement {
   s.className = "ym-caret";
   return s;
 }
+
+/**
+ * A single text box that types a set text as you press keys (any keys),
+ * like the reply box but with no choice: a search box, a user name. Enter,
+ * once it's all typed, calls `onEnter`. `secret` shows dots (a password).
+ */
+export class TypeField {
+  readonly el: HTMLSpanElement;
+  onEnter: () => void = () => {};
+  private typed = 0;
+
+  constructor(private text: string, private secret = false) {
+    this.el = document.createElement("span");
+    this.el.className = "xp-field typing";
+    this.draw();
+  }
+
+  get complete(): boolean {
+    return this.typed >= this.text.length;
+  }
+
+  key(e: KeyboardEvent): boolean {
+    if (e.key === "Enter") {
+      if (this.complete) this.onEnter();
+      return true;
+    }
+    if (e.key === "Backspace") this.typed = Math.max(0, this.typed - PER_KEY);
+    else if (e.key.length === 1) this.typed = Math.min(this.text.length, this.typed + PER_KEY);
+    else return false;
+    this.draw();
+    return true;
+  }
+
+  private draw() {
+    const shown = this.text.slice(0, this.typed);
+    this.el.textContent = this.secret ? "•".repeat(shown.length) : shown;
+    if (!this.complete) this.el.append(caret());
+  }
+}

@@ -111,12 +111,16 @@ Yaaho!. She's said she's online only "till 6".
    testimonial for her, and types and deletes it.
 3. **Priya says hi first.** A shy, awkward chat: "hi", "hi :)", "tuition ka
    homework kiya?", "Jab We Mate dekhi?". Long pauses while one of them is
-   "typing…".
+   "typing…". She asks for "the train song" from Jab We Mate: he finds it
+   on SongzPK in Internet Xplorer, downloads it on dial-up, and sends it
+   with Yaaho!'s Send File (if he doesn't, she lets it go: "tuition me pen
+   drive me de dena").
 4. **Rohan comes online**, late. Now two windows at once: catching up with
    Rohan (Prison Brake, the cricket team without him, Rohan's new school,
    Diwali plans), answering Priya in between. Rohan notices he's distracted:
    "kiske saath chat kar raha hai?? :P". Rohan goes "brb" and doesn't come
-   back for a while.
+   back for a while. He asks for the colony cricket team photo: sent from
+   the pen drive through Rediffit Mail, the attachment uploading slowly.
 5. **Meanwhile:** a MeToob clip that won't stop buffering; a BUZZ!; the
    clock (T), again and again. The hour he paid for is running out.
 6. **Six o'clock.** Priya has to go: "gtg… see u in tuition :)", and she
@@ -231,6 +235,7 @@ References in this folder: `summer-cycle/`, `sakura-crossing/`,
    | Khichdi | Khichdee | | Rock On!! | Rock Onn!! |
    | WWE | WWX | | Jaane Tu Ya Jaane Na | Jaane Tu Ya Jaane Main |
    | Windows XP | Windoze XP | | Golmaal | Gollmaal |
+   | Songs.pk | SongzPK | | Internet Explorer | Internet Xplorer |
 
 2. ~~**The story on the computer.**~~ Drafted: Rohan (the friend who moved
    away) and Priya (from tuition), see "The story on the computer". The
