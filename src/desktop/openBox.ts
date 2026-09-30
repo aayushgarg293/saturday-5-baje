@@ -1,4 +1,4 @@
-import { ICONS } from "./apps/basic";
+import { fileIcon, ICONS } from "./apps/basic";
 import { FOLDERS, type Folder, sizeLabel, type VFile } from "./files";
 import type { Kit } from "./kit";
 
@@ -53,7 +53,7 @@ export function openBox(kit: Kit, o: { title: string; folder: Folder; onPick: (f
     for (const file of kit.files.list(folder)) {
       const row = document.createElement("div");
       row.className = "file" + (file === chosen ? " chosen" : "");
-      row.innerHTML = `<div class="pic" style="background:${file.kind === "mp3" ? ICONS.music : ICONS.photo}"></div><span></span><i></i>`;
+      row.innerHTML = `<div class="pic" style="background:${fileIcon(file)}"></div><span></span><i></i>`;
       row.querySelector("span")!.textContent = file.name;
       row.querySelector("i")!.textContent = sizeLabel(file.size);
       row.addEventListener("click", () => {

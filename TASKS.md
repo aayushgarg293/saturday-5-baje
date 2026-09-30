@@ -252,8 +252,12 @@ motion; busy but walkable.
       box (`download.ts`, `progress.ts`: dial-up numbers at 10× speed),
       Send File (`openBox.ts`); her thread waits on it (`waitFor`, with
       nudges and a way on if you don't)
-- [ ] Rohan's thread (two chats at once, brb, BUZZ) and the photo for him:
-      the pen drive, Rediffit Mail with a slow attachment
+- [x] Rohan's thread (two chats at once, brb, BUZZ) and the photo for him:
+      the pen drive (`files.ts`, photos painted in `photos.ts`, the picture
+      viewer), Rediffit Mail (`sites/rediffit.ts`: sign in, inbox, compose,
+      a slow attachment). The threads take turns with `mark` and
+      `start.when`; a chat that isn't in front opens behind and its taskbar
+      button flashes; "is now online" balloons
 - [ ] Yorkut: profile, scraps, a friend's post, communities
 - [ ] MeToob: videos that buffer forever
 - [ ] Background detail: icons, tabs, pop-ups
@@ -261,7 +265,7 @@ motion; busy but walkable.
 
 The story is settled (`BRIEF.md`, "The story on the computer"); the plan's
 order: shell (done) → Yaaho! with Priya's thread (done) → the song for Priya
-(done) → Rohan + the photo by mail → Yorkut → MeToob and extras → log off
+(done) → Rohan + the photo by mail (done) → Yorkut → MeToob and extras → log off
 for real. The owner chose the tasks (a song, a photo), woven into the chats.
 
 ## 9. The walk home

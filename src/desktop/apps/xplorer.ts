@@ -1,6 +1,7 @@
 import { addStyles } from "../css";
 import type { Kit } from "../kit";
 import { portal } from "../sites/portal";
+import { rediffit } from "../sites/rediffit";
 import { songz } from "../sites/songz";
 import type { XpWindow } from "../windows";
 import { ICONS } from "./basic";
@@ -33,6 +34,7 @@ export type Site = (path: string, nav: Nav) => Page | null;
 const SITES: Record<string, Site> = {
   "www.rediffit.com": portal,
   "www.songzpk.com": songz,
+  "mail.rediffit.com": rediffit,
 };
 
 /** The page it opens on: the cafe owner set the portal as the home page. */

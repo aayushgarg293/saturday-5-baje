@@ -18,6 +18,7 @@ export type Step =
   | { time: string }
   | { status: Presence }
   | { buzz: true }
+  | { mark: string }
   | WaitFor;
 
 /**
@@ -37,8 +38,12 @@ export type WaitFor = {
 export type Thread = {
   /** Whose conversation (their Yaaho! ID). */
   buddy: string;
-  /** When it begins: seconds after you're first on the desktop, or only once you open their chat window. */
-  start: { after: number } | "whenYouOpenTheChat";
+  /**
+   * When it begins: seconds after you're first on the desktop; or once
+   * another conversation has reached a `mark` (`when`), `after` seconds
+   * later; or only once you open their chat window.
+   */
+  start: { after: number; when?: string } | "whenYouOpenTheChat";
   steps: Step[];
 };
 
@@ -54,8 +59,10 @@ export type Chat = {
   time(minutes: number): void;
   /** Is their chat window open? */
   isOpen(buddy: string): boolean;
-  /** Have you done this task yet? */
+  /** Have you done this task yet (or has a conversation reached this mark)? */
   isDone(task: string): boolean;
+  /** A conversation reached a `mark`: note it on the task board. */
+  mark(name: string): void;
 };
 
 /** Seconds they "type" a line: a little per letter, within limits (people then typed slowly). */
@@ -86,9 +93,13 @@ export class ThreadRunner {
     if (this.done) return;
     const b = this.thread.buddy, chat = this.chat;
     if (!this.started) {
-      this.clock += dt;
       const s = this.thread.start;
-      this.started = s === "whenYouOpenTheChat" ? chat.isOpen(b) : this.clock >= s.after;
+      if (s === "whenYouOpenTheChat") this.started = chat.isOpen(b);
+      else {
+        // (with `when`, the seconds only count once the mark is reached)
+        if (!s.when || chat.isDone(s.when)) this.clock += dt;
+        this.started = this.clock >= s.after;
+      }
       if (!this.started) return;
     }
     if (this.timer > 0) {
@@ -137,6 +148,8 @@ export class ThreadRunner {
     } else if ("buzz" in step) {
       chat.buzz(b);
       this.wait(GAP);
+    } else if ("mark" in step) {
+      chat.mark(step.mark);
     } else if ("waitFor" in step) {
       this.task = { step, t: 0, nudged: 0 };
     }

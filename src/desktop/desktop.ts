@@ -79,6 +79,7 @@ export class Desktop {
       sounds: this.sounds,
       files: new Files(),
       tasks: new Tasks(),
+      toast: (text) => this.toast(text),
       tick: (fn) => {
         this.tickers.add(fn);
         return () => this.tickers.delete(fn);
@@ -86,7 +87,7 @@ export class Desktop {
     };
     this.yaaho = new Yaaho(this.kit);
     this.xplorer = new Xplorer(this.kit);
-    this.addApp("computer", "My Computer", ICONS.computer, () => openMyComputer(this.windows));
+    this.addApp("computer", "My Computer", ICONS.computer, () => openMyComputer(this.kit));
     this.addApp("documents", "My Documents", ICONS.documents, () => openMyDocuments(this.kit));
     this.addApp("xplorer", "Internet Xplorer", ICONS.xplorer, () => this.xplorer.open());
     this.addApp("yaaho", "Yaaho! Messenger", ICONS.yaaho, () => this.yaaho.openList());
@@ -149,6 +150,14 @@ export class Desktop {
     setTimeout(() => { if (!this.isOpen) this.overlay.hidden = true; }, 350);
   }
 
+  /** A balloon above the tray, gone after a few seconds. */
+  private toast(text: string) {
+    const t = div("xp-toast");
+    t.textContent = text;
+    this.screen.append(t);
+    setTimeout(() => t.remove(), 4500);
+  }
+
   /** Every frame. The desktop's life (the chats) only moves on while you're on it. */
   update(dt: number) {
     if (!this.isOpen) return;
@@ -203,7 +212,7 @@ export class Desktop {
     this.tasks.innerHTML = "";
     const focused = this.windows.focused();
     for (const w of this.windows.list()) {
-      const t = div("xp-task" + (w === focused ? " focused" : ""));
+      const t = div("xp-task" + (w === focused ? " focused" : "") + (w.flashing ? " flash" : ""));
       t.textContent = w.title;
       t.addEventListener("click", (e) => {
         e.stopPropagation();

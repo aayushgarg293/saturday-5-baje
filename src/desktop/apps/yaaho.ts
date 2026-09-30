@@ -3,7 +3,7 @@ import { sizeLabel, type VFile } from "../files";
 import type { Kit } from "../kit";
 import { openBox } from "../openBox";
 import { Transfer, progressBar } from "../progress";
-import { BUDDIES, type Presence, THREADS, YOU } from "../story";
+import { BUDDIES, type Presence, REACTIONS, THREADS, YOU } from "../story";
 import { type Chat, ThreadRunner } from "../thread";
 import { ReplyBox } from "../typing";
 import type { XpWindow } from "../windows";
@@ -37,6 +37,8 @@ type Person = {
 
 /** Sending a file: your line's upload speed, KB per second (see progress.ts for how fast that really runs). */
 const UP_SPEED = 7;
+/** Where chat windows open, in turn. */
+const CHAT_SPOTS = [[150, 60], [40, 150], [180, 110], [70, 40]];
 /** Seconds after the desktop comes up before Yaaho! starts signing in, and how long signing in takes. */
 const AUTOSTART = 1.5;
 const SIGNING_IN = 2.5;
@@ -62,6 +64,11 @@ export class Yaaho implements Chat {
     addStyles("yaaho", CSS);
     for (const b of BUDDIES) this.people.set(b.id, { ...b, log: [], typing: false, ask: null, sending: false, win: null });
     this.runners = THREADS.map((t) => new ThreadRunner(t, this));
+    // a few things you do get a quick reaction (sending the wrong file…: story.ts)
+    kit.tasks.onPost.add((task) => {
+      const r = REACTIONS[task];
+      if (r) setTimeout(() => this.receive(r.buddy, r.says), 2500);
+    });
     this.listBody.className = "ym-list";
   }
 
@@ -100,7 +107,7 @@ export class Yaaho implements Chat {
   receive(id: string, text: string) {
     const p = this.person(id);
     this.add(p, { from: "they", text });
-    this.openChat(id, false);
+    this.popUp(p);
     this.sounds.play("ding");
   }
 
@@ -108,11 +115,15 @@ export class Yaaho implements Chat {
     const p = this.person(id);
     p.ask = { replies, answer };
     p.win?.box.offer(replies);
+    if (p.win) this.wm.flash(p.win.xp);
   }
 
   presence(id: string, presence: Presence) {
     const p = this.person(id);
-    if (presence === "online" && p.presence === "offline") this.sounds.play("knock");
+    if (presence === "online" && p.presence === "offline") {
+      this.sounds.play("knock"); // (the door: a friend has come online)
+      this.kit.toast(`${id} is now online`);
+    }
     p.presence = presence;
     if (presence === "offline") this.add(p, { from: "system", text: `${id} has signed out.` });
     this.drawList();
@@ -121,7 +132,7 @@ export class Yaaho implements Chat {
   buzz(id: string) {
     const p = this.person(id);
     this.add(p, { from: "buzz", text: "BUZZ!!!" });
-    this.openChat(id, false);
+    this.popUp(p);
     this.sounds.play("buzz");
     this.win(p)?.xp.shake();
   }
@@ -138,14 +149,31 @@ export class Yaaho implements Chat {
     return this.kit.tasks.isDone(task);
   }
 
+  mark(name: string) {
+    this.kit.tasks.complete(name);
+  }
+
   // --- the windows -----------------------------------------------------------------
 
-  /** Open (or bring forward) the chat with `id`. */
-  openChat(id: string, bringForward = true) {
+  /**
+   * Something new from them: their chat pops up if it isn't open. If you're
+   * busy in another window it opens behind, and its taskbar button flashes.
+   */
+  private popUp(p: Person) {
+    const front = this.wm.focused();
+    const busy = !!front && front !== this.list; // (just the friends list in front: not busy)
+    if (!this.win(p)) this.openChat(p.id, !busy);
+    const w = this.win(p)!;
+    if (w.xp.minimised) this.wm.restore(w.xp);
+    this.wm.flash(w.xp);
+  }
+
+  /** Open (or bring forward) the chat with `id` (`inFront` false: open it behind the window you're in). */
+  openChat(id: string, inFront = true) {
     const p = this.person(id);
     const open = this.win(p);
     if (open) {
-      if (bringForward || open.xp.minimised) this.wm.restore(open.xp);
+      if (inFront) this.wm.restore(open.xp);
       return;
     }
     const root = document.createElement("div");
@@ -164,8 +192,9 @@ export class Yaaho implements Chat {
       ask?.answer(k);
     };
     root.append(log, status, box.el);
-    const n = this.chats++ % 4;
-    const xp = this.wm.open({ id: `chat-${id}`, title: `${id} - Instant Message`, icon: ICONS.yaaho, x: 150 + n * 24, y: 70 + n * 24, w: 390, h: 380, content: root });
+    // the first two chats open apart, so both can be seen at once
+    const [x, y] = CHAT_SPOTS[this.chats++ % CHAT_SPOTS.length];
+    const xp = this.wm.open({ id: `chat-${id}`, title: `${id} - Instant Message`, icon: ICONS.yaaho, x, y, w: 390, h: 380, content: root, behind: !inFront });
     xp.onKey = (e) => box.key(e); // (typing goes to this chat while it's in front)
     p.win = { xp, log, status, box };
     for (const line of p.log) log.append(lineEl(line, id));
@@ -197,9 +226,8 @@ export class Yaaho implements Chat {
       p.sending = false;
       this.add(p, { from: "system", text: `${p.id} has received the file "${file.name}".` });
       this.sounds.play("ding");
-      if (file.tag === "jabWeMate") this.kit.tasks.complete("songSent");
-      // (anything else: they wonder what it is)
-      else setTimeout(() => this.receive(p.id, "ye kaunsa gaana hai?? :P"), 2500);
+      // the song Priya asked for; anything else, she wonders what it is (REACTIONS, story.ts)
+      this.kit.tasks.complete(file.tag === "jabWeMate" ? "songSent" : `wrongFile:${p.id}`);
     });
     const stop = this.kit.tick((dt) => {
       transfer.update(dt);

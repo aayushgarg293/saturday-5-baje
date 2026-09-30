@@ -1,4 +1,5 @@
-import { FOLDERS, type Folder, sizeLabel } from "../files";
+import { FOLDERS, type Folder, sizeLabel, type VFile } from "../files";
+import { photoUrl } from "../photos";
 import type { Kit } from "../kit";
 import type { WindowManager } from "../windows";
 
@@ -21,6 +22,7 @@ export const ICONS = {
   control: "linear-gradient(#90caf9 50%, #6d8faf 50%)",
   logoff: "radial-gradient(circle, #f2c542 55%, #b8860b 56%)",
   power: "radial-gradient(circle, #e74c3c 55%, #8e1f14 56%)",
+  pendrive: "linear-gradient(90deg, transparent 30%, #c8ccd0 30% 70%, transparent 70%) 0 0 / 100% 30% no-repeat, linear-gradient(90deg, transparent 18%, #3a5a9a 18% 82%, transparent 82%) 0 100% / 100% 72% no-repeat",
   disc: "radial-gradient(circle, #fff 12%, #9aa7ad 13% 18%, #e0e6ea 19% 45%, #b8c4cc 46% 69%, transparent 70%)",
   music: "linear-gradient(135deg, #9cc8ff, #2a5caa)",
   photo: "linear-gradient(#7fb2e5 55%, #5a9a3c 55%)",
@@ -41,11 +43,17 @@ function listing(items: [string, string][]): HTMLElement {
     .join("")}</div>`);
 }
 
-export function openMyComputer(wm: WindowManager) {
-  wm.open({
-    id: "computer", title: "My Computer", icon: ICONS.computer, x: 120, y: 60, w: 460, h: 300,
-    content: listing([[ICONS.computer, "Local Disk (C:)"], [ICONS.computer, "Local Disk (D:)"], [ICONS.disc, "DVD-RW Drive (E:)"], [ICONS.folder, "Shared Documents"]]),
-  });
+export function openMyComputer(kit: Kit) {
+  const body = listing([[ICONS.computer, "Local Disk (C:)"], [ICONS.computer, "Local Disk (D:)"], [ICONS.disc, "DVD-RW Drive (E:)"], [ICONS.pendrive, "Removable Disk (F:)"], [ICONS.folder, "Shared Documents"]]);
+  // his pen drive, plugged into the front of the PC
+  body.firstElementChild!.children[3].addEventListener("dblclick", () => openFolder(kit, "pendrive"));
+  kit.wm.open({ id: "computer", title: "My Computer", icon: ICONS.computer, x: 120, y: 60, w: 460, h: 300, content: body });
+}
+
+/** A file's icon: a photo shows itself (a thumbnail); a song, a music note-ish square. */
+export function fileIcon(f: VFile): string {
+  if (f.kind === "mp3") return ICONS.music;
+  return f.photo ? `url(${photoUrl(f.photo)}) center / cover` : ICONS.photo;
 }
 
 export function openMyDocuments(kit: Kit) {
@@ -64,12 +72,25 @@ export function openFolder(kit: Kit, folder: Folder) {
   const draw = () => {
     body.innerHTML = "";
     const files = kit.files.list(folder);
-    body.append(listing(files.map((f) => [f.kind === "mp3" ? ICONS.music : ICONS.photo, `${f.name}<br><small style="color:#888">${sizeLabel(f.size)}</small>`])));
+    body.append(listing(files.map((f) => [fileIcon(f), `${f.name}<br><small style="color:#888">${sizeLabel(f.size)}</small>`])));
+    // photos open in the picture viewer
+    const items = body.firstElementChild!.firstElementChild!.children;
+    files.forEach((f, k) => {
+      if (f.kind === "jpg") items[k].addEventListener("dblclick", () => viewPhoto(kit, f));
+    });
   };
   draw();
   kit.files.onChange.add(draw);
   kit.wm.open({ id: `folder-${folder}`, title: FOLDERS[folder], icon: ICONS.folder, x: 190, y: 120, w: 480, h: 300, content: body,
     onClose: () => kit.files.onChange.delete(draw) });
+}
+
+/** Windoze Picture and Fax Viewer: the photo, big, on grey. */
+export function viewPhoto(kit: Kit, f: VFile) {
+  const body = el(`<div style="height:100%;display:flex;align-items:center;justify-content:center;background:#ddd">
+    <img style="max-width:94%;max-height:94%;box-shadow:0 1px 4px rgba(0,0,0,0.4)"></div>`);
+  body.querySelector("img")!.src = photoUrl(f.photo ?? "blurry");
+  kit.wm.open({ id: `view-${f.name}`, title: `${f.name} - Windoze Picture and Fax Viewer`, icon: ICONS.photo, x: 150, y: 60, w: 460, h: 390, content: body });
 }
 
 export function openRecycleBin(wm: WindowManager) {

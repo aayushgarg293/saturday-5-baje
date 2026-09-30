@@ -133,6 +133,8 @@ function caret(): HTMLSpanElement {
 export class TypeField {
   readonly el: HTMLSpanElement;
   onEnter: () => void = () => {};
+  /** Is this the field being typed in (it shows the blinking caret)? */
+  active = true;
   private typed = 0;
 
   constructor(private text: string, private secret = false) {
@@ -157,9 +159,49 @@ export class TypeField {
     return true;
   }
 
+  setActive(on: boolean) {
+    this.active = on;
+    this.draw();
+  }
+
   private draw() {
     const shown = this.text.slice(0, this.typed);
     this.el.textContent = this.secret ? "•".repeat(shown.length) : shown;
-    if (!this.complete) this.el.append(caret());
+    if (this.active && !this.complete) this.el.append(caret());
+  }
+}
+
+/**
+ * A form's typed fields (a sign-in page: ID, then password). Keys go to the
+ * field you're in; when it's all typed you move on to the next. Click a
+ * field to go back to it. Enter, once every field is typed, calls `onEnter`.
+ */
+export class Fields {
+  onEnter: () => void = () => {};
+  private at = 0;
+
+  constructor(readonly fields: TypeField[]) {
+    fields.forEach((f, k) => f.el.addEventListener("click", () => this.focus(k)));
+    this.focus(0);
+  }
+
+  get complete(): boolean {
+    return this.fields.every((f) => f.complete);
+  }
+
+  key(e: KeyboardEvent): boolean {
+    if (e.key === "Enter") {
+      if (this.complete) this.onEnter();
+      return true;
+    }
+    const f = this.fields[this.at];
+    const used = f.key(e);
+    if (f.complete && this.at < this.fields.length - 1) this.focus(this.at + 1);
+    return used;
+  }
+
+  private focus(k: number) {
+    this.at = k;
+    this.fields.forEach((f, i) => f.setActive(i === k));
   }
 }

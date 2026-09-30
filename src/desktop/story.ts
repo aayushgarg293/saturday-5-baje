@@ -14,12 +14,20 @@ import type { Thread } from "./thread";
  *   { time: "5:05" }          the clock moves on to 5:05 pm
  *   { status: "offline" }     they go offline / idle / online
  *   { buzz: true }            BUZZ! (the window shakes)
+ *   { mark: "rohanBrb" }      note a moment, so another conversation can wait
+ *                             for it (a `waitFor`, or a thread's `start.when`)
  *   { waitFor: "songSent", … } wait until you've done a task (Priya has the
  *                             song), with nudges meanwhile, then `done` plays;
  *                             or after `giveUpAfter` seconds, `notDone`
  *
  * The tasks: "songSent" (a Jab We Mate song sent to Priya with Yaaho!'s
- * Send File; the songs come from SongzPK in Internet Xplorer).
+ * Send File; the songs come from SongzPK in Internet Xplorer), and
+ * "photoMailed" (the team photo from the pen drive, mailed to Rohan with
+ * Rediffit Mail).
+ *
+ * The two conversations take turns around each other: Rohan comes online
+ * once the song moment is over; Priya's later lines wait for Rohan's "brb"
+ * and his return, so the two windows are busy at the same time.
  *
  * Chat style, as people typed then: lowercase, Hinglish in Roman letters,
  * "kk", "brb", "gtg", "lol", ":P", "hiii", too many "!!!".
@@ -97,6 +105,7 @@ const priya: Thread = {
     { waitFor: "songSent", nudges: ["??", "mila?", "hello"], giveUpAfter: 300,
       done: [{ they: "mil gaya!!! thanks :D" }, { they: "repeat pe sun rahi hu" }],
       notDone: [{ they: "koi nahi, tuition me pen drive me de dena :)" }] },
+    { mark: "songMoment" }, // (Rohan comes online soon after this)
     { wait: 6 },
     { they: "acha sunn" },
     { hesitate: 5 },
@@ -109,7 +118,8 @@ const priya: Thread = {
     { time: "5:15" },
     { wait: 5 },
     { they: "6 baje tak hi online hu, fir tuition ka kaam" },
-    { wait: 25 },
+    // (quiet while you catch up with Rohan; back when he goes brb)
+    { waitFor: "rohanBrb", giveUpAfter: 400 },
     { time: "5:40" },
     { they: "Dil Mil Gaye Yaar dekhte ho?" },
     { you: [
@@ -117,7 +127,8 @@ const priya: Thread = {
       { say: "didi dekhti hai, to thoda sa", then: [{ they: "lol" }] },
       { say: "nahi, cricket dekhta hu", then: [{ they: "boring :P" }] },
     ] },
-    { wait: 15 },
+    { waitFor: "rohanBack", giveUpAfter: 120 },
+    { wait: 10 },
     { time: "6:00" },
     { they: "arre 6 baj gaye" },
     { they: "gtg... see u in tuition :)" },
@@ -127,6 +138,104 @@ const priya: Thread = {
       { say: "ok... bye" },
     ] },
     { they: "byee" },
+    { status: "offline" },
+    { mark: "priyaGone" },
+  ],
+};
+
+/**
+ * Rohan, the best friend who moved to Pune (the spine of the story). Their
+ * promise: every Saturday, 5 pm, here. Today is the first Saturday, and
+ * he's late too.
+ */
+const rohan: Thread = {
+  buddy: "rohan_rockstar",
+  start: { when: "songMoment", after: 12 },
+  steps: [
+    { time: "5:25" },
+    { status: "online" },
+    { wait: 3 },
+    { they: "oyeeee" },
+    { they: "sorry late ho gaya, yahan cafe me light chali gayi thi" },
+    { you: [
+      { say: "kab se wait kar raha tha!!", then: [{ they: "sorry bhai :(" }] },
+      { say: "koi nahi yaar" },
+      { say: "aa gaya finally :P", then: [{ they: "lol" }] },
+    ] },
+    { they: "kaisa hai?" },
+    { you: [
+      { say: "theek hu. tu bata, pune kaisa hai?" },
+      { say: "bore ho raha hu tere bina", then: [{ they: "same yaar" }] },
+      { say: "mast. tu bata" },
+    ] },
+    { hesitate: 3 },
+    { they: "pune bada hai yaar. sab english me baat karte hai school me" },
+    { they: "koi dost nahi bana abhi tak" },
+    { you: [
+      { say: "ban jayenge, tension mat le" },
+      { say: "wahan bhi cricket khel", then: [{ they: "yahan sab football khelte hai lol" }] },
+      { say: "wapas aaja :P", then: [{ they: "kaash" }] },
+    ] },
+    { wait: 3 },
+    { they: "prison brake ka season 3 dekha?" },
+    { you: [
+      { say: "haan!!! wo tattoo wala scene", then: [{ they: "bhai kya dimaag hai uska" }] },
+      { say: "nahi, ghar pe cable nahi aata", then: [{ they: "cd le le, yahan sab ke paas hai" }] },
+      { say: "spoiler mat dena!!", then: [{ they: "lol ok" }] },
+    ] },
+    { time: "5:35" },
+    { they: "aur team kaisi hai mere bina? :P" },
+    { you: [
+      { say: "bekaar, har match haar rahe hai", then: [{ they: "hahaha obviously" }] },
+      { say: "tu hota to jeet jaate", then: [{ they: ":)" }] },
+      { say: "sunny captain ban gaya lol", then: [{ they: "sunny??? lol team gayi" }] },
+    ] },
+    // the photo: from the pen drive, by Rediffit Mail (a task: see the top)
+    { they: "acha sun, wo team wali photo mail kar na" },
+    { they: "yahan sab ko dikhani hai apni team" },
+    { they: "rediffit pe, rohan_rockstar@rediffitmail.com" },
+    { you: [
+      { say: "haan pen drive me hai, abhi bhejta hu" },
+      { say: "ruk bhejta hu" },
+      { say: "pehle ye bata school kaisa hai", then: [{ they: "bekaar. pehle photo :P" }] },
+    ] },
+    { waitFor: "photoMailed", nudges: ["bheja?", "oye", "photo???"], giveUpAfter: 300,
+      done: [{ they: "aa gaya!!!" }, { they: "sab kitne bade lag rahe hai" }, { they: "sunny ka haircut dekh lol" }],
+      notDone: [{ they: "chal koi nahi, baad me bhej dena" }] },
+    { wait: 3 },
+    { they: "kiske saath chat kar raha hai?? :P" },
+    { they: "reply late de raha hai" },
+    { you: [
+      { say: "kisi ke saath nahi yaar", then: [{ they: "haan haan :P" }] },
+      { say: "tuition wali ek ladki...", then: [{ they: "oyeeee!!! :P :P" }, { they: "naam bata" }] },
+      { say: "tu nahi jaanta usko", then: [{ they: "matlab koi hai!!! :P" }] },
+    ] },
+    { wait: 3 },
+    { they: "brb, papa ko computer chahiye 5 min" },
+    { status: "idle" },
+    { mark: "rohanBrb" }, // (Priya's turn meanwhile)
+    { wait: 45 },
+    { status: "online" },
+    { buzz: true },
+    { they: "aa gaya" },
+    { mark: "rohanBack" },
+    { they: "diwali pe ajmer aaunga shayad!!" },
+    { you: [
+      { say: "sachii??? pakka aana", then: [{ they: "papa se baat karunga" }] },
+      { say: "phir match rakhte hai colony me", then: [{ they: "haan!!! purani team" }] },
+      { say: "patakhe le aana pune se :P", then: [{ they: "lol" }] },
+    ] },
+    { waitFor: "priyaGone", giveUpAfter: 90 },
+    { wait: 6 },
+    { time: "6:10" },
+    { they: "ok mummy bula rahi, khana ready hai" },
+    { they: "next saturday pakka?" },
+    { you: [
+      { say: "pakka!!" },
+      { say: "pakka. 5 baje. late mat hona", then: [{ they: "tu bhi :P" }] },
+      { say: "haan bhai pakka" },
+    ] },
+    { they: "bye :)" },
     { status: "offline" },
   ],
 };
@@ -143,4 +252,11 @@ const sunny: Thread = {
   ],
 };
 
-export const THREADS: Thread[] = [priya, sunny];
+export const THREADS: Thread[] = [priya, rohan, sunny];
+
+/** Quick reactions to things you do (not part of a conversation): who says what. */
+export const REACTIONS: Record<string, { buddy: string; says: string }> = {
+  "wrongFile:priya_cute_angel": { buddy: "priya_cute_angel", says: "ye kaunsa gaana hai?? :P" },
+  "wrongFile:sunny_4_six": { buddy: "sunny_4_six", says: "ye kya bheja?" },
+  wrongPhoto: { buddy: "rohan_rockstar", says: "ye kaunsi photo hai lol. team wali bhej na" },
+};

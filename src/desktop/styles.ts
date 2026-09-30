@@ -48,10 +48,16 @@ export const CSS = /* css */ `
 .xp-tasks { flex: 1; display: flex; gap: 3px; padding: 0 6px; overflow: hidden; }
 .xp-task { width: 150px; height: 23px; padding: 0 8px; display: flex; align-items: center; color: #fff; border-radius: 3px;
   background: #3c81f3; box-shadow: inset 0 0 0 1px #1c4fb7; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.xp-task.flash { animation: xp-flash 1s steps(1) infinite; }
+@keyframes xp-flash { 50% { background: #f0a030; box-shadow: inset 0 0 0 1px #b86e10; } }
 .xp-task.focused { background: #1e52b7; box-shadow: inset 1px 1px 2px #0e2b6f; }
 .xp-tray { height: 30px; padding: 0 10px; display: flex; align-items: center; gap: 8px; color: #fff;
   background: linear-gradient(#0f8ae8, #0c6fd6); border-left: 1px solid #0a4ea4; }
 .xp-tray .smiley { width: 14px; height: 14px; border-radius: 50%; background: #f2d024; box-shadow: inset 0 0 0 1px #9a7a00; }
+
+/* a balloon above the tray */
+.xp-toast { position: absolute; right: 8px; bottom: 38px; z-index: 960; padding: 8px 12px; border-radius: 6px;
+  background: #ffffe1; border: 1px solid #888; box-shadow: 2px 2px 5px rgba(0,0,0,0.3); font-weight: bold; }
 
 /* the Start menu */
 .xp-menu { position: absolute; left: 0; bottom: 30px; width: 380px; z-index: 950; border-radius: 6px 6px 0 0; overflow: hidden;

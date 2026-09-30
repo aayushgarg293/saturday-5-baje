@@ -11,6 +11,8 @@ export type Kit = {
   sounds: DesktopSounds;
   files: Files;
   tasks: Tasks;
+  /** A little balloon above the tray for a few seconds ("rohan_rockstar is now online"). */
+  toast(text: string): void;
   /** Run `fn(dt)` every frame while you're on the desktop (downloads, pages loading…). Returns a way to stop. */
   tick(fn: (dt: number) => void): () => void;
 };
@@ -21,10 +23,13 @@ export type Kit = {
  * (the `waitFor` step, thread.ts).
  */
 export class Tasks {
+  /** Called whenever something is posted (the messenger reacts to some: story.ts, REACTIONS). */
+  readonly onPost = new Set<(task: string) => void>();
   private done = new Set<string>();
 
   complete(task: string) {
     this.done.add(task);
+    for (const fn of this.onPost) fn(task);
   }
 
   isDone(task: string): boolean {

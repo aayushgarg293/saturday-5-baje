@@ -20,6 +20,8 @@ export type WindowOptions = {
   /** Fills the window's body. */
   content: HTMLElement;
   onClose?: () => void;
+  /** Open it behind the window you're using, not in front (a chat popping up while you type in another). */
+  behind?: boolean;
 };
 
 export type XpWindow = {
@@ -29,6 +31,8 @@ export type XpWindow = {
   el: HTMLDivElement;
   body: HTMLDivElement;
   minimised: boolean;
+  /** Its taskbar button is flashing (something new in it; stops when you bring it forward). */
+  flashing: boolean;
   setTitle(title: string): void;
   /** Shake it (a BUZZ!). */
   shake(): void;
@@ -73,7 +77,7 @@ export class WindowManager {
     this.screen.append(el);
 
     const win: XpWindow = {
-      id: o.id, title: o.title, icon: o.icon, el, body, minimised: false,
+      id: o.id, title: o.title, icon: o.icon, el, body, minimised: false, flashing: false,
       setTitle: (t) => {
         win.title = t;
         title.querySelector(".name")!.textContent = t;
@@ -122,11 +126,21 @@ export class WindowManager {
       window.addEventListener("pointerup", up);
     });
 
+    const before = this.focused();
     this.focus(win);
+    if (o.behind && before) this.focus(before);
     return win;
   }
 
+  /** Flash its taskbar button (unless it's the one in front). */
+  flash(win: XpWindow) {
+    if (win === this.focused()) return;
+    win.flashing = true;
+    this.onChange();
+  }
+
   focus(win: XpWindow) {
+    win.flashing = false;
     win.el.style.zIndex = String(++this.top);
     for (const w of this.windows) w.el.classList.toggle("inactive", w !== win);
     this.onChange();
