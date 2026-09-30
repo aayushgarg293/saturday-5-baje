@@ -102,6 +102,11 @@ export class AudioEngine {
     this.echoReturn.gain.setTargetAtTime(0.5 * (1 - k), t, 0.15);
   }
 
+  /** Everything slowly to silence (the ending), over about `seconds`. */
+  fadeOut(seconds: number) {
+    if (this.ctx) this.master.gain.setTargetAtTime(0, this.ctx.currentTime, seconds / 3);
+  }
+
   toggleMute() {
     this.muted = !this.muted;
     if (this.ctx) this.master.gain.setTargetAtTime(this.muted ? 0 : 0.7, this.ctx.currentTime, 0.05);

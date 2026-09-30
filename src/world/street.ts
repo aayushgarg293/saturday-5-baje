@@ -7,6 +7,7 @@ import { buildCafe } from "./buildings/cafe";
 import { type BuildContext, type BuildResult, type LampSpot, type PeopleSpot, type SignSpot } from "./buildings/common";
 import { type WorldLamp, lampToWorld } from "./evening";
 import { buildHaveli } from "./buildings/haveli";
+import { buildHome } from "./buildings/home";
 import { buildHouse } from "./buildings/house";
 import { buildShop } from "./buildings/shop";
 import { buildTemple } from "./props/temple";
@@ -54,6 +55,8 @@ export type Street = {
   people: WorldPeopleSpot[];
   /** The buildings' evening lights (world/evening.ts). */
   lamps: WorldLamp[];
+  /** Just in front of home's door (world/buildings/home.ts): where the walk ends. */
+  homeDoor: THREE.Vector3;
 };
 
 /** A `PeopleSpot` placed in the world: its position, and which way it faces (rotation about the vertical). */
@@ -63,8 +66,9 @@ export type WorldPeopleSpot = Omit<PeopleSpot, "x" | "y" | "z" | "turn"> & { pos
 const SEED = 2006;
 
 type Builder = (c: BuildContext) => BuildResult;
-const BUILDERS: Record<"shop" | "haveli" | "house" | "cafe" | "temple" | "wall", Builder> = {
+const BUILDERS: Record<"shop" | "haveli" | "house" | "home" | "cafe" | "temple" | "wall", Builder> = {
   wall: buildBoundaryWall,
+  home: buildHome,
   shop: buildShop,
   haveli: buildHaveli,
   house: buildHouse,
@@ -81,6 +85,7 @@ export function buildStreet(): Street {
   let cafeFrame = new THREE.Matrix4();
   const people: WorldPeopleSpot[] = [];
   const lamps: WorldLamp[] = [];
+  let homeDoor = new THREE.Vector3();
   const rng = makeRng(SEED);
 
   group.add(buildGround());
@@ -130,6 +135,11 @@ export function buildStreet(): Street {
     for (const sp of lampSpots) lamps.push(lampToWorld(sp, mesh.matrixWorld, rot));
     if (type === "cafe") cafeFrame = mesh.matrixWorld.clone();
     for (const { x, y, z, turn, ...rest } of spots) {
+      // doors aren't places for people: only home's is kept (the walk ends there)
+      if (rest.kind === "door") {
+        if (type === "home") homeDoor = new THREE.Vector3(x, y, z + 0.8).applyMatrix4(mesh.matrixWorld);
+        continue;
+      }
       people.push({ ...rest, position: new THREE.Vector3(x, y, z).applyMatrix4(mesh.matrixWorld), rotationY: rot + turn });
     }
     return { mesh, rot, w, height: result.height };
@@ -222,14 +232,15 @@ export function buildStreet(): Street {
       // three 9 m frontages side by side, 13.5 m either side of the centre
       const from = pointAt(end, (k - 0.5) * 9 * facing);
       const to = pointAt(end, (k + 0.5) * 9 * facing);
-      place(types[k + 1], from, to, normal, `end@${end}:${k}`);
+      // the middle house at the south end, behind where you start, is home
+      place(end === 0 && k === 0 ? "home" : types[k + 1], from, to, normal, `end@${end}:${k}`);
     }
   }
 
   // south to north, so whoever picks from them can space them out along the walk
   const along = (p: THREE.Vector3) => streetCoords(p.x, p.z).s;
   people.sort((a, b) => along(a.position) - along(b.position));
-  return { group, colliders, floors, cafeFrame, signs, spawn: { ...pointAt(1.5, 0), yaw: yawAlong(1.5) }, people, lamps };
+  return { group, colliders, floors, cafeFrame, signs, spawn: { ...pointAt(1.5, 0), yaw: yawAlong(1.5) }, people, lamps, homeDoor };
 }
 
 /** A plain boundary wall with a coping on top (the ends of the side roads' back lanes). */

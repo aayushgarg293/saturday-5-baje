@@ -15,9 +15,16 @@ down in booth 2, the dial-up modem, the game clock); and the computer:
 click, Esc to lean back), with Yaaho! Messenger (Priya and Rohan, the story
 as data in `desktop/story.ts`), Internet Xplorer (Rediffit portal, SongzPK,
 Rediffit Mail, Yorkut, MeToob), two tasks woven into the chats (a song for
-Priya, a photo for Rohan), the cafe timer, and Log Off. Next: phase 9,
-paying the owner and the walk home at dusk.
+Priya, a photo for Rohan), the cafe timer, and Log Off. Phase 9 done too:
+paying the owner, the light following the clock (render/daylight.ts), the
+lamps coming on (world/evening.ts), evening life and sounds, home and the
+ending card (*Saturday, 5 Baje*). This version is complete: one visit.
 The owner prefers a spare soundscape: add sounds only when asked.
+
+Latest (2026-09-30, Claude's background tab, 1521×784): ~4 ms per frame,
+~380 draw calls on the street (the people and the cafe added since the
+baseline below); dusk costs the same or less (no shadow pass once the sun
+is down). Measure on the owner's machine before release.
 
 Baseline (2026-09-28, M4, Chrome, 1470×956): **~3.5 ms per frame at pixel
 ratio 1.5, ~5.3 ms at 2; 110–206 draw calls** depending on the view (shadow
@@ -183,3 +190,5 @@ Keep each entry short.)*
 | Esc on the desktop couldn't give the mouse back to the game | Browsers only capture the mouse (pointer lock) on a click, never a key. After Esc, the next click on the view captures it (`main.ts`). |
 | Clicking a link on a web page leaned you out of the computer | The bezel's "clicked outside the screen?" test ran after the link's page had been swapped out, so the clicked element was no longer inside the screen. Check what was clicked (`e.target === bezel`), not "is it outside". |
 | Real key presses from Claude's test tools never reach the game | The test tab gets no key events at all. Drive the desktop with `window.dispatchEvent(new KeyboardEvent("keydown", { key }))`; the owner checks real typing. |
+| A fade (CSS transition) never ran in Claude's test tab | It was started on `requestAnimationFrame`, which a background tab never fires. Start it with a forced layout instead (`void el.offsetWidth; el.classList.add(...)`): works everywhere. |
+| New random choices in a builder would reshuffle the whole street | Builders draw from forked random streams in a fixed order; an extra draw in one changes everything built after it. Builders only *report* new things (lamp spots, doors); the code that uses them draws from its own seed (world/evening.ts, the evening men at the chai tapri). |

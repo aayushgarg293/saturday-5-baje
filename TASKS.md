@@ -235,7 +235,7 @@ motion; busy but walkable.
 
 - [x] Owner sits down, hears the modem, looks at the clock: "the clock is
       perfect and the modem sound is also perfect". Phase 7 done
-- [ ] Before release: Shift speed back from 10 m/s (testing) to ~3.6 (`FAST_SPEED` in `core/player.ts`)
+- [x] Before release: Shift speed back from 10 m/s (testing) to ~3.6 (`FAST_SPEED` in `core/player.ts`)
 
 ## 8. The computer
 - [x] Windows XP look-alike desktop: wallpaper, taskbar, Start menu, windows, sounds
@@ -279,9 +279,21 @@ order: shell (done) → Yaaho! with Priya's thread (done) → the song for Priya
 for real. The owner chose the tasks (a song, a photo), woven into the chats.
 
 ## 9. The walk home
-- [ ] Same street at dusk: sky, lighting, tubelights flickering on
-- [ ] Street life and sound changed for evening
-- [ ] Ending
+- [x] Paying the owner at the counter after Log Off ("[E] pay ₹40", he says
+      the sum in Hindi); "Oye! Paise?" stops you at the stairs until you pay
+- [x] The light follows the clock (`render/daylight.ts`: moments from 4:30
+      to 7:30, blended): golden, sunset, blue dusk; the hills darken; no
+      shadow pass once the sun is down
+- [x] The lights come on (`world/evening.ts`): shop tubelights with their
+      starting flicker (one bad tube), stall bulbs, pole lamps, stove fires,
+      lit windows, headlights; four instanced meshes, 7 draw calls in all
+- [x] Evening life and sound (`core/timeOfDay.ts`): the cricket kids go
+      home, two more men at the chai tapri, the aarti with its handbell and
+      the conch, the koel quiet, the cooker more often, calmer traffic
+- [x] The kachori cart's slogan: "1 कचौरी 2 समोसा, इस जीवन का क्या भरोसा"
+- [x] Home (`world/buildings/home.ts`: the house behind the start, its
+      door bulb and lit windows) and the ending (`ui/ending.ts`): "[E] go
+      home" after paying, the fade, the title card *Saturday, 5 Baje*
 
 ## Open questions (from `BRIEF.md`)
 - The story on the computer: the friend's post, who he chats with

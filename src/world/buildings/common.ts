@@ -55,6 +55,8 @@ export type LampSpot = {
   back?: number;
   ry?: number;
   ground?: number;
+  /** Always lit once it's evening, from 6 (home's door bulb and window). */
+  always?: boolean;
 };
 
 /**
@@ -63,7 +65,7 @@ export type LampSpot = {
  * kind of place it is. people/crowd.ts decides who's there.
  */
 export type PeopleSpot = {
-  kind: "counter" | "platform" | "temple";
+  kind: "counter" | "platform" | "temple" | "door";
   x: number;
   /** The floor they're on. */
   y: number;

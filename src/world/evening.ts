@@ -31,6 +31,8 @@ export type WorldLamp = {
   ground: number;
   /** Poles: higher, a wider pool. */
   pole?: boolean;
+  /** Home's: lit for sure, from 6. */
+  always?: boolean;
 };
 
 /** A builder's lamp spot, placed in the world by its building's (or stall's) matrix. */
@@ -43,6 +45,7 @@ export function lampToWorld(sp: LampSpot, matrix: THREE.Matrix4, rot: number, gr
     h: sp.h ?? 1,
     back: sp.back ?? 0,
     ground: (sp.ground ?? 0) + groundY,
+    always: sp.always,
   };
 }
 
@@ -80,14 +83,11 @@ export function buildEvening(spots: WorldLamp[]): Evening {
     const kind = sp.pole ? "pole" : sp.kind;
     const colours = COLOUR[sp.kind];
     const [from, spread] = sp.kind === "fire" ? [0, 0] : ON[kind as keyof typeof ON];
-    return {
-      ...sp,
-      on: from + rng.next() * spread,
-      colour: new THREE.Color(colours[Math.floor(rng.next() * colours.length)]),
-      bad: false,
-      flicker: rng.next() * 100,
-      lit: sp.kind !== "window" || rng.next() < WINDOWS_LIT,
-    };
+    const on = from + rng.next() * spread;
+    const colour = new THREE.Color(colours[Math.floor(rng.next() * colours.length)]);
+    const flicker = rng.next() * 100;
+    const lit = sp.kind !== "window" || rng.next() < WINDOWS_LIT;
+    return { ...sp, on: sp.always ? 18 * 60 : on, colour, bad: false, flicker, lit: lit || !!sp.always };
   });
   // one tube that never quite settles
   const tubes = lamps.filter((l) => l.kind === "tube");

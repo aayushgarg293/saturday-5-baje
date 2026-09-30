@@ -171,6 +171,11 @@ looks back.
 When he's done, he **logs off, leaves the cafe and walks home** through the
 same street. That's the end of this version.
 
+As built (phase 9): he pays the owner at the counter, goes down into the
+sunset, and walks home through the dusk as the lights come on and the aarti
+begins at the temple. Home is the house behind where the walk began: at its
+door, the screen fades to the title card. **Title: *Saturday, 5 Baje*.**
+
 ## Scope
 
 This version is **one visit**: the street, the cafe, the computer, the walk

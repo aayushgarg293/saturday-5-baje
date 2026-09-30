@@ -19,6 +19,7 @@ import { addLights } from "./render/lights";
 import { PAL } from "./render/palette";
 import { Pipeline } from "./render/post";
 import { createRenderer, fitToWindow } from "./render/renderer";
+import { playEnding } from "./ui/ending";
 import { showPrompt } from "./ui/prompt";
 import { buildBackdrop } from "./world/backdrop";
 import { buildEvening } from "./world/evening";
@@ -127,6 +128,20 @@ function stopAtTheStairs() {
   }
 }
 
+// --- home: the end ------------------------------------------------------------------------
+// Once you've paid, home's door (the house behind where you started) is the
+// end: [E] there fades the screen and the sound, and the title card comes up.
+let ended = false;
+const HOME_REACH = 2.2;
+const canGoHome = () => paid && !ended && player.pos.distanceTo(street.homeDoor) < HOME_REACH;
+function goHome() {
+  ended = true;
+  player.frozen = true;
+  audio.fadeOut(4);
+  playEnding();
+  document.exitPointerLock();
+}
+
 // --- sound ----------------------------------------------------------------------
 // Browsers only allow sound after a click, so it starts with the first click.
 const audio = new AudioEngine();
@@ -181,7 +196,8 @@ window.addEventListener("keydown", (e) => {
   if (!input.locked || e.repeat) return;
   // E: sit down at your computer, or get up; T: look up at the clock
   if (e.code === "KeyE") {
-    if (canPay()) pay();
+    if (canGoHome()) goHome();
+    else if (canPay()) pay();
     else if (seat.seated) seat.standUp();
     else seat.sitDown();
   }
@@ -194,8 +210,8 @@ startScreen.addEventListener("click", () => {
   input.lock();
 });
 input.onLockChange = (locked) => {
-  // (on the desktop the mouse is free on purpose: no start screen then)
-  startScreen.hidden = locked || desktop.isOpen;
+  // (on the desktop the mouse is free on purpose: no start screen then; nor at the end)
+  startScreen.hidden = locked || desktop.isOpen || ended;
 };
 
 // --- game loop ---------------------------------------------------------------------
@@ -242,10 +258,12 @@ function applyTimeOfDay() {
 
 /** The hint at the bottom of the screen: what you can do right now. */
 function prompt(): string | null {
+  if (ended) return null;
   if (desktop.isOpen || seat.leaned) return null;
   if (!input.locked && seat.seated) return "[Click] to look around again";
   if (seat.seated && loggedOff) return paid ? "[E] get up" : `[E] get up    (₹${charge(visitMinutes)} to pay at the counter)`;
   if (canPay()) return `[E] pay ₹${charge(visitMinutes)}`;
+  if (canGoHome()) return "[E] go home";
   if (seat.seated) return `${yourScreen.ready() ? "[Click] use the computer    " : ""}[E] get up    [T] look at the clock`;
   return seat.canSit() ? "[E] sit down" : null;
 }

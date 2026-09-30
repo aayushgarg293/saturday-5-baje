@@ -22,6 +22,7 @@ export function buildHouse(c: BuildContext): BuildResult {
   const doorX = r.range(-c.w / 4, c.w / 4);
   p.slab(doorX - 0.62, doorX + 0.62, 0.3, 2.55, face, face + 0.06, PAL.stoneTrim); // frame
   p.slab(doorX - 0.5, doorX + 0.5, 0.3, 2.45, face + 0.06, face + 0.1, PAL.wood);
+  c.people.push({ kind: "door", x: doorX, y: 0.3, z: face + 0.1, turn: 0 }); // (home.ts needs to know where it is)
   const winX = doorX + (doorX < 0 ? 1.8 : -1.8);
   if (Math.abs(winX) < c.w / 2 - 0.6) windowAt(c, winX, 1.8, face);
 
