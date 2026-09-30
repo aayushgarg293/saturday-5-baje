@@ -86,6 +86,57 @@ look-alike versions of the sites and apps of the time (see Naming).
   and a pen drive with a shortcut virus. These can be background detail:
   tabs, icons, pop-ups, bookmarks.
 
+### The story on the computer (draft, for the owner to edit)
+
+Two threads through the same hour, in two chat windows at once.
+
+**Rohan, the friend who moved away (the spine).** His best friend since
+class 3. At the start of the summer Rohan's father was transferred to Pune.
+Their promise: every Saturday, 5 pm, Yaaho! Messenger. Today is the first
+Saturday. The walk has made him late, so he climbs the stairs worried that
+he's missed him.
+
+**Priya, from tuition (the second thread).** In his tuition batch; they've
+never really talked. Yesterday she added him on Yorkut and accepted him on
+Yaaho!. She's said she's online only "till 6".
+
+**How the hour goes:**
+
+1. **He sits down; the modem connects.** Yaaho!: Rohan is offline. (Is he
+   late too, or gone already?) Priya is online.
+2. **Yorkut while he waits.** Rohan's new photo album, "new city new life :)",
+   full of comments from new friends he doesn't know. His own scrapbook:
+   Rohan's old scrap, "miss u yaar, cricket nahi khela koi". Priya's profile:
+   her communities (*I ♥ Jab We Mate*, *Dil Mil Gaye Yaar fans*). He starts a
+   testimonial for her, and types and deletes it.
+3. **Priya says hi first.** A shy, awkward chat: "hi", "hi :)", "tuition ka
+   homework kiya?", "Jab We Mate dekhi?". Long pauses while one of them is
+   "typing…".
+4. **Rohan comes online**, late. Now two windows at once: catching up with
+   Rohan (Prison Brake, the cricket team without him, Rohan's new school,
+   Diwali plans), answering Priya in between. Rohan notices he's distracted:
+   "kiske saath chat kar raha hai?? :P". Rohan goes "brb" and doesn't come
+   back for a while.
+5. **Meanwhile:** a MeToob clip that won't stop buffering; a BUZZ!; the
+   clock (T), again and again. The hour he paid for is running out.
+6. **Six o'clock.** Priya has to go: "gtg… see u in tuition :)", and she
+   leaves a scrap saying the same. Rohan: "ok mummy bula rahi, next
+   saturday pakka?".
+7. **He logs off**, pays the owner, goes down the stairs as the street's
+   sounds come back, and walks home at dusk. The tubelights are coming on;
+   the chaiwala's stove is lit. The same street; he's quieter, and
+   smiling.
+
+**The feeling:** a friendship stretched across a distance, and something
+new starting, in the same hour. Bittersweet and hopeful at once.
+
+**Chat style:** as people typed then: lowercase, Hinglish in Roman letters,
+"wat r u doin", "kk", "brb", "gtg", "lol", ":P", "hiii", too many "!!!".
+
+**To decide in phase 8:** chat pacing against the 10× clock (6 pm arrives
+only a few real minutes after sitting down), so the beats may follow the
+story rather than the exact time.
+
 ### Pop culture
 
 **Real shows and films of the period, with names changed a little**, not
@@ -181,8 +232,9 @@ References in this folder: `summer-cycle/`, `sakura-crossing/`,
    | WWE | WWX | | Jaane Tu Ya Jaane Na | Jaane Tu Ya Jaane Main |
    | Windows XP | Windoze XP | | Golmaal | Gollmaal |
 
-2. **The story on the computer:** what the friend's post is, who he chats
-   with and about what.
+2. ~~**The story on the computer.**~~ Drafted: Rohan (the friend who moved
+   away) and Priya (from tuition), see "The story on the computer". The
+   owner edits the lines before phase 8 builds them.
 3. ~~**The clock control.**~~ Settled: **T** turns your view to the wall
    clock (above the stairwell), zooming in to read it, then back.
 4. **Title:** a typical Indian cyber cafe name ("Cyber Planet",
