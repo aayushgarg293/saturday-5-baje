@@ -13,6 +13,8 @@ import type * as THREE from "three";
 
 export type Cue =
   | "templeBell" // the old woman swings the bell's clapper
+  | "aartiBell" // the little handbell she rings through the evening aarti
+  | "conch" // the conch blown once as the evening aarti begins
   | "batHit" // bat meets ball in the gali
   | "ballBounce" // the ball bouncing
   | "glassClink" // a chai glass set down, or knocked by the pan as he pours

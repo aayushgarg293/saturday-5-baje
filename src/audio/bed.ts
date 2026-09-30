@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { timeOfDay } from "../core/timeOfDay";
 import type { AudioEngine } from "./engine";
 import { type Ctx, type Vowel, envelope, filter, gain, noiseSource, pick, rand, stopAt, voice } from "./synth";
 
@@ -67,11 +68,16 @@ export class Bed {
     const ctx = this.ctx;
     const now = ctx.currentTime;
 
-    // the one-off sounds, each when its time comes
+    // the one-off sounds, each when its time comes. In the evening
+    // (core/timeOfDay.ts) the koel falls quiet, the traffic thins out, and
+    // more kitchens are cooking dinner.
+    const evening = timeOfDay.evening;
     for (const kind of Object.keys(EVERY) as Kind[]) {
       if (now < this.next[kind]) continue;
       const [a, b] = EVERY[kind];
-      this.next[kind] = now + rand(a, b);
+      const spacing = kind === "traffic" ? 1 + evening : kind === "cooker" ? 1 - 0.45 * evening : 1;
+      this.next[kind] = now + rand(a, b) * spacing;
+      if (kind === "koel" && evening > 0.2) continue;
       this.play(kind, player, now + 0.05);
     }
   }

@@ -1,5 +1,6 @@
 import * as THREE from "three";
-import type { Rng } from "../core/rng";
+import { type Rng, makeRng } from "../core/rng";
+import { timeOfDay } from "../core/timeOfDay";
 import type { Placement } from "../world/props/batch";
 import { type Action, type Actor, makeActor, seenFrom, smooth, v } from "./actor";
 import { buildPerson } from "./body";
@@ -11,6 +12,9 @@ import { type Role, recipeFor } from "./recipes";
  * glasses in hand: sipping, chatting, laughing. Two share the bench on one
  * side, the third faces them from the other bench; they talk across.
  *
+ * In the evening, two more come by after work and stand beside the benches,
+ * glasses in hand (they show up while you're not looking: core/timeOfDay.ts).
+ *
  * Positions are in the tapri's frame (x along the counter, +z toward the
  * street). Poses are in each man's own frame (see actor.ts).
  */
@@ -21,6 +25,33 @@ const MEN: { role: Role; at: { x: number; z: number; turn: number } }[] = [
   { role: "youngMan", at: { x: 1.45, z: 0.6, turn: -Math.PI / 2 } },
   { role: "man", at: { x: -1.45, z: 0.4, turn: Math.PI / 2 } }, // left bench, facing them
 ];
+
+/** The evening's two, standing at the benches' outer ends, turned in toward the others. */
+const EVENING_MEN: { role: Role; at: { x: number; z: number; turn: number } }[] = [
+  { role: "man", at: { x: -2.05, z: 0.55, turn: Math.PI / 2 } },
+  { role: "uncle", at: { x: 2.05, z: 0.5, turn: -Math.PI / 2 } },
+];
+/** When they come (clock minutes), and how far away you must be for them to appear. */
+const EVENING_FROM = 18 * 60;
+const UNSEEN = 18;
+
+/** Standing: the glass held at the chest, and the mouth. */
+const HOLD = v(-0.18, 1.05, 0.25), HIP = v(0.2, 0.95, 0.02), STAND_MOUTH = v(-0.02, 1.56, 0.15);
+
+/** A standing man's loop: chatting, glass in hand, and a sip now and then. */
+function standerActions(rng: Rng, friend: THREE.Vector3): Action[] {
+  return [
+    { name: "chat", duration: rng.range(4, 6), pose: (u) => ({ right: HOLD, left: HIP, look: friend, nod: Math.max(0, Math.sin(u * 2)) * 0.06, lean: 0.05 }) },
+    {
+      name: "sip", duration: 3.2,
+      pose: (u) => {
+        const up = smooth(THREE.MathUtils.clamp(Math.min(u / 0.8, (2.6 - u) / 0.8), 0, 1));
+        return { right: HOLD.clone().lerp(STAND_MOUTH, up), left: HIP, look: friend, nod: -0.15 * up };
+      },
+    },
+    { name: "laugh", duration: 2, pose: (u) => ({ right: HOLD, left: HIP, look: friend, lean: -0.06 + Math.abs(Math.sin(u * 7)) * 0.06, smile: true }) },
+  ];
+}
 
 /** Hands at rest, seated: on the thighs. The right one holds the glass. */
 const REST_R = v(-0.12, 0.64, 0.3), REST_L = v(0.13, 0.6, 0.26);
@@ -106,10 +137,36 @@ export function buildChaiCorner(where: Placement, rng: Rng): ChaiCorner {
     return makeActor({ person, at: man.at, seat: SEAT, actions: sitterActions(rng, friend, street), notice: "glance", phase: i * 3.7 });
   });
 
+  // the evening's two (their own random numbers, so the rest of the street's people don't change)
+  const eveningRng = makeRng(1845);
+  const evening = new THREE.Group();
+  group.add(evening);
+  evening.visible = false;
+  const standers = EVENING_MEN.map((man, i) => {
+    const person = buildPerson(recipeFor(man.role, eveningRng));
+    evening.add(person.root);
+    const glass = chaiGlass();
+    evening.add(glass);
+    const friend = seenFrom(man.at, 0, 1.2, 0.3);
+    const actor = makeActor({ person, at: man.at, actions: standerActions(eveningRng, friend), notice: "glance", phase: i * 2.3 });
+    return { actor, glass, turn: man.at.turn };
+  });
+  const middle = new THREE.Vector3();
+
   const at = new THREE.Vector3();
   return {
     group,
     update(t, dt, player) {
+      // they come (and, if you turn the clock back, go) only while you're not close by
+      const wanted = timeOfDay.minutes >= EVENING_FROM;
+      if (wanted !== evening.visible && group.getWorldPosition(middle).distanceTo(player) > UNSEEN) evening.visible = wanted;
+      if (evening.visible) {
+        for (const s of standers) {
+          s.actor.update(t, dt, player);
+          s.glass.position.copy(s.actor.grip("R", at));
+          s.glass.rotation.set(s.actor.now.name === "sip" ? -0.7 : 0, s.turn, 0, "YXZ");
+        }
+      }
       actors.forEach((actor, i) => {
         actor.update(t, dt, player);
         // the glass stays upright in his fist, tipping toward him as he sips

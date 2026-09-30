@@ -10,6 +10,7 @@ import { Input } from "./core/input";
 import { Player } from "./core/player";
 import { makeRng } from "./core/rng";
 import { Seat } from "./core/seat";
+import { timeOfDay } from "./core/timeOfDay";
 import { charge } from "./desktop/cafeTimer";
 import { Desktop } from "./desktop/desktop";
 import { buildCafePeople } from "./people/cafePeople";
@@ -221,12 +222,14 @@ function update(dt: number) {
   radio?.update(dt, player.pos);
   streetSounds?.update(dt, player.pos);
   cafeSounds?.update(dt, player.pos);
-  timeOfDay();
+  applyTimeOfDay();
 }
 
 /** The light, the sky, the haze and the grade follow the clock (render/daylight.ts). */
-function timeOfDay() {
+function applyTimeOfDay() {
   const look = lookAt(gameClock.minutes);
+  timeOfDay.minutes = gameClock.minutes;
+  timeOfDay.evening = look.evening;
   lights.setLook(look);
   sky.setLook(look);
   backdrop.setLook(look);

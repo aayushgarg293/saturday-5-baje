@@ -234,8 +234,10 @@ function brightness(l: Lamp, minutes: number, t: number): number {
   return 1;
 }
 
-/** A soft round spot, bright in the middle and fading to nothing: for glows and pools. */
-function softTexture(): THREE.CanvasTexture {
+/** A soft round spot, bright in the middle and fading to nothing: for glows and pools (also the aarti's flame). */
+let soft: THREE.CanvasTexture | null = null;
+export function softTexture(): THREE.CanvasTexture {
+  if (soft) return soft;
   const canvas = document.createElement("canvas");
   canvas.width = canvas.height = 64;
   const ctx = canvas.getContext("2d")!;
@@ -245,7 +247,7 @@ function softTexture(): THREE.CanvasTexture {
   g.addColorStop(1, "rgba(255,255,255,0)");
   ctx.fillStyle = g;
   ctx.fillRect(0, 0, 64, 64);
-  const tex = new THREE.CanvasTexture(canvas);
-  tex.colorSpace = THREE.SRGBColorSpace;
-  return tex;
+  soft = new THREE.CanvasTexture(canvas);
+  soft.colorSpace = THREE.SRGBColorSpace;
+  return soft;
 }

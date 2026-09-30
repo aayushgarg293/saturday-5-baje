@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { cue, passed } from "../core/cues";
+import { timeOfDay } from "../core/timeOfDay";
 import type { Rng } from "../core/rng";
 import type { Placement } from "../world/props/batch";
 import { type Actor, type Pose, makeActor, seenFrom, smooth, track, v } from "./actor";
@@ -19,11 +20,18 @@ import { recipeFor } from "./recipes";
  *
  * All four kids share one 7-second action, so everything happens on cue.
  *
+ * After 6 it's getting dark, and they've gone home (they leave while you're
+ * not near enough to see them go: core/timeOfDay.ts).
+ *
  * FRAME: the gali's, from `placeOnStreet` at the gali's mouth: +z out toward
  * the street, x across the gali (its walls at x = ±2), y up.
  */
 
 const LOOP = 7;
+/** When they go home (clock minutes), and how far away you must be for them to go (or come back). */
+const GO_HOME = 18 * 60 + 5;
+const UNSEEN = 25;
+const middle = new THREE.Vector3();
 const KID = 0.7; // the kids' height scale: the poses below are measured for it
 
 // where everyone stands (gali frame); `turn` = which way they face
@@ -189,6 +197,10 @@ export function buildCricket(where: Placement, rng: Rng): Cricket {
     group,
     standing: [BATTER, BOWLER, FIELD_A, FIELD_B],
     update(t, dt, player) {
+      // home time (or back again, if the clock is turned back): only while you're not close
+      const home = timeOfDay.minutes >= GO_HOME;
+      if (home === group.visible && group.getWorldPosition(middle).distanceTo(player) > UNSEEN) group.visible = !home;
+      if (!group.visible) return;
       for (const p of Object.values(players)) p.update(t, dt, player);
       const u = t % LOOP;
       for (const s of sounds) if (passed(before, u, s.at)) cue(s.name, s.where);

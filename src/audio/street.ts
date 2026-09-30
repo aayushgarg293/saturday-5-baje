@@ -53,6 +53,8 @@ export class StreetSounds {
     const out = (near: number, wet: number) => this.engine.place("street", where.x, where.y, where.z, near, wet);
     switch (name) {
       case "templeBell": return templeBell(this.ctx, out(2.5, 0.35), t);
+      case "aartiBell": return aartiBell(this.ctx, out(1.5, 0.3), t);
+      case "conch": return conch(this.ctx, out(6, 0.5), t);
       case "batHit": return batHit(this.ctx, out(2, 0.2), t);
       case "ballBounce": return ballBounce(this.ctx, out(1.5, 0.1), t);
       case "glassClink": return glassClink(this.ctx, out(1.2, 0.1), t);
@@ -118,6 +120,41 @@ function templeBell(ctx: Ctx, out: AudioNode, t: number) {
   }
   partials(ctx, out, t, parts, 0.18);
   tick(ctx, out, t, 3200, 0.2);
+}
+
+/** The aarti's little brass handbell, shaken: a small, high, quick ring (many of them, one per shake). */
+function aartiBell(ctx: Ctx, out: AudioNode, t: number) {
+  const f = rand(1880, 2020);
+  partials(ctx, out, t, [[f, 1, 0.45], [f * 2.32, 0.4, 0.3], [f * 3.61, 0.2, 0.18]], 0.07);
+}
+
+/**
+ * The conch (shankh), blown once as the evening aarti begins: one long,
+ * breathy note that swells, rises a little in pitch, and falls away.
+ * A few harmonics of a low note, plus the breath through it.
+ */
+function conch(ctx: Ctx, out: AudioNode, t: number) {
+  const len = 3.2;
+  const level = gain(ctx, 0);
+  const tone = filter(ctx, "lowpass", 2200);
+  tone.connect(level).connect(out);
+  level.gain.setValueAtTime(0, t);
+  level.gain.linearRampToValueAtTime(0.16, t + 0.35);
+  level.gain.setValueAtTime(0.16, t + len - 0.7);
+  level.gain.linearRampToValueAtTime(0, t + len);
+  for (const [harmonic, amp] of [[1, 1], [2, 0.5], [3, 0.3], [4, 0.12]] as const) {
+    const o = ctx.createOscillator();
+    o.frequency.setValueAtTime(288 * harmonic, t);
+    o.frequency.linearRampToValueAtTime(300 * harmonic, t + 0.8); // (the rise as the breath settles)
+    const g = gain(ctx, amp * 0.3);
+    o.connect(g).connect(tone);
+    o.start(t);
+    o.stop(t + len + 0.05);
+  }
+  const breath = noiseSource(ctx, "pink");
+  breath.connect(filter(ctx, "bandpass", 900, 1.2)).connect(gain(ctx, 0.35)).connect(tone);
+  breath.start(t);
+  breath.stop(t + len + 0.05);
 }
 
 /** Bat on ball: a dry wooden knock. */
