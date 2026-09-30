@@ -4,9 +4,11 @@ import type { Patch } from "../core/floors";
 import { type Rng, makeRng, shuffled } from "../core/rng";
 import { PAL, WALL_COLOURS } from "../render/palette";
 import { buildCafe } from "./buildings/cafe";
-import { type BuildContext, type BuildResult, type LampSpot, type PeopleSpot, type PlateSpot, type SignSpot } from "./buildings/common";
+import { type BuildContext, type BuildResult, type LabelSpot, type LampSpot, type PeopleSpot, type PlateSpot, type SignSpot } from "./buildings/common";
 import { type WorldLamp, lampToWorld } from "./evening";
 import type { WorldPlate } from "./nameplates";
+import type { WorldMural } from "./wallArt";
+import type { WorldLabel } from "./props/labels";
 import { buildHaveli } from "./buildings/haveli";
 import { buildHome } from "./buildings/home";
 import { buildHouse } from "./buildings/house";
@@ -56,6 +58,10 @@ export type Street = {
   people: WorldPeopleSpot[];
   /** The buildings' evening lights (world/evening.ts). */
   lamps: WorldLamp[];
+  /** What's painted at street level on the walls beside the galis and side roads (world/wallArt.ts). */
+  murals: WorldMural[];
+  /** The shops' goods' labels (world/props/labels.ts). */
+  labels: WorldLabel[];
   /** The houses' nameplates and blessings (world/nameplates.ts). */
   plates: WorldPlate[];
   /** Just in front of home's door (world/buildings/home.ts): where the walk ends. */
@@ -89,6 +95,7 @@ export function buildStreet(): Street {
   const people: WorldPeopleSpot[] = [];
   const lamps: WorldLamp[] = [];
   const plates: WorldPlate[] = [];
+  const labels: WorldLabel[] = [];
   let homeDoor = new THREE.Vector3();
   const rng = makeRng(SEED);
 
@@ -108,7 +115,8 @@ export function buildStreet(): Street {
     const spots: PeopleSpot[] = [];
     const lampSpots: LampSpot[] = [];
     const plateSpots: PlateSpot[] = [];
-    const result = BUILDERS[type]({ parts, w, rng: forkRng(rng), wall, shopName, people: spots, lamps: lampSpots, plates: plateSpots });
+    const labelSpots: LabelSpot[] = [];
+    const result = BUILDERS[type]({ parts, w, rng: forkRng(rng), wall, shopName, people: spots, lamps: lampSpots, plates: plateSpots, labels: labelSpots });
 
     const mesh = parts.build(name);
     // Turn the building so its local +z (its front) points along `normal`.
@@ -138,6 +146,7 @@ export function buildStreet(): Street {
 
     for (const sp of result.signs) addSign(sp, mesh, rot);
     for (const sp of lampSpots) lamps.push(lampToWorld(sp, mesh.matrixWorld, rot));
+    for (const sp of labelSpots) labels.push({ ...sp, rotationY: rot, position: new THREE.Vector3(sp.x, sp.y, sp.z).applyMatrix4(mesh.matrixWorld) });
     for (const sp of plateSpots) plates.push({ kind: sp.kind, w: sp.w, h: sp.h, rotationY: rot, position: new THREE.Vector3(sp.x, sp.y, sp.z).applyMatrix4(mesh.matrixWorld) });
     if (type === "cafe") cafeFrame = mesh.matrixWorld.clone();
     for (const { x, y, z, turn, ...rest } of spots) {
@@ -199,6 +208,7 @@ export function buildStreet(): Street {
   }
 
   addWallAds(rows, addSign);
+  const murals = findMuralWalls(rows);
 
   /**
    * A side road (layout.ts, SIDE_ROADS): a gap in the row leading to a lane
@@ -246,7 +256,7 @@ export function buildStreet(): Street {
   // south to north, so whoever picks from them can space them out along the walk
   const along = (p: THREE.Vector3) => streetCoords(p.x, p.z).s;
   people.sort((a, b) => along(a.position) - along(b.position));
-  return { group, colliders, floors, cafeFrame, signs, spawn: { ...pointAt(1.5, 0), yaw: yawAlong(1.5) }, people, lamps, plates, homeDoor };
+  return { group, colliders, floors, cafeFrame, signs, spawn: { ...pointAt(1.5, 0), yaw: yawAlong(1.5) }, people, lamps, plates, labels, murals, homeDoor };
 }
 
 /** A plain boundary wall with a coping on top (the ends of the side roads' back lanes). */
@@ -265,6 +275,30 @@ type RowEntry = {
   rot?: number;
   w?: number;
 };
+
+/**
+ * The bare side walls beside each gap in a row (a gali, a side road), at
+ * street level: two painted pieces on each, one near the front, one further
+ * in (world/wallArt.ts decides what).
+ */
+function findMuralWalls(rows: Record<"left" | "right", RowEntry[]>): WorldMural[] {
+  const out: WorldMural[] = [];
+  for (const side of ["left", "right"] as const) {
+    const row = rows[side];
+    const nextIsPlusX = side === "left" ? 1 : -1; // (as in addWallAds: which end of a building faces which neighbour)
+    row.forEach((e, i) => {
+      if (!e.mesh || e.w === undefined || e.rot === undefined) return;
+      for (const [nb, sign] of [[row[i - 1], -nextIsPlusX], [row[i + 1], nextIsPlusX]] as const) {
+        if (!nb || nb.height !== 0) continue; // only walls facing a gap
+        for (const z of [-2.3, -4.9]) {
+          const position = new THREE.Vector3(sign * (e.w / 2 + 0.003), 1.45, z).applyMatrix4(e.mesh.matrixWorld);
+          out.push({ position, rotationY: e.rot + sign * (Math.PI / 2), w: 2.2, h: 1.3 });
+        }
+      }
+    });
+  }
+  return out;
+}
 
 /** At most this many painted wall ads on the street. */
 const MAX_WALL_ADS = 8;

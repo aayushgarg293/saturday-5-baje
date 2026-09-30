@@ -24,7 +24,10 @@ import { showPrompt } from "./ui/prompt";
 import { buildBackdrop } from "./world/backdrop";
 import { buildEvening } from "./world/evening";
 import { buildNameplates } from "./world/nameplates";
+import { buildWallArt } from "./world/wallArt";
+import { buildLabels } from "./world/props/labels";
 import { HALL, PAY_SPOT, STAIR, STAIR_TOP, yourSeat } from "./world/cafe/plan";
+import { buildOwnerScreen } from "./world/cafe/ownerScreen";
 import { buildRoom } from "./world/cafe/room";
 import { buildYourScreen } from "./world/cafe/yourScreen";
 import { buildLife } from "./world/life";
@@ -68,6 +71,12 @@ const cafeRoom = buildRoom(street.cafeFrame);
 const cafePeople = buildCafePeople(street.cafeFrame, makeRng(2007));
 const yourScreen = buildYourScreen(street.cafeFrame);
 scene.add(cafeRoom.group, cafePeople.group, yourScreen.mesh, evening.group);
+const ownerScreen = buildOwnerScreen(street.cafeFrame); // (the cafe software on the owner's CRT)
+scene.add(ownerScreen.mesh);
+const wallArt = buildWallArt(street.murals); // (painted ads, warnings and chalk by the galis: one mesh)
+if (wallArt) scene.add(wallArt);
+const labels = buildLabels(street.labels); // (the shops' goods, printed: one mesh)
+if (labels) scene.add(labels);
 const nameplates = buildNameplates(street.plates); // (the houses' nameplates and blessings: one mesh)
 if (nameplates) scene.add(nameplates);
 scene.add(sky.group, street.group, life.group, buildSigns([...street.signs, ...life.signs, ...wires.signs]), wires.group, backdrop.group);
@@ -235,6 +244,7 @@ function update(dt: number) {
   desktop.update(dt);
   desktop.setTime(gameClock.label());
   if (connected && !loggedOff) desktop.setUsed(gameClock.minutes - sessionStart);
+  ownerScreen.update(gameClock.minutes, { connected, loggedOff, paid, used: loggedOff ? visitMinutes : connected ? gameClock.minutes - sessionStart : 0 });
   showPrompt(prompt());
   cafePeople.update(time, dt, player.pos);
   lights.followPlayer(player.pos);

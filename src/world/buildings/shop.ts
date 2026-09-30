@@ -1,7 +1,7 @@
 import { BOARD_COLOURS, PAL } from "../../render/palette";
 import { PLOT_DEPTH } from "../layout";
 import { SHOP_NAMES } from "../names";
-import { dressShop } from "../props/goods";
+import { dressShop, saloonChair } from "../props/goods";
 import {
   type BuildContext, type BuildResult, type SignSpot,
   FACADE, FLOOR_HEIGHT, balcony, body, ledge, roof, windowRow,
@@ -110,7 +110,11 @@ export function shopfront(
 
   // where its keeper sits: behind the counter on a tall stool (see `counter`
   // in goods.ts), or, for shops with nothing out front, on a stool on the platform
-  if (kind === "shop" && shutter === "open" && c.shopName !== undefined) {
+  if (kind === "shop" && shutter !== "closed" && c.shopName !== undefined && SHOP_NAMES[c.shopName].shelf === "barber") {
+    // the saloon: its barber at work on a customer (people/saloon.ts), not a keeper on a stool
+    const chair = saloonChair({ x0: x0 + pillar, face, back });
+    c.people.push({ kind: "saloon", x: chair.x, y: PLINTH_H, z: chair.z, turn: chair.turn });
+  } else if (kind === "shop" && shutter === "open" && c.shopName !== undefined) {
     const trade = SHOP_NAMES[c.shopName].trade;
     const outside = trade === "cloth" || trade === "cycle" || trade === "general";
     c.people.push(outside

@@ -469,10 +469,10 @@ function poster(ctx: CanvasRenderingContext2D, w: number, h: number, film: (type
   const lines = words.length > 2 ? [words.slice(0, 2).join(" "), words.slice(2).join(" ")] : [film.title];
   lines.forEach((line, k) =>
     text(ctx, line, 0, y0 + h * (0.34 + k * 0.16), w * 0.86, h * 0.15, film.ink, LATIN));
-  text(ctx, "आज ही देखें", 0, y0 + h * 0.66, w * 0.7, h * 0.08, film.ink, DEVANAGARI);
+  text(ctx, film.sub ?? "आज ही देखें", 0, y0 + h * 0.66, w * 0.8, h * 0.08, film.ink, DEVANAGARI);
   ctx.fillStyle = "rgba(0,0,0,0.55)";
   ctx.fillRect(x0, y0 + h * 0.74, w, h * 0.1);
-  text(ctx, `NOW SHOWING • ${CINEMA.en}`, 0, y0 + h * 0.79, w * 0.9, h * 0.06, "#f7e9c8", LATIN);
+  text(ctx, film.footer ?? `NOW SHOWING • ${CINEMA.en}`, 0, y0 + h * 0.79, w * 0.9, h * 0.06, "#f7e9c8", LATIN);
   // sun-faded
   ctx.fillStyle = `rgba(250,244,230,${rng.range(0.05, 0.3)})`;
   ctx.fillRect(x0, y0, w, h);

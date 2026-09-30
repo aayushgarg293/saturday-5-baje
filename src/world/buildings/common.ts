@@ -34,6 +34,29 @@ export type BuildContext = {
   lamps: LampSpot[];
   /** …and where a nameplate or a painted blessing goes (world/nameplates.ts says which, and paints it). */
   plates: PlateSpot[];
+  /** …and the fronts of the goods in shops, for their printed labels (world/props/labels.ts). */
+  labels: LabelSpot[];
+};
+
+/**
+ * The front of a box on a shop's shelf, or of a snack packet hanging in its
+ * doorway, for a printed label (world/props/labels.ts picks the product and
+ * paints it). `shelf`: what kind of shop; `shop`: which (so neighbours stock differently); `run`:
+ * boxes of the same run hold the same product, as shops stack them; `packet`:
+ * a hanging packet (else a box on a shelf).
+ */
+export type LabelSpot = {
+  x: number;
+  y: number;
+  z: number;
+  w: number;
+  h: number;
+  shelf: import("../names").Shelf;
+  shop: number;
+  run: number;
+  packet?: boolean;
+  /** Leaning back by this much (a photo frame on its stand). */
+  tilt?: number;
 };
 
 /**
@@ -76,7 +99,7 @@ export type LampSpot = {
  * kind of place it is. people/crowd.ts decides who's there.
  */
 export type PeopleSpot = {
-  kind: "counter" | "platform" | "temple" | "door";
+  kind: "counter" | "platform" | "temple" | "door" | "saloon";
   x: number;
   /** The floor they're on. */
   y: number;

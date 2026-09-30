@@ -17,48 +17,57 @@ export type ShopName = {
   tag: string;
   /** Decides the goods laid out in front of the shop (world/props/goods.ts). */
   trade: Trade;
+  /** What's on its shelves, exactly (world/props/goods.ts shapes them, world/props/labels.ts prints them). */
+  shelf: Shelf;
 };
 
 /** Kinds of shop, for dressing them with goods. */
 export type Trade = "kirana" | "sweets" | "cloth" | "electrical" | "cycle" | "general";
 
+/** What a shop keeps on its shelves: each has its own shapes and products. */
+export type Shelf =
+  | "grocery" | "paan" | "masala" | "namkeen" | "dairy" | "sweets" | "juice"
+  | "chemist" | "optical" | "photo" | "books" | "stationery" | "gifts" | "mobile"
+  | "barber" | "beauty" | "bangles" | "utensils" | "tent" | "jewellery" | "video"
+  | "hardware" | "footwear" | "watch" | "electrical" | "electronics" | "cycle" | "autoParts" | "cloth";
+
 export const SHOP_NAMES: ShopName[] = [
-  { hi: "शर्मा जनरल स्टोर", en: "Sharma General Store", tag: "Kirana • Cold Drinks • Dry Fruits", trade: "kirana" },
-  { hi: "गुप्ता मिष्ठान भंडार", en: "Gupta Mishthan Bhandar", tag: "Kachori • Samosa • Jalebi", trade: "sweets" },
-  { hi: "जनता साइकिल स्टोर", en: "Janta Cycle Store", tag: "Repairing • Puncture • Parts", trade: "cycle" },
-  { hi: "बॉम्बे हेयर कटिंग सैलून", en: "Bombay Hair Cutting Saloon", tag: "Hair Cut • Shave • Massage", trade: "general" },
-  { hi: "रॉयल टेलर्स", en: "Royal Tailors", tag: "Gents & Ladies • Suit Specialist", trade: "cloth" },
-  { hi: "कृष्णा फोटो स्टूडियो", en: "Krishna Photo Studio", tag: "Passport Photo • Colour Lab", trade: "general" },
-  { hi: "लक्ष्मी चूड़ी भंडार", en: "Laxmi Choodi Bhandar", tag: "Bangles • Bindi • Cosmetics", trade: "general" },
-  { hi: "जैन मेडिकल स्टोर", en: "Jain Medical Store", tag: "Chemist & Druggist", trade: "general" },
-  { hi: "अग्रवाल क्लॉथ हाउस", en: "Agarwal Cloth House", tag: "Suit • Saree • Cut Piece", trade: "cloth" },
-  { hi: "महावीर इलेक्ट्रिकल्स", en: "Mahaveer Electricals", tag: "Fan • Cooler • Wiring", trade: "electrical" },
-  { hi: "श्री बालाजी बर्तन भंडार", en: "Shri Balaji Bartan Bhandar", tag: "Steel • Brass • Pressure Cooker", trade: "general" },
-  { hi: "न्यू फैंसी स्टोर", en: "New Fancy Store", tag: "Gift • Toys • Stationery", trade: "general" },
-  { hi: "अजमेर स्वीट्स", en: "Ajmer Sweets", tag: "Sohan Halwa • Ghewar • Namkeen", trade: "sweets" },
-  { hi: "सरस्वती बुक डिपो", en: "Saraswati Book Depot", tag: "Guides • Copies • Pen", trade: "general" },
-  { hi: "गणेश मोबाइल पॉइंट", en: "Ganesh Mobile Point", tag: "Recharge • Repairing • Cover", trade: "general" },
-  { hi: "चौधरी ऑटो पार्ट्स", en: "Chaudhary Auto Parts", tag: "Scooter • Motorcycle", trade: "cycle" },
-  { hi: "भारत टेंट हाउस", en: "Bharat Tent House", tag: "Shaadi • Party • Jagran", trade: "general" },
-  { hi: "मोहन पान भंडार", en: "Mohan Paan Bhandar", tag: "Meetha Paan • Cold Drinks", trade: "kirana" },
-  { hi: "खंडेलवाल ज्वैलर्स", en: "Khandelwal Jewellers", tag: "Sona • Chandi • Hallmark", trade: "general" },
-  { hi: "जय अम्बे जूस सेंटर", en: "Jai Ambe Juice Centre", tag: "Lassi • Shake • Juice", trade: "sweets" },
-  { hi: "सोनी वीडियो लाइब्रेरी", en: "Soni Video Library", tag: "VCD • DVD on Rent", trade: "general" },
-  { hi: "पटेल हार्डवेयर", en: "Patel Hardware", tag: "Paint • Sanitary • Tools", trade: "general" },
-  { hi: "अजमेर फुटवियर", en: "Ajmer Footwear", tag: "Joota • Chappal • School Shoes", trade: "general" },
-  { hi: "ओम ऑप्टिकल्स", en: "Om Opticals", tag: "Eye Testing • Chashma", trade: "general" },
-  { hi: "शिव शक्ति किराना", en: "Shiv Shakti Kirana", tag: "Atta • Dal • Chawal", trade: "kirana" },
-  { hi: "माँ भवानी मसाला भंडार", en: "Maa Bhavani Masala Bhandar", tag: "Pisai • Masale", trade: "kirana" },
-  { hi: "मॉडर्न ड्राई क्लीनर्स", en: "Modern Dry Cleaners", tag: "Dry Clean • Press", trade: "cloth" },
-  { hi: "आशा ब्यूटी पार्लर", en: "Asha Beauty Parlour", tag: "Ladies Only • Mehndi", trade: "general" },
-  { hi: "राठौड़ इलेक्ट्रॉनिक्स", en: "Rathore Electronics", tag: "TV • VCD Player • Repairing", trade: "electrical" },
-  { hi: "सिंधी नमकीन भंडार", en: "Sindhi Namkeen Bhandar", tag: "Bhujia • Papad • Achaar", trade: "kirana" },
-  { hi: "गोपाल डेयरी", en: "Gopal Dairy", tag: "Doodh • Dahi • Paneer", trade: "kirana" },
-  { hi: "विजय स्टेशनरी", en: "Vijay Stationery", tag: "Xerox • Lamination • Spiral", trade: "general" },
-  { hi: "राजपूत टायर्स", en: "Rajput Tyres", tag: "Puncture • Tube • Tyre", trade: "cycle" },
-  { hi: "हनुमान किराना स्टोर", en: "Hanuman Kirana Store", tag: "Sab Saman Uchit Daam", trade: "kirana" },
-  { hi: "कमल वॉच कंपनी", en: "Kamal Watch Co.", tag: "Watch • Clock • Repairing", trade: "general" },
-  { hi: "नेहा गारमेंट्स", en: "Neha Garments", tag: "Ready-made • Kids Wear", trade: "cloth" },
+  { hi: "शर्मा जनरल स्टोर", en: "Sharma General Store", tag: "Kirana • Cold Drinks • Dry Fruits", trade: "kirana", shelf: "grocery" },
+  { hi: "गुप्ता मिष्ठान भंडार", en: "Gupta Mishthan Bhandar", tag: "Kachori • Samosa • Jalebi", trade: "sweets", shelf: "sweets" },
+  { hi: "जनता साइकिल स्टोर", en: "Janta Cycle Store", tag: "Repairing • Puncture • Parts", trade: "cycle", shelf: "cycle" },
+  { hi: "बॉम्बे हेयर कटिंग सैलून", en: "Bombay Hair Cutting Saloon", tag: "Hair Cut • Shave • Massage", trade: "general", shelf: "barber" },
+  { hi: "रॉयल टेलर्स", en: "Royal Tailors", tag: "Gents & Ladies • Suit Specialist", trade: "cloth", shelf: "cloth" },
+  { hi: "कृष्णा फोटो स्टूडियो", en: "Krishna Photo Studio", tag: "Passport Photo • Colour Lab", trade: "general", shelf: "photo" },
+  { hi: "लक्ष्मी चूड़ी भंडार", en: "Laxmi Choodi Bhandar", tag: "Bangles • Bindi • Cosmetics", trade: "general", shelf: "bangles" },
+  { hi: "जैन मेडिकल स्टोर", en: "Jain Medical Store", tag: "Chemist & Druggist", trade: "general", shelf: "chemist" },
+  { hi: "अग्रवाल क्लॉथ हाउस", en: "Agarwal Cloth House", tag: "Suit • Saree • Cut Piece", trade: "cloth", shelf: "cloth" },
+  { hi: "महावीर इलेक्ट्रिकल्स", en: "Mahaveer Electricals", tag: "Fan • Cooler • Wiring", trade: "electrical", shelf: "electrical" },
+  { hi: "श्री बालाजी बर्तन भंडार", en: "Shri Balaji Bartan Bhandar", tag: "Steel • Brass • Pressure Cooker", trade: "general", shelf: "utensils" },
+  { hi: "न्यू फैंसी स्टोर", en: "New Fancy Store", tag: "Gift • Toys • Stationery", trade: "general", shelf: "gifts" },
+  { hi: "अजमेर स्वीट्स", en: "Ajmer Sweets", tag: "Sohan Halwa • Ghewar • Namkeen", trade: "sweets", shelf: "sweets" },
+  { hi: "सरस्वती बुक डिपो", en: "Saraswati Book Depot", tag: "Guides • Copies • Pen", trade: "general", shelf: "books" },
+  { hi: "गणेश मोबाइल पॉइंट", en: "Ganesh Mobile Point", tag: "Recharge • Repairing • Cover", trade: "general", shelf: "mobile" },
+  { hi: "चौधरी ऑटो पार्ट्स", en: "Chaudhary Auto Parts", tag: "Scooter • Motorcycle", trade: "cycle", shelf: "autoParts" },
+  { hi: "भारत टेंट हाउस", en: "Bharat Tent House", tag: "Shaadi • Party • Jagran", trade: "general", shelf: "tent" },
+  { hi: "मोहन पान भंडार", en: "Mohan Paan Bhandar", tag: "Meetha Paan • Cold Drinks", trade: "kirana", shelf: "paan" },
+  { hi: "खंडेलवाल ज्वैलर्स", en: "Khandelwal Jewellers", tag: "Sona • Chandi • Hallmark", trade: "general", shelf: "jewellery" },
+  { hi: "जय अम्बे जूस सेंटर", en: "Jai Ambe Juice Centre", tag: "Lassi • Shake • Juice", trade: "sweets", shelf: "juice" },
+  { hi: "सोनी वीडियो लाइब्रेरी", en: "Soni Video Library", tag: "VCD • DVD on Rent", trade: "general", shelf: "video" },
+  { hi: "पटेल हार्डवेयर", en: "Patel Hardware", tag: "Paint • Sanitary • Tools", trade: "general", shelf: "hardware" },
+  { hi: "अजमेर फुटवियर", en: "Ajmer Footwear", tag: "Joota • Chappal • School Shoes", trade: "general", shelf: "footwear" },
+  { hi: "ओम ऑप्टिकल्स", en: "Om Opticals", tag: "Eye Testing • Chashma", trade: "general", shelf: "optical" },
+  { hi: "शिव शक्ति किराना", en: "Shiv Shakti Kirana", tag: "Atta • Dal • Chawal", trade: "kirana", shelf: "grocery" },
+  { hi: "माँ भवानी मसाला भंडार", en: "Maa Bhavani Masala Bhandar", tag: "Pisai • Masale", trade: "kirana", shelf: "masala" },
+  { hi: "मॉडर्न ड्राई क्लीनर्स", en: "Modern Dry Cleaners", tag: "Dry Clean • Press", trade: "cloth", shelf: "cloth" },
+  { hi: "आशा ब्यूटी पार्लर", en: "Asha Beauty Parlour", tag: "Ladies Only • Mehndi", trade: "general", shelf: "beauty" },
+  { hi: "राठौड़ इलेक्ट्रॉनिक्स", en: "Rathore Electronics", tag: "TV • VCD Player • Repairing", trade: "electrical", shelf: "electronics" },
+  { hi: "सिंधी नमकीन भंडार", en: "Sindhi Namkeen Bhandar", tag: "Bhujia • Papad • Achaar", trade: "kirana", shelf: "namkeen" },
+  { hi: "गोपाल डेयरी", en: "Gopal Dairy", tag: "Doodh • Dahi • Paneer", trade: "kirana", shelf: "dairy" },
+  { hi: "विजय स्टेशनरी", en: "Vijay Stationery", tag: "Xerox • Lamination • Spiral", trade: "general", shelf: "stationery" },
+  { hi: "राजपूत टायर्स", en: "Rajput Tyres", tag: "Puncture • Tube • Tyre", trade: "cycle", shelf: "cycle" },
+  { hi: "हनुमान किराना स्टोर", en: "Hanuman Kirana Store", tag: "Sab Saman Uchit Daam", trade: "kirana", shelf: "grocery" },
+  { hi: "कमल वॉच कंपनी", en: "Kamal Watch Co.", tag: "Watch • Clock • Repairing", trade: "general", shelf: "watch" },
+  { hi: "नेहा गारमेंट्स", en: "Neha Garments", tag: "Ready-made • Kids Wear", trade: "cloth", shelf: "cloth" },
 ];
 
 /** A painted wall ad for a look-alike brand of the period (slogans are invented). */
@@ -83,8 +92,13 @@ export const WALL_ADS: WallAd[] = [
   { brand: "Ajmer Coaching Classes", line: "IIT • PMT • 10+2", hi: "सफलता की गारंटी", bg: "#f5efe3", fg: "#1f3f7a", accent: "#c8342b" },
 ];
 
-/** Films on the posters: look-alike titles (from the brief), with a poster colour scheme. */
-export type Film = { title: string; top: string; bottom: string; ink: string };
+/**
+ * The posters pasted on the walls: films (look-alike titles, from the brief),
+ * and the other posters every wall had: the circus in town, a jagran night,
+ * tuition admissions, a Diwali sale. `sub` and `footer` replace a film's
+ * "आज ही देखें" and "NOW SHOWING" lines.
+ */
+export type Film = { title: string; top: string; bottom: string; ink: string; sub?: string; footer?: string };
 
 export const FILMS: Film[] = [
   { title: "3 IDIOTZ", top: "#f4d03f", bottom: "#e67e22", ink: "#1b1b1b" },
@@ -95,6 +109,11 @@ export const FILMS: Film[] = [
   { title: "JAANE TU YA JAANE MAIN", top: "#aed6f1", bottom: "#2874a6", ink: "#fffaf0" },
   { title: "GOLLMAAL", top: "#58d68d", bottom: "#f4d03f", ink: "#c0392b" },
   { title: "WWX SMACKDOWN", top: "#212f3d", bottom: "#7b241c", ink: "#f4d03f" },
+  // not films
+  { title: "THE GREAT RAMBU CIRCUS", top: "#f4d03f", bottom: "#c0392b", ink: "#1b1b1b", sub: "शेर • हाथी • जोकर • झूला", footer: "MELA GROUND • 3 SHOWS DAILY" },
+  { title: "MATA KA JAGRAN", top: "#f5b041", bottom: "#b03a2e", ink: "#fffaf0", sub: "विशाल भगवती जागरण • सारी रात", footer: "SATURDAY NIGHT • GANDHI CHOWK" },
+  { title: "ADMISSION OPEN", top: "#fdfefe", bottom: "#aed6f1", ink: "#1f3f7a", sub: "कक्षा 6 से 12 • गणित • विज्ञान", footer: "SHARMA TUTORIALS • ☎ 2451190" },
+  { title: "DIWALI DHAMAKA SALE", top: "#f7dc6f", bottom: "#e74c3c", ink: "#4a235a", sub: "हर माल पर 50% छूट", footer: "NEW FANCY STORE • MAIN BAZAR" },
 ];
 
 /** The town's cinema, advertised on the posters. */
