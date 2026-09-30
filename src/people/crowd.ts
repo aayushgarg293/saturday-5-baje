@@ -11,6 +11,7 @@ import { buildDevotee } from "./devotee";
 import { buildSaloon } from "./saloon";
 import { golgappaCrew, iceGolaCrew, jalebiCrew, kachoriCrew } from "./sellers";
 import { buildShopkeeper } from "./shopkeepers";
+import { buildTailor } from "./tailor";
 
 /**
  * Everyone on the street: puts each group of people at its spot (the spots
@@ -72,6 +73,8 @@ export function buildCrowd(spots: WorldPeopleSpot[]): Crowd {
   for (const spot of spots.filter((s) => s.kind === "temple")) groups.push(buildDevotee(spot, rng));
   // the saloon: a barber at work on a customer
   for (const spot of spots.filter((s) => s.kind === "saloon")) groups.push(buildSaloon(spot));
+  // the tailor at his sewing machine
+  for (const spot of spots.filter((s) => s.kind === "tailor")) groups.push(buildTailor(spot));
 
   // shopkeepers, spread out along the street (the rest of the shops' keepers are inside, out of sight)
   const taken: THREE.Vector3[] = [];

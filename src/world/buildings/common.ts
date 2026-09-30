@@ -36,7 +36,27 @@ export type BuildContext = {
   plates: PlateSpot[];
   /** …and the fronts of the goods in shops, for their printed labels (world/props/labels.ts). */
   labels: LabelSpot[];
+  /** …and where a ceiling fan hangs (world/fans.ts builds and turns them). */
+  fans: FanSpot[];
+  /** …and where washing could be hung out: a balcony's railing, a line on the roof (world/laundry.ts decides). */
+  lines: LineSpot[];
 };
+
+/**
+ * A ceiling fan in a shop, in the builder's frame: `x, z` under its middle,
+ * `y` the ceiling it hangs from, `r` how far its blades reach (narrow shops
+ * get smaller fans).
+ */
+export type FanSpot = { x: number; y: number; z: number; r: number };
+
+/**
+ * Where washing could hang, in the builder's frame: along x from `x0` to
+ * `x1`, hanging from height `y` at `z`.
+ *   rail  over a balcony's front railing
+ *   roof  on a line strung across the roof, behind the parapet (the poles
+ *         at its ends are built with the washing, only if it's used)
+ */
+export type LineSpot = { kind: "rail" | "roof"; x0: number; x1: number; y: number; z: number };
 
 /**
  * The front of a box on a shop's shelf, or of a snack packet hanging in its
@@ -99,7 +119,7 @@ export type LampSpot = {
  * kind of place it is. people/crowd.ts decides who's there.
  */
 export type PeopleSpot = {
-  kind: "counter" | "platform" | "temple" | "door" | "saloon";
+  kind: "counter" | "platform" | "temple" | "door" | "saloon" | "tailor";
   x: number;
   /** The floor they're on. */
   y: number;
@@ -216,6 +236,7 @@ export function balcony(c: BuildContext, y: number, zFace: number) {
     bar(-bw / 2 + 0.03, z);
     bar(bw / 2 - 0.03, z);
   }
+  c.lines.push({ kind: "rail", x0: -bw / 2 + 0.1, x1: bw / 2 - 0.1, y: railY + 0.03, z: front + 0.04 });
 }
 
 /**
@@ -232,6 +253,9 @@ export function roof(c: BuildContext, roofY: number, zFace: number): number {
   p.slab(-c.w / 2, -c.w / 2 + t, roofY, roofY + para, -PLOT_DEPTH, zFace, c.wall); // sides
   p.slab(c.w / 2 - t, c.w / 2, roofY, roofY + para, -PLOT_DEPTH, zFace, c.wall);
   p.box(c.w + 0.12, 0.08, 0.34, 0, roofY + para + 0.04, zFace - 0.1, PAL.stoneTrim); // coping
+  // a place for a washing line, just behind the parapet and high enough that the washing shows
+  // over it from the street (in front of the dish and the tank)
+  c.lines.push({ kind: "roof", x0: -c.w / 2 + 0.5, x1: c.w / 2 - 0.5, y: roofY + 2.0, z: zFace - 0.45 });
 
   // Water tank on a little stand, toward the back of the roof.
   if (r.next() < 0.75) {

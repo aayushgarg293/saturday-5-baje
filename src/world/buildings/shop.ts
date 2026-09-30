@@ -96,6 +96,15 @@ export function shopfront(
     c.lamps.push({ kind: "tube", x: mid, y: OPENING_TOP - 0.55, z: face - 0.45, w: Math.min(1.2, inner - 0.4), back: ROOM_DEPTH - 0.55, h: OPENING_TOP - PLINTH_H, ground: PLINTH_H });
   }
 
+  // the ceiling fan, toward the back of the room (clear of the tubelight): its canopy and rod are
+  // part of the building; the motor and blades turn, so world/fans.ts builds those
+  if (shutter !== "closed") {
+    const fz = face - 1.4;
+    p.cylinder(0.07, 0.07, 0.04, mid, OPENING_TOP - 0.14, fz, 0xefeade, { segments: 10 });
+    p.cylinder(0.016, 0.016, 0.3, mid, OPENING_TOP - 0.29, fz, 0xefeade, { segments: 6 });
+    c.fans.push({ x: mid, y: OPENING_TOP - 0.44, z: fz, r: Math.min(0.72, inner / 2 - 0.15) });
+  }
+
   // awning: high against the wall, sloping down toward the street
   const awningColour = r.next() < 0.6 ? PAL.tin : PAL.tarp;
   // (its top edge meets the wall at ~3.8 m, just under the signboard)
@@ -114,6 +123,9 @@ export function shopfront(
     // the saloon: its barber at work on a customer (people/saloon.ts), not a keeper on a stool
     const chair = saloonChair({ x0: x0 + pillar, face, back });
     c.people.push({ kind: "saloon", x: chair.x, y: PLINTH_H, z: chair.z, turn: chair.turn });
+  } else if (kind === "shop" && shutter === "open" && c.shopName !== undefined && SHOP_NAMES[c.shopName].work === "tailor") {
+    // the tailor on his stool, facing the street, his machine just inside the opening (people/tailor.ts)
+    c.people.push({ kind: "tailor", x: mid, y: PLINTH_H, z: face - 1.0, turn: 0 });
   } else if (kind === "shop" && shutter === "open" && c.shopName !== undefined) {
     const trade = SHOP_NAMES[c.shopName].trade;
     const outside = trade === "cloth" || trade === "cycle" || trade === "general";

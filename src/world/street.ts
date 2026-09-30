@@ -4,7 +4,7 @@ import type { Patch } from "../core/floors";
 import { type Rng, makeRng, shuffled } from "../core/rng";
 import { PAL, WALL_COLOURS } from "../render/palette";
 import { buildCafe } from "./buildings/cafe";
-import { type BuildContext, type BuildResult, type LabelSpot, type LampSpot, type PeopleSpot, type PlateSpot, type SignSpot } from "./buildings/common";
+import { type BuildContext, type BuildResult, type FanSpot, type LabelSpot, type LampSpot, type LineSpot, type PeopleSpot, type PlateSpot, type SignSpot } from "./buildings/common";
 import { type WorldLamp, lampToWorld } from "./evening";
 import type { WorldPlate } from "./nameplates";
 import type { WorldMural } from "./wallArt";
@@ -64,12 +64,21 @@ export type Street = {
   labels: WorldLabel[];
   /** The houses' nameplates and blessings (world/nameplates.ts). */
   plates: WorldPlate[];
+  /** The shops' ceiling fans (world/fans.ts). */
+  fans: WorldFan[];
+  /** Where washing could hang: balcony railings, roof lines (world/laundry.ts). */
+  lines: WorldLine[];
   /** Just in front of home's door (world/buildings/home.ts): where the walk ends. */
   homeDoor: THREE.Vector3;
 };
 
 /** A `PeopleSpot` placed in the world: its position, and which way it faces (rotation about the vertical). */
 export type WorldPeopleSpot = Omit<PeopleSpot, "x" | "y" | "z" | "turn"> & { position: THREE.Vector3; rotationY: number };
+
+/** A shop's ceiling fan in the world: under its middle at the ceiling, and how far its blades reach. */
+export type WorldFan = { position: THREE.Vector3; r: number };
+/** A washing line in the world: from `a` to `b` (where the washing hangs from), facing `rotationY` (its building's front). */
+export type WorldLine = { kind: LineSpot["kind"]; a: THREE.Vector3; b: THREE.Vector3; rotationY: number };
 
 /** Seed for the random parts of the street: change it for a different street. */
 const SEED = 2006;
@@ -96,6 +105,8 @@ export function buildStreet(): Street {
   const lamps: WorldLamp[] = [];
   const plates: WorldPlate[] = [];
   const labels: WorldLabel[] = [];
+  const fans: WorldFan[] = [];
+  const lines: WorldLine[] = [];
   let homeDoor = new THREE.Vector3();
   const rng = makeRng(SEED);
 
@@ -116,7 +127,12 @@ export function buildStreet(): Street {
     const lampSpots: LampSpot[] = [];
     const plateSpots: PlateSpot[] = [];
     const labelSpots: LabelSpot[] = [];
-    const result = BUILDERS[type]({ parts, w, rng: forkRng(rng), wall, shopName, people: spots, lamps: lampSpots, plates: plateSpots, labels: labelSpots });
+    const fanSpots: FanSpot[] = [];
+    const lineSpots: LineSpot[] = [];
+    const result = BUILDERS[type]({
+      parts, w, rng: forkRng(rng), wall, shopName,
+      people: spots, lamps: lampSpots, plates: plateSpots, labels: labelSpots, fans: fanSpots, lines: lineSpots,
+    });
 
     const mesh = parts.build(name);
     // Turn the building so its local +z (its front) points along `normal`.
@@ -148,6 +164,9 @@ export function buildStreet(): Street {
     for (const sp of lampSpots) lamps.push(lampToWorld(sp, mesh.matrixWorld, rot));
     for (const sp of labelSpots) labels.push({ ...sp, rotationY: rot, position: new THREE.Vector3(sp.x, sp.y, sp.z).applyMatrix4(mesh.matrixWorld) });
     for (const sp of plateSpots) plates.push({ kind: sp.kind, w: sp.w, h: sp.h, rotationY: rot, position: new THREE.Vector3(sp.x, sp.y, sp.z).applyMatrix4(mesh.matrixWorld) });
+    const toWorld = (x: number, y: number, z: number) => new THREE.Vector3(x, y, z).applyMatrix4(mesh.matrixWorld);
+    for (const sp of fanSpots) fans.push({ position: toWorld(sp.x, sp.y, sp.z), r: sp.r });
+    for (const sp of lineSpots) lines.push({ kind: sp.kind, a: toWorld(sp.x0, sp.y, sp.z), b: toWorld(sp.x1, sp.y, sp.z), rotationY: rot });
     if (type === "cafe") cafeFrame = mesh.matrixWorld.clone();
     for (const { x, y, z, turn, ...rest } of spots) {
       // doors aren't places for people: only home's is kept (the walk ends there)
@@ -256,7 +275,7 @@ export function buildStreet(): Street {
   // south to north, so whoever picks from them can space them out along the walk
   const along = (p: THREE.Vector3) => streetCoords(p.x, p.z).s;
   people.sort((a, b) => along(a.position) - along(b.position));
-  return { group, colliders, floors, cafeFrame, signs, spawn: { ...pointAt(1.5, 0), yaw: yawAlong(1.5) }, people, lamps, plates, labels, murals, homeDoor };
+  return { group, colliders, floors, cafeFrame, signs, spawn: { ...pointAt(1.5, 0), yaw: yawAlong(1.5) }, people, lamps, plates, labels, murals, fans, lines, homeDoor };
 }
 
 /** A plain boundary wall with a coping on top (the ends of the side roads' back lanes). */

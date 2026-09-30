@@ -23,6 +23,8 @@ import { playEnding } from "./ui/ending";
 import { showPrompt } from "./ui/prompt";
 import { buildBackdrop } from "./world/backdrop";
 import { buildEvening } from "./world/evening";
+import { buildFans } from "./world/fans";
+import { buildLaundry } from "./world/laundry";
 import { buildNameplates } from "./world/nameplates";
 import { buildWallArt } from "./world/wallArt";
 import { buildLabels } from "./world/props/labels";
@@ -79,6 +81,9 @@ const labels = buildLabels(street.labels); // (the shops' goods, printed: one me
 if (labels) scene.add(labels);
 const nameplates = buildNameplates(street.plates); // (the houses' nameplates and blessings: one mesh)
 if (nameplates) scene.add(nameplates);
+const shopFans = buildFans(street.fans); // (the shops' ceiling fans, turning: one mesh)
+const laundry = buildLaundry(street.lines); // (washing on the balconies and roofs, swaying: one mesh, and the roof lines)
+scene.add(shopFans.mesh, laundry.group);
 scene.add(sky.group, street.group, life.group, buildSigns([...street.signs, ...life.signs, ...wires.signs]), wires.group, backdrop.group);
 
 // --- the player ----------------------------------------------------------------
@@ -239,6 +244,8 @@ function update(dt: number) {
   seat.update(dt); // (after the player: when seated, the seat has the camera)
   life.update(time, dt, player.pos);
   cafeRoom.update(dt);
+  shopFans.update(dt);
+  laundry.update(time);
   cafeRoom.setClock(gameClock.hours, gameClock.minute);
   yourScreen.update(dt, gameClock.label());
   desktop.update(dt);

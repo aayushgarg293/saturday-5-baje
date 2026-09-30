@@ -19,6 +19,8 @@ export type ShopName = {
   trade: Trade;
   /** What's on its shelves, exactly (world/props/goods.ts shapes them, world/props/labels.ts prints them). */
   shelf: Shelf;
+  /** Someone at work in it, instead of a keeper on a stool: the tailor at his machine (people/tailor.ts). */
+  work?: "tailor";
 };
 
 /** Kinds of shop, for dressing them with goods. */
@@ -36,7 +38,7 @@ export const SHOP_NAMES: ShopName[] = [
   { hi: "गुप्ता मिष्ठान भंडार", en: "Gupta Mishthan Bhandar", tag: "Kachori • Samosa • Jalebi", trade: "sweets", shelf: "sweets" },
   { hi: "जनता साइकिल स्टोर", en: "Janta Cycle Store", tag: "Repairing • Puncture • Parts", trade: "cycle", shelf: "cycle" },
   { hi: "बॉम्बे हेयर कटिंग सैलून", en: "Bombay Hair Cutting Saloon", tag: "Hair Cut • Shave • Massage", trade: "general", shelf: "barber" },
-  { hi: "रॉयल टेलर्स", en: "Royal Tailors", tag: "Gents & Ladies • Suit Specialist", trade: "cloth", shelf: "cloth" },
+  { hi: "रॉयल टेलर्स", en: "Royal Tailors", tag: "Gents & Ladies • Suit Specialist", trade: "cloth", shelf: "cloth", work: "tailor" },
   { hi: "कृष्णा फोटो स्टूडियो", en: "Krishna Photo Studio", tag: "Passport Photo • Colour Lab", trade: "general", shelf: "photo" },
   { hi: "लक्ष्मी चूड़ी भंडार", en: "Laxmi Choodi Bhandar", tag: "Bangles • Bindi • Cosmetics", trade: "general", shelf: "bangles" },
   { hi: "जैन मेडिकल स्टोर", en: "Jain Medical Store", tag: "Chemist & Druggist", trade: "general", shelf: "chemist" },
