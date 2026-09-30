@@ -2,8 +2,8 @@ import * as THREE from "three";
 
 /**
  * What's on the other customers' CRT screens, painted in code (look-alike
- * names only): a Counter-Strike-like game, a Yahoo-Messenger-like chat, a
- * Rediffmail-like inbox. Small (a CRT seen across the room), a little blurry
+ * names only, from BRIEF.md): a Counter-Strike-like game, a Yaaho! Messenger
+ * chat, a Rediffit mail inbox. Small (a CRT seen across the room), a little blurry
  * and blue-tinged, as those screens were.
  */
 
@@ -109,7 +109,7 @@ function mail(ctx: CanvasRenderingContext2D) {
   ctx.fillRect(0, 0, W, 30);
   ctx.fillStyle = "#fff";
   ctx.font = `bold 16px ${SANS}`;
-  ctx.fillText("redifmail", 10, 21);
+  ctx.fillText("rediffit mail", 10, 21);
   ctx.fillStyle = "#f0ece0";
   ctx.fillRect(0, 30, 70, H - 30); // the folders
   ctx.fillStyle = "#333";

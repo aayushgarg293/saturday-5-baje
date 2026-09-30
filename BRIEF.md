@@ -183,6 +183,7 @@ References in this folder: `summer-cycle/`, `sakura-crossing/`,
 
 2. **The story on the computer:** what the friend's post is, who he chats
    with and about what.
-3. **The clock control:** which key or button looks up at the wall clock.
+3. ~~**The clock control.**~~ Settled: **T** turns your view to the wall
+   clock (above the stairwell), zooming in to read it, then back.
 4. **Title:** a typical Indian cyber cafe name ("Cyber Planet",
    "Shree Ganesh Cyber Cafe", "Net World"…). Placeholder: "Cyber Cafe".
