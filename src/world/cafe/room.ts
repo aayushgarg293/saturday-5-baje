@@ -75,8 +75,8 @@ export function buildRoom(frame: THREE.Matrix4): Room {
 
   // --- the clock: a painted face, and its hands -------------------------------------------------
   const clock = new THREE.Group();
-  clock.position.set(CLOCK.x + 0.04, floorY + CLOCK.y, CLOCK.z);
-  clock.rotation.y = Math.PI / 2; // its face looks into the hall (+x)
+  clock.position.set(CLOCK.x + Math.sin(CLOCK.turn) * 0.04, floorY + CLOCK.y, CLOCK.z + Math.cos(CLOCK.turn) * 0.04);
+  clock.rotation.y = CLOCK.turn; // its face looks into the hall
   group.add(clock);
   const face = new THREE.Mesh(new THREE.CircleGeometry(CLOCK.radius, 32), toon({ color: 0xffffff, map: clockFace(), flatShading: false }));
   clock.add(face);

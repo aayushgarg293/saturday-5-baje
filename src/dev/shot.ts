@@ -1,3 +1,4 @@
+import type { Seat } from "../core/seat";
 import { CafeSounds } from "../audio/cafe";
 import type { Room } from "../world/cafe/room";
 import { cue, onCue } from "../core/cues";
@@ -42,6 +43,7 @@ export type GameHandle = {
   /** Stalls, animals and traffic, for scripted checks. */
   life: Life;
   cafeRoom: Room;
+  seat: Seat;
   /** The sound (for measuring levels: Claude can't listen). */
   audio: AudioEngine;
   /** Advance the game by `seconds` without rendering. */
@@ -74,12 +76,14 @@ export function installDevTools(game: GameHandle) {
 
   window.__shot = async (name, spot = name, size = {}) => {
     const { width = 1600, height = 900 } = size;
-    const target = typeof spot === "string" ? CAMERAS[spot] : spot;
-    if (!target) throw new Error(`__shot: no saved camera called "${spot}"`);
-
     const { renderer, camera, player } = game;
-    player.place(target.pos[0], target.pos[1], target.yaw, target.pitch ?? 0, target.floor);
-    game.step(0); // lets anything that follows the player (the shadow area) catch up
+    // "current": shoot exactly what the camera sees now (seated at your computer, say)
+    if (spot !== "current") {
+      const target = typeof spot === "string" ? CAMERAS[spot] : spot;
+      if (!target) throw new Error(`__shot: no saved camera called "${spot}"`);
+      player.place(target.pos[0], target.pos[1], target.yaw, target.pitch ?? 0, target.floor);
+      game.step(0); // lets anything that follows the player (the shadow area) catch up
+    }
 
     // Render at the requested size, at 1:1 pixels, so every shot is comparable
     // regardless of the window or screen.

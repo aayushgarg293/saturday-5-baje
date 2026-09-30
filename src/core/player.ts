@@ -48,6 +48,11 @@ const CLIMB_RATE = 12;
 export class Player {
   /** Position of his feet (y: 0 on the street, higher on the stairs and upstairs). */
   readonly pos = new THREE.Vector3();
+  /**
+   * Frozen: not walking or looking, and not moving the camera (something
+   * else has it: sitting down, glancing at the clock, core/seat.ts).
+   */
+  frozen = false;
   /** Direction he faces: yaw turns left/right, pitch looks up/down (radians). */
   yaw = 0;
   pitch = 0;
@@ -93,6 +98,7 @@ export class Player {
   }
 
   update(dt: number) {
+    if (this.frozen) return;
     const input = this.input;
 
     // --- look --------------------------------------------------------------

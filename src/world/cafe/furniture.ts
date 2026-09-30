@@ -56,7 +56,7 @@ export function furnish(p: Parts, floorY: number): Furnished {
     p.box(1.25, 0.05, 0.06, t.x + Math.sin(t.turn) * out, floorY + t.y, t.z + Math.cos(t.turn) * out, 0xefeade, { ry: t.turn });
   }
   // the clock's case (its face and hands: room.ts)
-  p.cylinder(CLOCK.radius + 0.025, CLOCK.radius + 0.025, 0.05, CLOCK.x + 0.01, floorY + CLOCK.y, CLOCK.z, 0x7a2f2a, { rz: Math.PI / 2, segments: 24 });
+  p.cylinder(CLOCK.radius + 0.025, CLOCK.radius + 0.025, 0.05, CLOCK.x + Math.sin(CLOCK.turn) * 0.01, floorY + CLOCK.y, CLOCK.z + Math.cos(CLOCK.turn) * 0.01, 0x7a2f2a, { rz: Math.PI / 2, ry: CLOCK.turn + Math.PI / 2, segments: 24 });
 
   // at the back: a water cooler with a big blue jug, and a steel glass on a chain
   const wx = HALL.x0 + 0.45, wz = HALL.z0 + 0.45;

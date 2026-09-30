@@ -8,13 +8,11 @@ Read both before starting work.
 
 ## Status
 
-Phases 0–4 done. Phase 5 (people) in progress: the people system, the
-chaiwala, clothing and role recipes, the men on the chai benches and the
-stall sellers, shopkeepers, the temple, the cricket kids and the walkers are
-built (`src/people/`, placed by `people/crowd.ts` and `world/life.ts`).
-The moving vehicles carry real riders (`people/riders.ts`). Phase 6 (sound)
-in progress: the sound system and a quiet background layer (`src/audio/`).
-The radio at the chai tapri plays an original filmy tune (`audio/radio.ts`).
+Phases 0–7 done: the street (30 people, traffic, animals, sound), and the
+cafe: the stair, the long hall with 13 booths, the owner and four customers,
+the cafe's own sounds, sitting down at your computer in booth 2 (E), the
+dial-up modem, the game clock (T to look at it). Next: phase 8, the XP
+desktop (it needs the story on the computer first: BRIEF.md, open questions).
 The owner prefers a spare soundscape: add sounds only when asked.
 
 Baseline (2026-09-28, M4, Chrome, 1470×956): **~3.5 ms per frame at pixel
@@ -176,3 +174,4 @@ Keep each entry short.)*
 | Sound played out of the owner's speakers during a test | Calling `__game.audio.start()` in Claude's tab starts real sound. Measure with `__audioLab` instead (renders offline, silently); if the live context was started, `await __game.audio.ctx.close()`. |
 | A console test hears nothing from a module the game clearly uses | The dev server loads a file edited since page load as `file.ts?t=…`; `import("/src/…/file.ts")` from the console then gets a second, separate copy. Use what the dev tools hand over (`__cues`, `__audioLayers`, `__game`), not console imports of stateful modules. |
 | A steady sound (the oil sizzle) could be heard all along the street | Normal distance fading never reaches zero, and a hiss that never stops stays noticeable even when faint. Give never-ending sounds a hard edge: `place(..., reach)` fades them out completely by `reach` metres. |
+| The clock couldn't be seen from the chair | Seated, your eyes (1.22 m) are lower than the booth partitions (1.45 m): check sight lines from the SEATED eye, not a standing camera. `__shot(name, "current")` shoots what the camera sees right now (seated, mid-glance). |

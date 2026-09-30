@@ -1,3 +1,5 @@
+import * as THREE from "three";
+
 /**
  * The cafe hall's floor plan, as data: where the booths, the counter, the
  * fans, the tubelights, the clock and the signs are. Everything that builds
@@ -106,5 +108,31 @@ export const TUBES = [
   { x: -1.0, z: HALL.z0 + 0.02, y: 2.6, turn: 0 },
 ];
 
-/** The wall clock, on the far side wall, where you can see it from your booth over the partitions. */
-export const CLOCK = { x: HALL.x0 + 0.03, z: -4.5, y: 2.35, radius: 0.19 };
+/**
+ * The wall clock: on the wall above the stairwell, facing into the hall.
+ * Everyone can see it, and so can you from your chair (turning round and
+ * looking up over the aisle; the booth partitions in front of you are
+ * taller than your eyes when you sit). `turn`: which way its face looks.
+ */
+export const CLOCK = { x: 4.17, z: -4.3, y: 2.3, radius: 0.24, turn: -Math.PI / 2 };
+
+/**
+ * Your seat in booth 2, in the world (for core/seat.ts): where your eyes go
+ * sitting down (leaning in a little toward the screen), the screen's
+ * middle, the chair, where you stand when you get up (behind the chair), and
+ * the wall clock. `frame`: the cafe building's matrix.
+ */
+export function yourSeat(frame: THREE.Matrix4) {
+  const b = BOOTHS.find((x) => x.n === YOUR_BOOTH)!;
+  const at = (u: number, y: number, v: number) => {
+    const q = boothPoint(b, u, v);
+    return new THREE.Vector3(q.x, HALL.floor + y, q.z).applyMatrix4(frame);
+  };
+  return {
+    eye: at(0, 1.22, 0.2),
+    screen: at(DESK.screen.u, DESK.screen.y, DESK.screen.v),
+    chair: at(0, 0, 0),
+    stand: at(0, 0, -0.6),
+    clock: new THREE.Vector3(CLOCK.x, HALL.floor + CLOCK.y, CLOCK.z).applyMatrix4(frame),
+  };
+}

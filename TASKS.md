@@ -214,15 +214,27 @@ motion; busy but walkable.
       bike keys on the desk). Their screens lit (`world/cafe/screens.ts`).
       Actors can now break off for a one-off action (`perform`)
 - [x] Owner looks at the cafe's people: "it looks good"
-- [ ] Sitting down at the computer: the camera moves to the screen
-- [ ] The wall clock and the look-up control
+- [x] Sitting down (`core/seat.ts`): in booth 2, [E] sits you down (the view
+      eases into the chair, leaning in; the mouse turns your head only so
+      far); [E] again gets you up behind the chair. Prompts: `ui/prompt.ts`
+- [x] Your screen (`world/cafe/yourScreen.ts`): the XP-like welcome; on first
+      sitting, the dial-up box (Dialing 172233… / Verifying… / Registering…)
+      while the modem screeches (`audio/cafe.ts`, ~12 s), then a placeholder
+      desktop (hill, taskbar, start, the time, "connected 48.0 Kbps")
+- [x] The game clock (`core/clock.ts`): 4:30 pm at the start, 10× real time;
+      the wall clock's hands and the desktop show it. [T] looks up at the
+      wall clock (seated or standing), zooming in to read it. The clock
+      moved above the stairwell: seated, the booth partitions are taller
+      than your eyes and hid it on the far wall
 - [x] Owner: the street's sounds should go silent as you climb, leaving only
       the cafe's. `AudioEngine.setIndoors`: street, radio, background and
       their echo fade out up the stairs (silent at the top); the cafe's own
       `inside` sounds fade in (`audio/cafe.ts`): ceiling fans (whoosh, tick,
       hum) and key/mouse clicks cued by the people typing
-- [ ] Dial-up modem (with sitting down)
+- [x] Dial-up modem (with sitting down)
 
+- [x] Owner sits down, hears the modem, looks at the clock: "the clock is
+      perfect and the modem sound is also perfect". Phase 7 done
 - [ ] Before release: Shift speed back from 10 m/s (testing) to ~3.6 (`FAST_SPEED` in `core/player.ts`)
 
 ## 8. The computer

@@ -1,19 +1,25 @@
 import * as THREE from "three";
 import { Bed } from "./audio/bed";
+import { CafeSounds } from "./audio/cafe";
 import { AudioEngine } from "./audio/engine";
 import { Radio } from "./audio/radio";
 import { StreetSounds } from "./audio/street";
-import { CafeSounds } from "./audio/cafe";
+import { GameClock } from "./core/clock";
+import { cue } from "./core/cues";
 import { Input } from "./core/input";
 import { Player } from "./core/player";
+import { makeRng } from "./core/rng";
+import { Seat } from "./core/seat";
+import { buildCafePeople } from "./people/cafePeople";
 import { addLights } from "./render/lights";
 import { PAL } from "./render/palette";
 import { Pipeline } from "./render/post";
 import { createRenderer, fitToWindow } from "./render/renderer";
+import { showPrompt } from "./ui/prompt";
 import { buildBackdrop } from "./world/backdrop";
-import { buildCafePeople } from "./people/cafePeople";
-import { makeRng } from "./core/rng";
+import { yourSeat } from "./world/cafe/plan";
 import { buildRoom } from "./world/cafe/room";
+import { buildYourScreen } from "./world/cafe/yourScreen";
 import { buildLife } from "./world/life";
 import { buildSigns } from "./world/signs";
 import { buildSky } from "./world/sky";
@@ -50,13 +56,27 @@ const sky = buildSky();
 const life = buildLife(street.people, [...street.colliders, ...wires.colliders]);
 const cafeRoom = buildRoom(street.cafeFrame);
 const cafePeople = buildCafePeople(street.cafeFrame, makeRng(2007));
-scene.add(cafeRoom.group, cafePeople.group);
+const yourScreen = buildYourScreen(street.cafeFrame);
+scene.add(cafeRoom.group, cafePeople.group, yourScreen.mesh);
 scene.add(sky.group, street.group, life.group, buildSigns([...street.signs, ...life.signs, ...wires.signs]), wires.group, buildBackdrop());
 
 // --- the player ----------------------------------------------------------------
 const input = new Input(canvas);
 const player = new Player(camera, input, [...street.colliders, ...wires.colliders, ...life.colliders], street.floors);
 player.place(street.spawn.x, street.spawn.z, street.spawn.yaw);
+
+// --- your seat, your computer, the time ------------------------------------------------
+const gameClock = new GameClock();
+const seat = new Seat(camera, player, input, yourSeat(street.cafeFrame));
+seat.onSit = () => {
+  // the first time you sit down, the computer dials up (and every time, it's connected after)
+  yourScreen.connect();
+  if (!connected) cue("modem", seat.spots.screen);
+  connected = true;
+};
+let connected = false;
+/** Up in the cafe (the only place above the street): where T can look at the clock. */
+const inCafe = () => player.pos.y > 4;
 
 // --- sound ----------------------------------------------------------------------
 // Browsers only allow sound after a click, so it starts with the first click.
@@ -73,6 +93,10 @@ audio.onStart((ctx) => {
 });
 window.addEventListener("keydown", (e) => {
   if (e.code === "KeyM") audio.toggleMute();
+  if (!input.locked || e.repeat) return;
+  // E: sit down at your computer, or get up; T: look up at the clock
+  if (e.code === "KeyE") (seat.seated ? seat.standUp() : seat.sitDown());
+  if (e.code === "KeyT" && (seat.seated || inCafe())) seat.lookAtClock();
 });
 
 // Click to capture the mouse (and start the sound); the start screen shows whenever it's released.
@@ -89,9 +113,14 @@ input.onLockChange = (locked) => {
 let time = 0;
 function update(dt: number) {
   time += dt;
+  gameClock.update(dt);
   player.update(dt);
+  seat.update(dt); // (after the player: when seated, the seat has the camera)
   life.update(time, dt, player.pos);
   cafeRoom.update(dt);
+  cafeRoom.setClock(gameClock.hours, gameClock.minute);
+  yourScreen.update(dt, gameClock.label());
+  showPrompt(seat.seated ? "[E] get up    [T] look at the clock" : seat.canSit() ? "[E] sit down" : null);
   cafePeople.update(time, dt, player.pos);
   lights.followPlayer(player.pos);
   bed?.update(dt, player.pos);
@@ -137,6 +166,7 @@ if (import.meta.env.DEV) {
     street,
     life,
     cafeRoom,
+    seat,
     audio,
     render,
     step(seconds) {
