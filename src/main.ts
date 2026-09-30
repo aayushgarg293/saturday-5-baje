@@ -96,6 +96,7 @@ audio.onStart((ctx) => {
 // Seated and connected, a click leans you in; once close, the desktop takes
 // over the view and the mouse is set free to use it. Esc leans you back.
 const desktop = new Desktop(audio);
+desktop.yaaho.onTime = (minutes) => gameClock.advanceTo(minutes);
 seat.onLeanIn = () => {
   desktop.show();
   document.exitPointerLock();
@@ -143,6 +144,7 @@ input.onLockChange = (locked) => {
 let time = 0;
 function update(dt: number) {
   time += dt;
+  gameClock.storyDriven = seat.seated; // (at the desk, the story moves the clock)
   gameClock.update(dt);
   player.update(dt);
   seat.update(dt); // (after the player: when seated, the seat has the camera)
@@ -150,6 +152,7 @@ function update(dt: number) {
   cafeRoom.update(dt);
   cafeRoom.setClock(gameClock.hours, gameClock.minute);
   yourScreen.update(dt, gameClock.label());
+  desktop.update(dt);
   desktop.setTime(gameClock.label());
   showPrompt(prompt());
   cafePeople.update(time, dt, player.pos);
@@ -187,6 +190,7 @@ if (import.meta.env.DEV) {
   const { installDevTools } = await import("./dev/shot");
   const stats = createStats(renderer, player);
   input.onKeyPress = (code) => {
+    if (desktop.isOpen) return; // (keys on the desktop are for typing)
     if (code === "KeyC") stats.togglePosition();
     // compare the look with and without each pass
     if (code === "KeyO") pipeline.enabled.ink = !pipeline.enabled.ink;

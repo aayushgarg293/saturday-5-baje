@@ -1,5 +1,6 @@
 import type { AudioEngine } from "../audio/engine";
 import { ICONS, messageBox, openMyComputer, openMyDocuments, openRecycleBin } from "./apps/basic";
+import { Yaaho } from "./apps/yaaho";
 import { type DesktopSounds, desktopSounds } from "./sounds";
 import { CSS, SCREEN } from "./styles";
 import { wallpaperImage } from "./wallpaper";
@@ -28,6 +29,7 @@ export class Desktop {
   onLogOff: () => void = () => {};
 
   readonly windows: WindowManager;
+  readonly yaaho: Yaaho;
   readonly sounds: DesktopSounds;
   private overlay: HTMLDivElement;
   private glass: HTMLDivElement;
@@ -66,6 +68,8 @@ export class Desktop {
 
     this.addApp("computer", "My Computer", ICONS.computer, () => openMyComputer(this.windows));
     this.addApp("documents", "My Documents", ICONS.documents, () => openMyDocuments(this.windows));
+    this.yaaho = new Yaaho(this.windows, this.sounds);
+    this.addApp("yaaho", "Yaaho! Messenger", ICONS.yaaho, () => this.yaaho.openList());
     this.addApp("recycle", "Recycle Bin", ICONS.recycle, () => openRecycleBin(this.windows));
 
     // the taskbar: start, the open windows, the tray (the time)
@@ -76,6 +80,7 @@ export class Desktop {
     const tray = div("xp-tray");
     tray.innerHTML = `<div class="smiley" title="Yaaho! Messenger"></div><span class="time"></span>`;
     this.clock = tray.querySelector(".time")!;
+    tray.querySelector(".smiley")!.addEventListener("click", () => this.yaaho.openList());
     taskbar.append(start, this.tasks, tray);
     this.screen.append(taskbar);
 
@@ -90,7 +95,10 @@ export class Desktop {
 
     window.addEventListener("resize", () => this.fit());
     window.addEventListener("keydown", (e) => {
-      if (this.isOpen && e.code === "Escape") this.onLeave(false);
+      if (!this.isOpen) return;
+      if (e.code === "Escape") this.onLeave(false);
+      // other keys go to the chat in front (typing your reply)
+      else if (this.yaaho.key(e)) e.preventDefault();
     });
     this.drawIcons();
   }
@@ -121,6 +129,11 @@ export class Desktop {
     setTimeout(() => { if (!this.isOpen) this.overlay.hidden = true; }, 350);
   }
 
+  /** Every frame. The desktop's life (the chats) only moves on while you're on it. */
+  update(dt: number) {
+    if (this.isOpen) this.yaaho.update(dt);
+  }
+
   /** The time in the tray. */
   setTime(label: string) {
     if (this.clock.textContent !== label) this.clock.textContent = label;
@@ -147,7 +160,7 @@ export class Desktop {
     Object.values(this.apps).forEach((app, k) => {
       const icon = div("xp-icon");
       icon.style.left = `${12}px`;
-      icon.style.top = `${12 + k * 74}px`;
+      icon.style.top = `${12 + k * 84}px`; // (room for a two-line name)
       icon.innerHTML = `<div class="pic" style="background:${app.icon}"></div><span></span>`;
       icon.querySelector("span")!.textContent = app.name;
       icon.addEventListener("click", (e) => {
