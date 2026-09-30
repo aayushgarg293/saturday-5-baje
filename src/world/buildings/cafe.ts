@@ -2,6 +2,7 @@ import { PAL } from "../../render/palette";
 import { PLOT_DEPTH } from "../layout";
 import { type BuildContext, type BuildResult, FACADE, type LocalBox, type LocalFloor, type SignSpot, ledge, roof } from "./common";
 import { furnish } from "../cafe/furniture";
+import { STAIR as STAIR_PLAN } from "../cafe/plan";
 import { GROUND_TOP, PLINTH_H, shopfront } from "./shop";
 
 /**
@@ -56,7 +57,7 @@ export const CAFE_FLOOR = GROUND_TOP;
 const CEILING = 8.0;
 const ROOF_Y = 8.2;
 /** The stair's strip across the frontage, and where it ends at the back. */
-const STAIR = { x0: 3.0, x1: 4.2, top: -7.0, steps: 21 };
+const STAIR = { ...STAIR_PLAN, steps: 21 };
 /** Wall thickness. */
 const WALL = 0.22;
 /** The loose stone step in front of the door, halfway up to the platform. */

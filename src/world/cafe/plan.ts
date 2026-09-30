@@ -90,6 +90,12 @@ export const YOUR_BOOTH = 2;
 
 /** The owner's counter, at the top of the stairs, and where he sits behind it (facing the landing). */
 export const COUNTER = { x0: 1.5, x1: 2.2, z0: -9.8, z1: -8.0, top: 1.0 };
+/** Where you stand to pay: on the landing side of the counter, facing the owner. */
+export const PAY_SPOT = { x: 2.65, z: -8.9 };
+/** The stair's strip across the frontage (x), and its top (z): world/buildings/cafe.ts builds it here. */
+export const STAIR = { x0: 3.0, x1: 4.2, top: -7.0 };
+/** Where you're stopped if you try to leave without paying: the landing, just off the top step. */
+export const STAIR_TOP = { x: 3.6, z: -7.7 };
 /** (A tall seat: behind a counter this high, he sits up on a revolving stool.) */
 export const OWNER_SEAT = { x: 1.1, z: -8.9, turn: FACE_RAILING, seat: 0.74 };
 

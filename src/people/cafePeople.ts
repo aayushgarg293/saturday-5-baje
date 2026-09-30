@@ -29,7 +29,19 @@ import { type Role, recipeFor } from "./recipes";
  * (plan.ts, DESK: where the keyboard, mouse and screen are).
  */
 
-export type CafePeople = { group: THREE.Group; update(t: number, dt: number, player: THREE.Vector3): void };
+export type CafePeople = {
+  group: THREE.Group;
+  update(t: number, dt: number, player: THREE.Vector3): void;
+  /** You pay the owner `rupees`: he reaches over the counter for it, and says the sum, and "phir aana". */
+  pay(rupees: number): void;
+  /** He calls out to you (leaving without paying): a look toward the stairs, and the words. */
+  callOut(words: string): void;
+};
+
+/** The sums a bill can come to, as he'd say them. */
+const RUPEES: Record<number, string> = {
+  15: "Pandrah", 20: "Bees", 30: "Tees", 40: "Chaalis", 50: "Pachaas", 60: "Saath", 70: "Sattar", 80: "Assi", 90: "Nabbe", 100: "Sau",
+};
 
 /** Seat heights above the hall's floor: the plastic chairs, the owner's revolving chair. */
 const SEAT = { booth: 0.47, owner: OWNER_SEAT.seat + 0.02 };
@@ -101,6 +113,18 @@ export function buildCafePeople(frame: THREE.Matrix4, rng: Rng): CafePeople {
     name: "point", duration: 3.2,
     // his right arm out toward the booths, then down
     pose: () => ({ right: v(-0.64, 1.38, 0.12), left: own.keys.clone().add(v(0.1, 0, 0)), look: v(-4.4, 1.3, -0.4), lean: 0.05, twist: -0.25, smile: true }),
+  };
+  /** Taking your money: his right hand out over the counter, then into the register's drawer. */
+  const takeAction: Action = {
+    name: "take", duration: 3.4,
+    pose: (u) => u < 1.7
+      ? { right: v(-0.08, 1.14, 0.78), left: own.register.clone().add(v(0.12, 0, -0.05)), look: v(0, 1.45, 1.6), lean: 0.3, smile: true }
+      : { right: own.register.clone().add(v(-0.04, 0.02, 0)), left: own.register.clone().add(v(0.12, 0, -0.05)), look: own.register, lean: 0.35, nod: 0.1 },
+  };
+  /** Calling out: turned toward the stairs, one hand raised. */
+  const callAction: Action = {
+    name: "call", duration: 2.6,
+    pose: () => ({ right: v(-0.35, 1.45, 0.45), left: own.keys.clone().add(v(0.1, 0, 0)), look: own.stairs, lean: 0.1, twist: -0.2 }),
   };
   const ownerPerson = person("shopkeeper", 1);
   const owner = makeActor({ person: ownerPerson, at: OWNER_SEAT, seat: SEAT.owner, actions: ownerActions, notice: "greet", phase: rng.range(0, 10) });
@@ -206,6 +230,15 @@ export function buildCafePeople(frame: THREE.Matrix4, rng: Rng): CafePeople {
 
   return {
     group,
+    pay(rupees) {
+      owner.perform(takeAction);
+      say("Owner", `${RUPEES[rupees] ?? rupees} rupaye.`, 2.4);
+      setTimeout(() => say("Owner", "Haan… theek hai. Phir aana!", 3.5), 2600);
+    },
+    callOut(words) {
+      owner.perform(callAction);
+      say("Owner", words, 3);
+    },
     update(t, dt, player) {
       if (player.distanceTo(centre) > NEAR) return;
       owner.update(t, dt, player);

@@ -20,7 +20,7 @@ import { Pipeline } from "./render/post";
 import { createRenderer, fitToWindow } from "./render/renderer";
 import { showPrompt } from "./ui/prompt";
 import { buildBackdrop } from "./world/backdrop";
-import { yourSeat } from "./world/cafe/plan";
+import { HALL, PAY_SPOT, STAIR, STAIR_TOP, yourSeat } from "./world/cafe/plan";
 import { buildRoom } from "./world/cafe/room";
 import { buildYourScreen } from "./world/cafe/yourScreen";
 import { buildLife } from "./world/life";
@@ -91,6 +91,39 @@ let visitMinutes = 0;
 /** Up in the cafe (the only place above the street): where T can look at the clock. */
 const inCafe = () => player.pos.y > 4;
 
+// --- paying the owner ---------------------------------------------------------------------
+// After Log Off, walk to the counter: [E] pays. Until you've paid, he won't let
+// you go down the stairs (once you've used a computer, that is).
+let paid = false;
+const toCafe = street.cafeFrame.clone().invert();
+/** Where the player is in the cafe's own frame (plan.ts's numbers). */
+const cafeLocal = new THREE.Vector3();
+const whereInCafe = () => cafeLocal.copy(player.pos).applyMatrix4(toCafe);
+const atCounter = () => {
+  const p = whereInCafe();
+  return inCafe() && !seat.seated && Math.hypot(p.x - PAY_SPOT.x, p.z - PAY_SPOT.z) < 1.1;
+};
+const canPay = () => loggedOff && !paid && atCounter();
+function pay() {
+  paid = true;
+  cafePeople.pay(charge(visitMinutes));
+}
+/** Leaving without paying: back to the top of the stairs, and he calls out (not too often). */
+let lastCallOut = -99;
+function stopAtTheStairs() {
+  if (!connected || paid) return;
+  const p = whereInCafe();
+  const onStair = p.x > STAIR.x0 - 0.1 && p.x < STAIR.x1 + 0.1 && p.z > STAIR.top + 0.25 && player.pos.y < HALL.floor - 0.1;
+  if (!onStair) return;
+  const top = new THREE.Vector3(STAIR_TOP.x, HALL.floor, STAIR_TOP.z).applyMatrix4(street.cafeFrame);
+  const counter = new THREE.Vector3(PAY_SPOT.x, HALL.floor, PAY_SPOT.z).applyMatrix4(street.cafeFrame);
+  player.place(top.x, top.z, Math.atan2(-(counter.x - top.x), -(counter.z - top.z)), 0, top.y);
+  if (time - lastCallOut > 4) {
+    lastCallOut = time;
+    cafePeople.callOut(loggedOff ? "Oye! Paise?" : "Oye! Log off karke, paise de ke jao!");
+  }
+}
+
 // --- sound ----------------------------------------------------------------------
 // Browsers only allow sound after a click, so it starts with the first click.
 const audio = new AudioEngine();
@@ -144,7 +177,11 @@ window.addEventListener("keydown", (e) => {
   if (e.code === "KeyM" && !desktop.isOpen) audio.toggleMute();
   if (!input.locked || e.repeat) return;
   // E: sit down at your computer, or get up; T: look up at the clock
-  if (e.code === "KeyE") (seat.seated ? seat.standUp() : seat.sitDown());
+  if (e.code === "KeyE") {
+    if (canPay()) pay();
+    else if (seat.seated) seat.standUp();
+    else seat.sitDown();
+  }
   if (e.code === "KeyT" && (seat.seated || inCafe())) seat.lookAtClock();
 });
 
@@ -166,6 +203,7 @@ function update(dt: number) {
   gameClock.storyDriven = seat.seated; // (at the desk, the story moves the clock)
   gameClock.update(dt);
   player.update(dt);
+  stopAtTheStairs();
   seat.update(dt); // (after the player: when seated, the seat has the camera)
   life.update(time, dt, player.pos);
   cafeRoom.update(dt);
@@ -200,7 +238,8 @@ function timeOfDay() {
 function prompt(): string | null {
   if (desktop.isOpen || seat.leaned) return null;
   if (!input.locked && seat.seated) return "[Click] to look around again";
-  if (seat.seated && loggedOff) return `[E] get up    (₹${charge(visitMinutes)} to pay at the counter)`;
+  if (seat.seated && loggedOff) return paid ? "[E] get up" : `[E] get up    (₹${charge(visitMinutes)} to pay at the counter)`;
+  if (canPay()) return `[E] pay ₹${charge(visitMinutes)}`;
   if (seat.seated) return `${yourScreen.ready() ? "[Click] use the computer    " : ""}[E] get up    [T] look at the clock`;
   return seat.canSit() ? "[E] sit down" : null;
 }
