@@ -238,11 +238,11 @@ const rohan: Thread = {
       { say: "100 baar dekh chuka hu" },
       { say: "cafe me nahi chalta, bahut slow hai", then: [{ they: "yahan bhi same :(" }] },
     ] },
-    { they: "diwali pe ajmer aaunga shayad!!" },
+    { they: "rakhi pe ajmer aaunga shayad!!" },
     { you: [
       { say: "sachii??? pakka aana", then: [{ they: "papa se baat karunga" }] },
       { say: "phir match rakhte hai colony me", then: [{ they: "haan!!! purani team" }] },
-      { say: "patakhe le aana pune se :P", then: [{ they: "lol" }] },
+      { say: "pune ki bhakarwadi le aana :P", then: [{ they: "lol pakka" }] },
     ] },
     { waitFor: "priyaGone", giveUpAfter: 90 },
     { wait: 6 },

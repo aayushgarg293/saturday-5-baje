@@ -9,7 +9,10 @@ import { flat } from "../render/toon";
  * - The DOME is a big sphere seen from inside. Its colour depends only on
  *   how high you look: dusty blue overhead, fading to a warm cream haze at the
  *   horizon, a little brighter and warmer toward the sun. It's quantised into
- *   faint bands, which reads as painted rather than photographic.
+ *   faint bands, which reads as painted rather than photographic. The sun
+ *   itself is painted on it: a flat disc with a soft halo, pale gold high up,
+ *   orange-pink low down; it sets behind the hills (world/backdrop.ts draws
+ *   them in front of the sky).
  * - The CLOUDS are flat cards with a cumulus shape painted on a canvas: lit
  *   cream tops over violet-grey undersides, the way cel animation shades them.
  *
@@ -22,6 +25,9 @@ import { flat } from "../render/toon";
  */
 
 const DOME_RADIUS = 1000;
+/** The sun's painted size: its disc's radius and its halo's, in degrees (bigger than the real 0.27°: it has to read). */
+const SUN = { disc: 1.5, halo: 4.5 };
+const WHITE = new THREE.Color(0xffffff);
 
 export type Sky = { group: THREE.Group; follow(camera: THREE.Camera): void; setLook(look: Look): void };
 
@@ -43,6 +49,10 @@ export function buildSky(): Sky {
       u.uHorizon.value.copy(look.skyHorizon);
       u.uSunGlow.value.copy(look.sunGlow);
       u.uSunDir.value.copy(look.toSun);
+      // the disc: the sunlight's colour, lifted toward white (it's the brightest thing in the sky); it
+      // fades out as it goes below the horizon (the hills hide it first)
+      u.uSunColor.value.copy(look.sun).lerp(WHITE, 0.25);
+      u.uSunShow.value = THREE.MathUtils.smoothstep(look.sunHeight, -2, 0.5);
       for (const card of clouds.children) ((card as THREE.Mesh).material as THREE.MeshBasicMaterial).color.copy(look.clouds);
     },
   };
@@ -60,6 +70,10 @@ function buildDome(): THREE.Mesh {
       uHorizon: { value: new THREE.Color() },
       uSunGlow: { value: new THREE.Color() },
       uSunDir: { value: new THREE.Vector3(0, 1, 0) },
+      uSunColor: { value: new THREE.Color() },
+      uSunShow: { value: 1 },
+      uSunDisc: { value: Math.cos(THREE.MathUtils.degToRad(SUN.disc)) },
+      uSunHalo: { value: Math.cos(THREE.MathUtils.degToRad(SUN.halo)) },
       uBands: { value: 24 },
     },
     vertexShader: /* glsl */ `
@@ -70,8 +84,8 @@ function buildDome(): THREE.Mesh {
       }
     `,
     fragmentShader: /* glsl */ `
-      uniform vec3 uTop, uMid, uHorizon, uSunGlow, uSunDir;
-      uniform float uBands;
+      uniform vec3 uTop, uMid, uHorizon, uSunGlow, uSunDir, uSunColor;
+      uniform float uBands, uSunShow, uSunDisc, uSunHalo;
       varying vec3 vDir;
       void main() {
         vec3 dir = normalize(vDir);
@@ -83,6 +97,13 @@ function buildDome(): THREE.Mesh {
         // a warm glow on the sun's side of the sky, strongest low down
         float toward = max(dot(normalize(vec3(dir.x, 0.0, dir.z)), normalize(vec3(uSunDir.x, 0.0, uSunDir.z))), 0.0);
         col = mix(col, uSunGlow, pow(toward, 3.0) * (1.0 - smoothstep(0.0, 0.5, h)) * 0.55);
+        // the sun: a flat disc (a hair of softness at its edge) in a soft halo; nothing below the horizon
+        float c = dot(dir, normalize(uSunDir));
+        float disc = smoothstep(uSunDisc - 0.00004, uSunDisc + 0.00004, c);
+        float halo = smoothstep(uSunHalo, uSunDisc, c);
+        float above = smoothstep(-0.01, 0.004, dir.y);
+        col = mix(col, mix(uSunGlow, uSunColor, 0.6), halo * halo * 0.45 * uSunShow * above);
+        col = mix(col, uSunColor, disc * uSunShow * above);
         gl_FragColor = vec4(col, 1.0);
       }
     `,

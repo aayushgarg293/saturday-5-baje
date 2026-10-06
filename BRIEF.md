@@ -17,7 +17,7 @@ didn't what it was like.
 - **Place:** one market street in a tier-2/3 city in Rajasthan, Ajmer-like.
   Signboards in Hindi (Devanagari), with the odd English word
   ("CYBER CAFE", "STD ISD PCO"), hand-painted and imperfect.
-- **Season and time:** summer vacation, late afternoon, roughly 3–6 pm.
+- **Season and time:** a Saturday in June 2007 (decided: a chill summer game; no festivals), summer vacation, late afternoon into dusk.
   Warm, low sun, but not yet golden hour.
 
 ## The player
@@ -117,7 +117,7 @@ Yaaho!. She's said she's online only "till 6".
    drive me de dena").
 4. **Rohan comes online**, late. Now two windows at once: catching up with
    Rohan (Prison Brake, the cricket team without him, Rohan's new school,
-   Diwali plans), answering Priya in between. Rohan notices he's distracted:
+   Rakhi plans), answering Priya in between. Rohan notices he's distracted:
    "kiske saath chat kar raha hai?? :P". Rohan goes "brb" and doesn't come
    back for a while. He asks for the colony cricket team photo: sent from
    the pen drive through Rediffit Mail, the attachment uploading slowly.

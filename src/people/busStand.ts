@@ -15,7 +15,7 @@ import { type Role, recipeFor } from "./recipes";
  *                   door: calling out where it's going, waving people on,
  *                   counting his tickets. Come near and you hear him.
  *   on the benches  under the shed: a man reading the paper, an old man
- *                   dozing, a little boy swinging his legs
+ *                   dozing, a woman and her little boy
  *   standing        a man with his tin trunk, eyeing the buses
  *
  * Their own random numbers (the street's people don't change). FRAME: the
@@ -98,9 +98,16 @@ export function buildBusStandPeople(): BusStandPeople {
     person: person("uncle", true), at: benchSeat(4), seat: BENCH.seat, notice: "none", phase: 5,
     actions: [{ name: "doze", duration: 12, pose: (u) => ({ right: knees.r, left: knees.l, look: v(0, 0.9, 1.2), nod: 0.45 + Math.sin(u * 0.8) * 0.03, closed: true }) }],
   }));
-  // a little boy, swinging his legs, waiting for his family
+  // a woman waiting, her hands folded in her lap, and her boy beside her, swinging his legs
   actors.push(makeActor({
-    person: person("kid", true), at: benchSeat(8), seat: BENCH.seat * 0.9, notice: "none", phase: 2,
+    person: person("villageWoman", true), at: benchSeat(8.35), seat: BENCH.seat, notice: "glance", phase: 1, // (seat 7 fell in the gap between two benches)
+    actions: [
+      { name: "wait", duration: 7, pose: () => ({ right: v(-0.08, 0.66, 0.32), left: v(0.08, 0.66, 0.32), look: seenFrom(benchSeat(8.35), BAYS[1].x, 1.6, BAYS[1].z) }) },
+      { name: "boy", duration: 3, pose: () => ({ right: v(-0.08, 0.66, 0.32), left: v(0.3, 0.75, 0.05), look: v(0.8, 0.8, 0.2), smile: true }) },
+    ],
+  }));
+  actors.push(makeActor({
+    person: person("kid", true), at: benchSeat(9.15), seat: BENCH.seat * 0.9, notice: "none", phase: 2,
     actions: [{ name: "swing", duration: 6, pose: (u) => ({ right: v(-0.1, 0.5, 0.25), left: v(0.1, 0.5, 0.25), look: track(u, [0, 3, 6], [v(0, 1, 3), v(-2, 1.2, 2), v(0, 1, 3)]) }) }],
   }));
 

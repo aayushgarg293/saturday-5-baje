@@ -161,7 +161,7 @@ export const WALL_ADS: WallAd[] = [
 /**
  * The posters pasted on the walls: films (look-alike titles, from the brief),
  * and the other posters every wall had: the circus in town, a jagran night,
- * tuition admissions, a Diwali sale. `sub` and `footer` replace a film's
+ * tuition admissions, a summer sale (it's June: coolers and fans). `sub` and `footer` replace a film's
  * "आज ही देखें" and "NOW SHOWING" lines.
  */
 export type Film = { title: string; top: string; bottom: string; ink: string; sub?: string; footer?: string };
@@ -179,7 +179,7 @@ export const FILMS: Film[] = [
   { title: "THE GREAT RAMBU CIRCUS", top: "#f4d03f", bottom: "#c0392b", ink: "#1b1b1b", sub: "शेर • हाथी • जोकर • झूला", footer: "MELA GROUND • 3 SHOWS DAILY" },
   { title: "MATA KA JAGRAN", top: "#f5b041", bottom: "#b03a2e", ink: "#fffaf0", sub: "विशाल भगवती जागरण • सारी रात", footer: "SATURDAY NIGHT • GANDHI CHOWK" },
   { title: "ADMISSION OPEN", top: "#fdfefe", bottom: "#aed6f1", ink: "#1f3f7a", sub: "कक्षा 6 से 12 • गणित • विज्ञान", footer: "SHARMA TUTORIALS • ☎ 2451190" },
-  { title: "DIWALI DHAMAKA SALE", top: "#f7dc6f", bottom: "#e74c3c", ink: "#4a235a", sub: "हर माल पर 50% छूट", footer: "NEW FANCY STORE • MAIN BAZAR" },
+  { title: "GARMI DHAMAKA SALE", top: "#f7dc6f", bottom: "#e74c3c", ink: "#4a235a", sub: "कूलर • पंखे • फ्रिज पर भारी छूट", footer: "NEW FANCY STORE • MAIN BAZAR" },
 ];
 
 /** The town's cinema, advertised on the posters. */

@@ -30,7 +30,7 @@ const SITE = "www.yorkut.com";
 const YOUR_SCRAPS: { from: string; when: string; text: string }[] = [
   { from: "Sunny", when: "3 days ago", text: "oye sunday ko match hai 7 baje. late mat aana!!!" },
   { from: "Rohan ★ rockstar", when: "2 weeks ago", text: "miss u yaar, cricket nahi khela koi. yahan sab football khelte hai :(" },
-  { from: "Neha ~*~", when: "3 weeks ago", text: "~*~*~ HaPpY hOlI!!! ~*~*~ may ur life b full of colours!!! :) :)" },
+  { from: "Neha ~*~", when: "3 months ago", text: "~*~*~ HaPpY hOlI!!! ~*~*~ may ur life b full of colours!!! :) :)" },
   { from: "Ankit", when: "1 month ago", text: "send this scrap to 15 frnds n c the magic on ur screen!!!" },
 ];
 

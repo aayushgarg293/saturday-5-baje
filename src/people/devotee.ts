@@ -12,7 +12,7 @@ import { recipeFor } from "./recipes";
 /** Moments in the bell action (seconds in) when the clapper strikes. */
 const RINGS = [0.8, 1.15, 1.5];
 /** When the evening aarti begins (clock minutes), and how near you must be to hear the conch that starts it. */
-const AARTI_FROM = 18 * 60 + 12;
+const AARTI_FROM = 18 * 60 + 50; // (at sunset: render/daylight.ts)
 const CONCH_WITHIN = 40;
 /** The handbell rings this often (seconds) through the aarti. */
 const HANDBELL = 0.21;

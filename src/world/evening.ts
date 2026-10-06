@@ -201,7 +201,7 @@ export function buildEvening(spots: WorldLamp[], include: (lamp: WorldLamp) => b
 
 // --- headlights ---------------------------------------------------------------------------
 /** When the vehicles switch their headlights on (clock minutes), and their colour. */
-const HEADLIGHTS_ON = 18 * 60 + 10;
+const HEADLIGHTS_ON = 18 * 60 + 45; // (as the light goes: June sunsets are late)
 const HEADLIGHT = new THREE.Color(0xfff0c8);
 let headlights: { glow: THREE.MeshBasicMaterial; pool: THREE.MeshBasicMaterial } | null = null;
 function headlightMaterials() {

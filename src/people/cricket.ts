@@ -34,7 +34,7 @@ import { recipeFor } from "./recipes";
 
 const LOOP = 7;
 /** When they go home (clock minutes), and how far away you must be for them to go (or come back). */
-const GO_HOME = 18 * 60 + 5;
+const GO_HOME = 18 * 60 + 45; // (June: they play on till the light starts to go)
 const UNSEEN = 25;
 const middle = new THREE.Vector3();
 const KID = 0.7; // the kids' height scale: the poses below are measured for it
