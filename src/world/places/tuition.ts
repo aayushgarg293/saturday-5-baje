@@ -1,9 +1,7 @@
 import * as THREE from "three";
 import { type Box, boxAt } from "../../core/colliders";
-import { makeRng } from "../../core/rng";
 import type { WorldLamp } from "../evening";
 import { Parts } from "../kit";
-import { buildVehicle } from "../props/vehicles";
 import { SCHOOL, schoolZ } from "../schoolRoad";
 import type { WorldSign } from "../street";
 
@@ -13,7 +11,7 @@ import type { WorldSign } from "../street";
  * room downstairs is the class: its doors folded open, benches inside, the
  * big board across the front at the first floor, the batch timings painted
  * smaller by the door. The kids' cycles stand along the road's edge outside
- * (the class lets out at six: people/tuition.ts).
+ * (people/tuition.ts: the class lets out at six).
  *
  * FRAME: square to the world, its origin on the frontage (school road's
  * west front line) at the house's middle: x east (the house is at −x, the
@@ -41,7 +39,6 @@ export function buildTuition(): Tuition {
   group.updateMatrixWorld(true);
   const toWorld = (x: number, y: number, z: number) => new THREE.Vector3(x, y, z).applyMatrix4(group.matrixWorld);
   const p = new Parts();
-  const rng = makeRng(7761);
   const colliders: Box[] = [];
   const box = (x0: number, x1: number, z0: number, z1: number) => {
     const c = toWorld((x0 + x1) / 2, 0, (z0 + z1) / 2);
@@ -78,14 +75,7 @@ export function buildTuition(): Tuition {
   const lamps: WorldLamp[] = [{ kind: "bulb", position: toWorld(FACE + 0.35, 2.75, -1.9), rotationY: 0, w: 1, h: 1, back: 0, ground: 0 }];
   p.box(0.3, 0.08, 0.08, FACE + 0.15, 2.85, -1.9, 0x3a3f3a);
 
-  // the kids' cycles, on their stands at the road's edge
-  for (const c of TUITION_CYCLES) {
-    const v = buildVehicle("bicycle", rng);
-    p.addParts(v.parts, new THREE.Matrix4().makeTranslation(c.x, 0, c.z).multiply(new THREE.Matrix4().makeRotationY(rng.range(-0.15, 0.15))));
-  }
-  box(0.7, 2.5, TUITION_CYCLES[0].z - 0.3, TUITION_CYCLES[2].z + 0.3);
-  box(0.7, 2.5, TUITION_CYCLES[3].z - 0.3, TUITION_CYCLES[5].z + 0.3);
-
+  // (the kids' cycles, at TUITION_CYCLES, are people/tuition.ts's: they leave with them at six)
   group.add(p.build("tuitionHouse"));
   return { group, colliders, lamps, signs };
 }

@@ -13,6 +13,7 @@ import { buildConstruction } from "./construction";
 import { buildMohallaPeople } from "./mohalla";
 import { buildStationPeople } from "./station";
 import { buildSchoolRoadPeople } from "./schoolRoad";
+import { buildTuitionPeople } from "./tuition";
 import { buildCourtPeople } from "./court";
 import { buildPco } from "./pco";
 import { type Saloon, buildSaloon } from "./saloon";
@@ -105,6 +106,8 @@ export function buildCrowd(spots: WorldPeopleSpot[]): Crowd {
   groups.push(buildStationPeople());
   // …and on school road: the school's chowkidar, the park's old men, kids and peanut seller
   groups.push(buildSchoolRoadPeople());
+  // …and the tuition letting out at six, the kulfi-wala, Priya and Neha
+  groups.push(buildTuitionPeople());
 
   // shopkeepers, spread out along the street (the rest of the shops' keepers are inside, out of sight)
   const taken: THREE.Vector3[] = [];

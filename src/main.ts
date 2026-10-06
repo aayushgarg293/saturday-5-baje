@@ -8,6 +8,7 @@ import { AudioEngine } from "./audio/engine";
 import { Radio } from "./audio/radio";
 import { StreetSounds } from "./audio/street";
 import { GameClock } from "./core/clock";
+import { storySoFar } from "./core/storySoFar";
 import { cue } from "./core/cues";
 import { Input } from "./core/input";
 import { Player } from "./core/player";
@@ -94,7 +95,7 @@ scene.add(sky.group, street.group, life.group, signs, wires.group, backdrop.grou
 // only drawing what's near (world/areas.ts): the town's buildings, its signs, its people, sorted once by where they are
 const areas = buildAreas();
 areas.assign([...street.group.children, ...signs.children]);
-for (const name of ["courtPeople", "busStandPeople", "construction", "mohallaPeople", "stationPeople", "schoolRoadPeople"]) areas.assign([scene.getObjectByName(name)!]);
+for (const name of ["courtPeople", "busStandPeople", "construction", "mohallaPeople", "stationPeople", "schoolRoadPeople", "tuitionPeople"]) areas.assign([scene.getObjectByName(name)!]);
 
 // --- the player ----------------------------------------------------------------
 const input = new Input(canvas);
@@ -196,6 +197,7 @@ audio.onStart((ctx) => {
 // over the view and the mouse is set free to use it. Esc leans you back.
 const desktop = new Desktop(audio);
 desktop.yaaho.onTime = (minutes) => gameClock.advanceTo(minutes);
+storySoFar.isDone = (task) => desktop.kit.tasks.isDone(task); // (Priya remembers, when you meet her: people/tuition.ts)
 seat.onLeanIn = () => {
   desktop.show();
   document.exitPointerLock();
