@@ -20,6 +20,11 @@ import { recipeFor } from "./recipes";
  *
  * All four kids share one 7-second action, so everything happens on cue.
  *
+ * You can bat (activities/cricket.ts): the batter hands you his bat and
+ * watches from the wall, and the bowler bowls to you, the same ball each
+ * time. Swing as it reaches you: your timing decides where it goes (see
+ * `Shot` below), and the ball goes there instead of to the first fielder.
+ *
  * After 6 it's getting dark, and they've gone home (they leave while you're
  * not near enough to see them go: core/timeOfDay.ts).
  *
@@ -150,12 +155,76 @@ function fielderB(u: number): Pose {
   };
 }
 
+/**
+ * What your swing did:
+ *   six, four   timed right: over the bowler's head and out into the street,
+ *               or along the ground past the fielder
+ *   two, one    a little early or late: into the gap, run!
+ *   caught      late, off the edge onto the wall and caught one-handed:
+ *               "one tip one hand", out (gully rules)
+ *   bowled      missed it, and it hit the stumps: out
+ *   beaten      missed it, and it went past them
+ */
+export type Shot = "six" | "four" | "two" | "one" | "caught" | "bowled" | "beaten";
+
 export type Cricket = {
   group: THREE.Group;
   /** Where the kids stand (gali frame), to collide with. */
   standing: { x: number; z: number }[];
   update(t: number, dt: number, player: THREE.Vector3): void;
+  /** You, batting (activities/cricket.ts). */
+  you: {
+    /** The middle of the gali, where you ask to play (world). */
+    middle: THREE.Vector3;
+    /** Your eyes at the crease, and the bowler's hand you watch (world). */
+    eye: THREE.Vector3;
+    bowler: THREE.Vector3;
+    /** Are the kids out playing (not gone home)? */
+    here(): boolean;
+    /** You take the bat (true), or give it back (false). */
+    batting(on: boolean): void;
+    /** You swing, now. */
+    swing(): void;
+    /** What happened to it (decided a moment after it reached you). */
+    onShot: (shot: Shot) => void;
+  };
 };
+
+/** Where the batter waits while you bat: by the wall, out of the way (gali frame). */
+const WATCHING = { x: 1.5, z: -2.3, turn: -Math.PI / 2 - 0.6 };
+/** How close to the moment the ball reaches the bat a swing must be (seconds): spot on, near enough, late. */
+const TIMING = { right: 0.07, near: 0.15, late: 0.26 };
+/** When the shot is decided (loop time): just after the ball would have reached the bat. */
+const DECIDED = T.hit + TIMING.late;
+
+/** Where the ball goes after your shot (gali frame), by loop time `u` (≥ T.hit); `null`: in someone's hand. */
+function afterShot(shot: Shot, u: number, hand: () => THREE.Vector3): THREE.Vector3 | null {
+  const back = (from: THREE.Vector3) => (u >= T.thrown ? arc(from, CAUGHT, Math.min(1, (u - T.thrown) / (T.caught - T.thrown)), 0.6) : from.clone());
+  const fly = (to: THREE.Vector3, until: number, peak: number) => (u < until ? arc(HIT, to, (u - T.hit) / (until - T.hit), peak) : back(to));
+  switch (shot) {
+    case "six": return fly(SIX_LANDS, 3.8, 5.5);
+    case "four": return fly(FOUR_STOPS, 3.4, 0.25);
+    case "two":
+    case "one": return flight(u);
+    case "caught": {
+      // off the edge, onto the wall, and into the second fielder's hand
+      if (u < 2.35) return arc(HIT, WALL_HIT, (u - T.hit) / 0.25, 0.2);
+      if (u < 2.65) return WALL_HIT.clone().lerp(hand(), (u - 2.35) / 0.3);
+      return u < T.thrown ? null : back(FIELD_B_HAND);
+    }
+    case "bowled": {
+      if (u < 2.2) return HIT.clone().lerp(STUMPS_HIT, (u - T.hit) / 0.1);
+      return back(u < 2.45 ? STUMPS_HIT.clone().lerp(BEHIND, (u - 2.2) / 0.25) : BEHIND);
+    }
+    case "beaten": return back(u < 2.3 ? HIT.clone().lerp(BEHIND, (u - T.hit) / 0.2) : BEHIND);
+  }
+}
+const SIX_LANDS = v(0.6, 0.04, 10);
+const FOUR_STOPS = v(-0.7, 0.04, 6.2);
+const WALL_HIT = v(-1.9, 1.1, -3.9);
+const FIELD_B_HAND = v(FIELD_B.x, 0.7, FIELD_B.z);
+const STUMPS_HIT = v(STUMPS.x, 0.3, STUMPS.z);
+const BEHIND = v(0.25, 0.04, -6.5);
 
 export function buildCricket(where: Placement, rng: Rng): Cricket {
   const group = new THREE.Group();
@@ -178,6 +247,22 @@ export function buildCricket(where: Placement, rng: Rng): Cricket {
     fieldB: kid(FIELD_B, fielderB),
   };
 
+  // while you bat, the batter stands by the wall, hands on his hips, watching (the same kid: his own body)
+  const watching = makeActor({
+    person: players.batter.person, at: WATCHING, notice: "none",
+    actions: [{ name: "watch", duration: LOOP, pose: (u) => ({ right: v(-0.15, 0.47, 0.03), left: v(0.15, 0.47, 0.03), look: eyesOn(WATCHING, u), smile: u > T.hit && u < 4 }) }],
+  });
+  // (making an actor puts the body where it stands: put him back at the crease until you bat)
+  const stand = (at: Spot) => {
+    players.batter.person.root.position.set(at.x, 0, at.z);
+    players.batter.person.root.rotation.y = at.turn;
+  };
+  stand(BATTER);
+  let youBat = false;
+  let swungAt = -1; // loop time of your swing (−1: none yet this ball)
+  let swingNow = false; // (you've just swung: stamped with the loop time next frame)
+  let shot: Shot | null = null;
+
   const theBat = bat();
   const ball = tennisBall();
   const wicket = stumps();
@@ -193,17 +278,75 @@ export function buildCricket(where: Placement, rng: Rng): Cricket {
     { name: "ballBounce", at: T.lands, where: group.localToWorld(LANDS.clone()) },
   ] as const;
   let before = 0;
+  const handB = () => players.fieldB.grip("R", new THREE.Vector3());
+
+  /** Your shot, from when you swung (loop time) against when the ball reached the bat. */
+  const judge = (): Shot => {
+    if (swungAt < 0) return Math.random() < 0.5 ? "bowled" : "beaten";
+    const off = swungAt - T.hit; // (negative: early)
+    if (Math.abs(off) <= TIMING.right) return Math.random() < 0.4 ? "six" : "four";
+    if (Math.abs(off) <= TIMING.near) return off < 0 ? "two" : "one";
+    if (off > 0) return Math.random() < 0.6 ? "caught" : "one";
+    return Math.random() < 0.5 ? "bowled" : "beaten";
+  };
+
+  const you: Cricket["you"] = {
+    middle: group.localToWorld(v(0, 0, -2)),
+    eye: group.localToWorld(v(BATTER.x - 0.1, 1.42, BATTER.z + 0.15)),
+    bowler: group.localToWorld(v(0, 0.85, 1.0)),
+    here: () => group.visible,
+    batting(on) {
+      youBat = on;
+      stand(on ? WATCHING : BATTER); // (he steps aside to the wall, or back to the crease)
+      shot = null;
+      swungAt = -1;
+      theBat.visible = !on;
+      wicket.rotation.set(0, 0, 0);
+    },
+    swing() {
+      if (youBat && swungAt < 0) swingNow = true;
+    },
+    onShot: () => {},
+  };
+
   return {
     group,
     standing: [BATTER, BOWLER, FIELD_A, FIELD_B],
+    you,
     update(t, dt, player) {
       // home time (or back again, if the clock is turned back): only while you're not close
       const home = timeOfDay.minutes >= GO_HOME;
       if (home === group.visible && group.getWorldPosition(middle).distanceTo(player) > UNSEEN) group.visible = !home;
       if (!group.visible) return;
-      for (const p of Object.values(players)) p.update(t, dt, player);
       const u = t % LOOP;
-      for (const s of sounds) if (passed(before, u, s.at)) cue(s.name, s.where);
+      for (const [name, p] of Object.entries(players)) if (!(youBat && name === "batter")) p.update(t, dt, player);
+      if (youBat) watching.update(t, dt, player);
+
+      // batting yourself: a new ball, your shot decided just after it reached you
+      if (youBat) {
+        if (u < before) {
+          shot = null;
+          swungAt = -1;
+          wicket.rotation.set(0, 0, 0);
+        }
+        if (swingNow) {
+          swingNow = false;
+          if (!shot) swungAt = u;
+        }
+        // decided when you swing (once the ball's there), or, if you didn't, just after it passed you
+        const swungIn = swungAt >= 0 && u >= Math.max(T.hit, swungAt) && u < 5;
+        if (!shot && (swungIn || passed(before, u, DECIDED))) {
+          shot = judge();
+          if (shot === "bowled") wicket.rotation.set(0.5, 0, 0.15); // (knocked back)
+          if (shot !== "beaten" && shot !== "bowled" && swungAt >= 0) cue("batHit", group.localToWorld(HIT.clone()));
+          you.onShot(shot);
+        }
+      }
+      for (const s of sounds) {
+        // (batting yourself, the bat's knock comes with your shot, above)
+        if (youBat && s.name === "batHit") continue;
+        if (passed(before, u, s.at)) cue(s.name, s.where);
+      }
       before = u;
 
       // the bat: from the top hand, toward where the pose says its end points
@@ -212,6 +355,19 @@ export function buildCricket(where: Placement, rng: Rng): Cricket {
       tip.copy(seenFrom({ x: 0, z: 0, turn: -BATTER.turn }, b.tip.x, b.tip.y, b.tip.z)).add(v(BATTER.x, 0, BATTER.z));
       theBat.position.copy(hands);
       theBat.quaternion.setFromUnitVectors(v(0, -1, 0), dir.copy(tip).sub(hands).normalize());
+
+      // batting yourself: after the ball reaches you, it goes where your shot sent it
+      if (youBat && shot && u >= T.hit) {
+        const at = afterShot(shot, u, handB);
+        if (at) ball.position.copy(at);
+        else players.fieldB.grip("R", ball.position);
+        if (shot !== "one" && shot !== "two") return;
+      }
+      if (youBat && !shot && u >= T.hit && u < DECIDED) {
+        // (still deciding: it carries on toward the stumps)
+        ball.position.copy(HIT).lerp(STUMPS_HIT, (u - T.hit) / (DECIDED - T.hit));
+        return;
+      }
 
       // the ball: flying, on the ground, or in someone's hand
       const free = flight(u);

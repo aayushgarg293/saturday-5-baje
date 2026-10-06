@@ -6,6 +6,7 @@ import { makeRng } from "../core/rng";
 import type { SignSpot } from "./buildings/common";
 import { Parts } from "./kit";
 import { buildCrowd } from "../people/crowd";
+import type { Cricket } from "../people/cricket";
 import type { Saloon } from "../people/saloon";
 import type { GolgappaCrew } from "../people/sellers";
 import { planLanes } from "../people/lanes";
@@ -42,6 +43,8 @@ export type Life = {
   golgappa: GolgappaCrew;
   /** The saloon's chair, which can be yours (activities/haircut.ts). */
   saloon: Saloon;
+  /** The kids' cricket in the gali, where you can bat (activities/cricket.ts). */
+  cricket: Cricket;
   update(t: number, dt: number, player: THREE.Vector3): void;
 };
 
@@ -144,6 +147,7 @@ export function buildLife(people: WorldPeopleSpot[], solid: readonly Box[]): Lif
     walkers,
     golgappa: crowd.golgappa,
     saloon: crowd.saloon,
+    cricket: crowd.cricket,
     // the radio's speaker, in the world: the tapri's frame applied to its spot on the counter
     radioAt: new THREE.Vector3(RADIO_AT.x - 0.05, RADIO_AT.y + 0.08, RADIO_AT.z).applyMatrix4(placeOnStreet(SLOTS.chaiTapri.s, SLOTS.chaiTapri.offset).matrix),
     update(t, dt, player) {

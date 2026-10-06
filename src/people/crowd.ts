@@ -6,7 +6,7 @@ import { StaticBatch, placeOnStreet } from "../world/props/batch";
 import type { WorldPeopleSpot } from "../world/street";
 import { buildChaiCorner } from "./chaiCorner";
 import { buildChaiwala } from "./chaiwala";
-import { buildCricket } from "./cricket";
+import { type Cricket, buildCricket } from "./cricket";
 import { buildDevotee } from "./devotee";
 import { buildPco } from "./pco";
 import { type Saloon, buildSaloon } from "./saloon";
@@ -43,6 +43,8 @@ export type Crowd = {
   golgappa: GolgappaCrew;
   /** The saloon, whose chair can be yours (activities/haircut.ts). */
   saloon: Saloon;
+  /** The gully cricket, where you can bat (activities/cricket.ts). */
+  cricket: Cricket;
 };
 
 /** `spots`: the places the buildings offer for people (world/street.ts), south to north. */
@@ -109,6 +111,7 @@ export function buildCrowd(spots: WorldPeopleSpot[]): Crowd {
     group,
     golgappa: golgappa!,
     saloon: saloon!,
+    cricket,
     colliders: bodies.colliders,
     update(t, dt, player) {
       groups.forEach((g, i) => {
