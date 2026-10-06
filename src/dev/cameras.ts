@@ -29,6 +29,12 @@ function along(s: number, offset = 0, turn = 0, pitch = 0): CameraSpot {
 const cafeMid = (CAFE.s0 + CAFE.s1) / 2;
 
 export const CAMERAS: Record<string, CameraSpot> = {
+  /** The town (world/town.ts): the chowk, from the bazaar's north end, the clock tower ahead. */
+  chowk: along(198, 0, 0, 0.12),
+  /** Inside the chowk, by its south-west corner, looking up at the tower. */
+  tower: along(209, -9, -0.5, 0.35),
+  /** The chowk's east edge: court road's mouth. */
+  courtMouth: along(222, -8, -Math.PI / 2, 0.05),
   /** The opening view: the south end, looking up the street. The cafe sign should be visible. */
   start: along(1.5),
   /** Shops on the left, early in the walk. */

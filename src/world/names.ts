@@ -33,6 +33,15 @@ export type Shelf =
   | "barber" | "beauty" | "bangles" | "utensils" | "tent" | "jewellery" | "video"
   | "hardware" | "footwear" | "watch" | "electrical" | "electronics" | "cycle" | "autoParts" | "cloth";
 
+/**
+ * How many of the names below are the bazaar's (the first ones): its shops
+ * are named from these, in a fixed shuffled order. Names added later, for the
+ * town's other roads, go after them, so the bazaar's shops keep their names.
+ */
+export const BAZAAR_SHOPS = 36;
+/** The chowk's shops' names: the ten after the bazaar's. */
+export const CHOWK_SHOPS = { from: 36, count: 10 };
+
 export const SHOP_NAMES: ShopName[] = [
   { hi: "शर्मा जनरल स्टोर", en: "Sharma General Store", tag: "Kirana • Cold Drinks • Dry Fruits", trade: "kirana", shelf: "grocery" },
   { hi: "गुप्ता मिष्ठान भंडार", en: "Gupta Mishthan Bhandar", tag: "Kachori • Samosa • Jalebi", trade: "sweets", shelf: "sweets" },
@@ -70,6 +79,17 @@ export const SHOP_NAMES: ShopName[] = [
   { hi: "हनुमान किराना स्टोर", en: "Hanuman Kirana Store", tag: "Sab Saman Uchit Daam", trade: "kirana", shelf: "grocery" },
   { hi: "कमल वॉच कंपनी", en: "Kamal Watch Co.", tag: "Watch • Clock • Repairing", trade: "general", shelf: "watch" },
   { hi: "नेहा गारमेंट्स", en: "Neha Garments", tag: "Ready-made • Kids Wear", trade: "cloth", shelf: "cloth" },
+  // --- round the chowk (world/town.ts): after the bazaar's, so its shops keep their names ---
+  { hi: "घंटाघर मिष्ठान भंडार", en: "Ghanta Ghar Mishthan Bhandar", tag: "Kachori • Ghewar • Lassi", trade: "sweets", shelf: "sweets" },
+  { hi: "राजस्थान हैंडलूम", en: "Rajasthan Handloom", tag: "Bandhej • Leheriya • Razai", trade: "cloth", shelf: "cloth" },
+  { hi: "अजमेर घड़ी साज़", en: "Ajmer Ghadi Saaz", tag: "Watch Repairing • Battery", trade: "general", shelf: "watch" },
+  { hi: "न्यू इंडिया बुक स्टॉल", en: "New India Book Stall", tag: "Akhbar • Magazine • Novel", trade: "general", shelf: "books" },
+  { hi: "सेठी ड्राई फ्रूट्स", en: "Sethi Dry Fruits", tag: "Kaju • Badam • Pista", trade: "kirana", shelf: "grocery" },
+  { hi: "प्रकाश फोटो कॉपी", en: "Prakash Photo Copy", tag: "Xerox • Fax • Lamination", trade: "general", shelf: "stationery" },
+  { hi: "मारवाड़ जूती घर", en: "Marwar Jooti Ghar", tag: "Mojdi • Jooti • Chappal", trade: "general", shelf: "footwear" },
+  { hi: "श्याम रेडियो सर्विस", en: "Shyam Radio Service", tag: "Radio • Tape • TV Repairing", trade: "electrical", shelf: "electronics" },
+  { hi: "होटल अन्नपूर्णा", en: "Hotel Annapurna", tag: "Shudh Shakahari Bhojnalaya", trade: "sweets", shelf: "sweets" },
+  { hi: "गुरु कृपा किराना", en: "Guru Kripa Kirana", tag: "Sab Saman Uchit Daam", trade: "kirana", shelf: "grocery" },
 ];
 
 /** A painted wall ad for a look-alike brand of the period (slogans are invented). */

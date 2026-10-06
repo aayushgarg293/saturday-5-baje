@@ -1,5 +1,6 @@
 import { type Box, pushOut } from "../core/colliders";
 import { SIDE_ROADS, SLOTS, STREET_LENGTH, pointAt } from "../world/layout";
+import { CHOWK } from "../world/town";
 
 /**
  * Dev-only walk check: can the player actually get everywhere?
@@ -29,7 +30,8 @@ export function walkCheck(colliders: readonly Box[]): WalkReport {
   const t0 = performance.now();
   // the area to search: the street's bounding box, with room for galis and side roads
   let minX = Infinity, maxX = -Infinity, minZ = Infinity, maxZ = -Infinity;
-  for (let s = -2; s <= STREET_LENGTH + 2; s += 2) {
+  // (and on into the chowk at the bazaar's north end: world/town.ts)
+  for (let s = -2; s <= STREET_LENGTH + CHOWK.depth + 4; s += 2) {
     for (const off of [-20, 20]) {
       const p = pointAt(s, off);
       minX = Math.min(minX, p.x); maxX = Math.max(maxX, p.x);
@@ -106,6 +108,10 @@ export function walkCheck(colliders: readonly Box[]): WalkReport {
     kachori: isReached(SLOTS.kachoriSamosa.s, toward(SLOTS.kachoriSamosa.offset)),
     jalebi: isReached(SLOTS.jalebi.s, toward(SLOTS.jalebi.offset)),
     iceGola: isReached(SLOTS.iceGola.s, toward(SLOTS.iceGola.offset)),
+    // the chowk: round the clock tower's island, and its far corners
+    chowkByTower: isReached(STREET_LENGTH + CHOWK.depth / 2, CHOWK.island + 1.2),
+    chowkNorthWest: isReached(STREET_LENGTH + CHOWK.depth - 2, -CHOWK.half + 2),
+    chowkNorthEast: isReached(STREET_LENGTH + CHOWK.depth - 2, CHOWK.half - 2),
   };
 
   // the narrowest clear walkable width across the street, every metre

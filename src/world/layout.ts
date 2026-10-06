@@ -1,4 +1,5 @@
 import type { Rng } from "../core/rng";
+import { Road } from "./roads";
 
 /**
  * The street plan, as data.
@@ -9,7 +10,8 @@ import type { Rng } from "../core/rng";
  *           side as you walk in), positive = right (the east side)
  *
  * `pointAt(s, offset)` turns those into world x/z. That way the street can
- * curve, and nothing else has to know how.
+ * curve, and nothing else has to know how. (The street is one `Road`,
+ * world/roads.ts: the town's other roads are built the same way.)
  *
  *   north   s = STREET_LENGTH ─ closed by a building across the street
  *     ▲        cafe (right side) near the end, its sign visible from the start
@@ -41,87 +43,41 @@ const TURNS = [
   { from: 80, to: 122, degrees: -11 },
 ];
 
-/** Street direction at `s`, in radians (0 = due north, positive = turned east). */
-function headingAt(s: number): number {
-  let deg = 0;
-  for (const t of TURNS) {
-    const k = Math.min(1, Math.max(0, (s - t.from) / (t.to - t.from)));
-    deg += t.degrees * k * k * (3 - 2 * k); // smoothstep: eases in and out
-  }
-  return (deg * Math.PI) / 180;
-}
-
-/*
- * The centre line, worked out once: walk along the street in small steps,
- * turning as the heading says, and record where we are. `s` is then true
- * distance walked, even round the bend.
+/**
+ * The bazaar: the first road of the town (world/roads.ts), from home's door
+ * (the world's origin) north to the chowk. Everything below, and everything
+ * that imports these functions, is about this road.
  */
-const STEP = 0.5;
-const table: { x: number; z: number; heading: number }[] = [];
-{
-  let x = 0, z = 0;
-  for (let s = -10; s <= STREET_LENGTH + 10 + STEP; s += STEP) {
-    const h = headingAt(s);
-    table.push({ x, z, heading: h });
-    x += Math.sin(h) * STEP;
-    z -= Math.cos(h) * STEP;
-  }
-  // Shift so that s = 0 is exactly at the world origin. Copy the numbers
-  // first: the origin point is itself in the table, and shifting it to zero
-  // halfway through the loop would leave every later point unshifted.
-  const { x: ox, z: oz } = table[10 / STEP];
-  for (const p of table) {
-    p.x -= ox;
-    p.z -= oz;
-  }
-}
+export const BAZAAR = new Road({ name: "bazaar", start: { x: 0, z: 0 }, heading: 0, length: STREET_LENGTH, turns: TURNS });
 
 /** Where the centre line is at `s`, and which way the street runs there. */
 export function centreAt(s: number): { x: number; z: number; heading: number } {
-  const f = (s + 10) / STEP;
-  const i = Math.max(0, Math.min(table.length - 2, Math.floor(f)));
-  const t = Math.max(0, Math.min(1, f - i));
-  const a = table[i], b = table[i + 1];
-  return {
-    x: a.x + (b.x - a.x) * t,
-    z: a.z + (b.z - a.z) * t,
-    heading: a.heading + (b.heading - a.heading) * t,
-  };
+  return BAZAAR.centreAt(s);
 }
 
 /** World position of a spot `offset` metres to the side of the centre line at `s`. */
 export function pointAt(s: number, offset: number): { x: number; z: number } {
-  const c = centreAt(s);
-  // "right" across the street is 90° clockwise from the direction of travel
-  return { x: c.x + Math.cos(c.heading) * offset, z: c.z + Math.sin(c.heading) * offset };
+  return BAZAAR.pointAt(s, offset);
 }
 
 /**
  * The other way round: how far along the street (`s`) a world point is, and
- * how far to the side (`offset`, left negative). Finds the nearest point on
- * the centre line (a simple search: it's only used while building).
+ * how far to the side (`offset`, left negative).
  */
 export function streetCoords(x: number, z: number): { s: number; offset: number } {
-  let best = 0, bestD = Infinity;
-  table.forEach((p, i) => {
-    const d = (p.x - x) ** 2 + (p.z - z) ** 2;
-    if (d < bestD) { bestD = d; best = i; }
-  });
-  const c = table[best];
-  // positive offset is to the right: 90° clockwise from the direction of travel
-  const offset = (x - c.x) * Math.cos(c.heading) + (z - c.z) * Math.sin(c.heading);
-  return { s: best * STEP - 10, offset };
+  return BAZAAR.roadCoords(x, z);
 }
 
 /** The player's yaw for looking along the street at `s` (turn = extra turn, radians, left +). */
 export function yawAlong(s: number, turn = 0): number {
-  return -centreAt(s).heading + turn;
+  return BAZAAR.yawAlong(s, turn);
 }
 
 // --- plots ------------------------------------------------------------------------
 
 export type Side = "left" | "right";
-export type PlotType = "shop" | "haveli" | "house" | "cafe" | "gali" | "temple" | "road";
+/** (`open`: a gap left empty, where another road leads off: world/town.ts.) */
+export type PlotType = "shop" | "haveli" | "house" | "cafe" | "gali" | "temple" | "road" | "open";
 
 export type Plot = {
   side: Side;
@@ -148,27 +104,45 @@ const FIXED: Omit<Plot, "setback">[] = [
 export const CAFE = FIXED.find((p) => p.type === "cafe")!;
 
 /**
- * Fill both sides of the street with plots. Fixed plots go where they're
- * told; the gaps between them are split into buildings of random widths.
- * Havelis turn up more in the older middle stretch of the street.
+ * How a row of plots along a road is laid out: its length, which sides have
+ * buildings, the plots that must be exactly where they are, what kind of
+ * building goes in the rest (`pick`, given how far along it is), and how far
+ * the buildings stand back from the centre line (`setback`: a range, or one
+ * number for a straight edge, as round the chowk).
  */
-export function planPlots(rng: Rng): Plot[] {
+export type RowPlan = {
+  length: number;
+  sides: Side[];
+  fixed: Omit<Plot, "setback">[];
+  pick: (rng: Rng, s: number) => PlotType;
+  setback: { min: number; max: number };
+};
+
+/** The bazaar's row plan. */
+const BAZAAR_ROWS: RowPlan = { length: STREET_LENGTH, sides: ["left", "right"], fixed: FIXED, pick: pickType, setback: SETBACK };
+
+/**
+ * Fill a road's sides with plots (the bazaar's, unless another plan is
+ * given). Fixed plots go where they're told; the gaps between them are split
+ * into buildings of random widths.
+ */
+export function planPlots(rng: Rng, plan: RowPlan = BAZAAR_ROWS): Plot[] {
   const plots: Plot[] = [];
-  for (const side of ["left", "right"] as const) {
-    const fixed = FIXED.filter((p) => p.side === side).sort((a, b) => a.s0 - b.s0);
+  for (const side of plan.sides) {
+    const fixed = plan.fixed.filter((p) => p.side === side).sort((a, b) => a.s0 - b.s0);
     let s = 0;
     for (const next of [...fixed, null]) {
-      const end = next ? next.s0 : STREET_LENGTH;
+      const end = next ? next.s0 : plan.length;
       while (end - s > 0.01) {
-        const type = pickType(rng, s);
+        const type = plan.pick(rng, s);
         let width = type === "haveli" ? rng.range(7, 10) : rng.range(3.6, 6.2);
         // don't leave a sliver too narrow to be a building: absorb it now
         if (end - s - width < 3.4) width = end - s;
-        plots.push({ side, s0: s, s1: s + width, type, setback: rng.range(SETBACK.min, SETBACK.max) });
+        plots.push({ side, s0: s, s1: s + width, type, setback: rng.range(plan.setback.min, plan.setback.max) });
         s += width;
       }
       if (next) {
-        const setback = next.type === "cafe" ? 3.5 : SETBACK.min;
+        const setback = next.type === "cafe" ? 3.5 : plan.setback.min;
         plots.push({ ...next, setback });
         s = next.s1;
       }
@@ -177,6 +151,7 @@ export function planPlots(rng: Rng): Plot[] {
   return plots;
 }
 
+/** Havelis turn up more in the older middle stretch of the bazaar. */
 function pickType(rng: Rng, s: number): PlotType {
   const oldQuarter = s > 70 && s < 160; // havelis cluster in the middle
   const r = rng.next();

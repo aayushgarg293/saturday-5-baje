@@ -16,11 +16,14 @@ import { buildShop } from "./buildings/shop";
 import { buildTemple } from "./props/temple";
 import { Parts, ribbon } from "./kit";
 import { addRoadPatches } from "./roadPatches";
-import { SHOP_NAMES } from "./names";
+import { BAZAAR_SHOPS, CHOWK_SHOPS } from "./names";
+import { type Chowk, buildChowk } from "./places/chowk";
+import { CHOWK, CHOWK_ROWS } from "./town";
 import {
   CAFE, DRAIN, PLOT_DEPTH, ROAD_WIDTH, SIDE_ROADS, STREET_LENGTH,
-  type Plot, centreAt, planPlots, pointAt, streetCoords, yawAlong,
+  BAZAAR, type Plot, centreAt, planPlots, pointAt, streetCoords, yawAlong,
 } from "./layout";
+import type { Road } from "./roads";
 
 /**
  * Builds the street: the ground, the curved road and drains, and a building
@@ -69,6 +72,13 @@ export type Street = {
   fans: WorldFan[];
   /** Where washing could hang: balcony railings, roof lines (world/laundry.ts). */
   lines: WorldLine[];
+  /**
+   * The signs of the town beyond the bazaar (the chowk…): painted after all
+   * the others (main.ts), so the bazaar's look exactly as they did.
+   */
+  townSigns: WorldSign[];
+  /** The chowk's clock tower (world/places/chowk.ts): its clock is set every frame. */
+  chowk: Chowk;
   /** Just in front of home's door (world/buildings/home.ts): where the walk ends. */
   homeDoor: THREE.Vector3;
 };
@@ -101,6 +111,9 @@ export function buildStreet(): Street {
   const colliders: Box[] = [];
   const floors: Patch[] = [];
   const signs: WorldSign[] = [];
+  const townSigns: WorldSign[] = [];
+  /** Where new signs go: the bazaar's list, until the town's buildings are built. */
+  let signList = signs;
   let cafeFrame = new THREE.Matrix4();
   const people: WorldPeopleSpot[] = [];
   const lamps: WorldLamp[] = [];
@@ -119,11 +132,11 @@ export function buildStreet(): Street {
    */
   function place(
     type: keyof typeof BUILDERS, a: { x: number; z: number }, b: { x: number; z: number },
-    normal: THREE.Vector2, name: string, shopName?: number,
+    normal: THREE.Vector2, name: string, shopName?: number, random: Rng = rng,
   ) {
     const w = Math.hypot(b.x - a.x, b.z - a.z);
     const parts = new Parts();
-    const wall = type === "cafe" ? PAL.limeWhite : rng.pick(WALL_COLOURS);
+    const wall = type === "cafe" ? PAL.limeWhite : random.pick(WALL_COLOURS);
     const spots: PeopleSpot[] = [];
     const lampSpots: LampSpot[] = [];
     const plateSpots: PlateSpot[] = [];
@@ -131,7 +144,7 @@ export function buildStreet(): Street {
     const fanSpots: FanSpot[] = [];
     const lineSpots: LineSpot[] = [];
     const result = BUILDERS[type]({
-      parts, w, rng: forkRng(rng), wall, shopName,
+      parts, w, rng: forkRng(random), wall, shopName,
       people: spots, lamps: lampSpots, plates: plateSpots, labels: labelSpots, fans: fanSpots, lines: lineSpots,
     });
 
@@ -182,7 +195,7 @@ export function buildStreet(): Street {
 
   /** Record a sign given in a building's own frame, in world terms. */
   function addSign(sp: SignSpot, mesh: THREE.Mesh, rot: number) {
-    signs.push({
+    signList.push({
       kind: sp.kind,
       position: new THREE.Vector3(sp.x, sp.y, sp.z).applyMatrix4(mesh.matrixWorld),
       rotationY: rot + (sp.ry ?? 0),
@@ -195,40 +208,54 @@ export function buildStreet(): Street {
   }
 
   // --- the plots on both sides ---------------------------------------------------
-  // Each side's buildings in order along the street, for finding wall-ad spots.
-  const rows: Record<"left" | "right", RowEntry[]> = { left: [], right: [] };
   // Each shop gets a name from world/names.ts, in a fixed shuffled order. The
   // name decides both its signboard and the goods it lays out.
-  const shopOrder = shuffled(SHOP_NAMES.length, 11);
-  let shopCount = 0;
+  const murals: WorldMural[] = [];
+  buildRow(BAZAAR, planPlots(rng), rng, shuffled(BAZAAR_SHOPS, 11));
 
-  for (const plot of planPlots(rng)) {
-    const sign = plot.side === "left" ? -1 : 1;
-    const a = pointAt(plot.s0, sign * plot.setback);
-    const b = pointAt(plot.s1, sign * plot.setback);
-    // the building faces across the street, toward the centre line
-    const along = new THREE.Vector2(b.x - a.x, b.z - a.z).normalize();
-    const normal = plot.side === "left"
-      ? new THREE.Vector2(-along.y, along.x)
-      : new THREE.Vector2(along.y, -along.x);
+  /**
+   * The buildings along both sides of `road`, one per plot (from `plots`),
+   * using `random` for their looks and `shopOrder` for the shops' names (in
+   * turn). Galis and side roads are gaps. Then the painted ads on the tall
+   * side walls, and the spots for wall paintings beside the gaps.
+   */
+  function buildRow(road: Road, plots: Plot[], random: Rng, shopOrder: number[]) {
+    // each side's buildings in order along the road, for finding wall-ad spots
+    const rows: Record<"left" | "right", RowEntry[]> = { left: [], right: [] };
+    let shopCount = 0;
+    for (const plot of plots) {
+      const sign = plot.side === "left" ? -1 : 1;
+      const a = road.pointAt(plot.s0, sign * plot.setback);
+      const b = road.pointAt(plot.s1, sign * plot.setback);
+      // the building faces across the road, toward the centre line
+      const along = new THREE.Vector2(b.x - a.x, b.z - a.z).normalize();
+      const normal = plot.side === "left"
+        ? new THREE.Vector2(-along.y, along.x)
+        : new THREE.Vector2(along.y, -along.x);
 
-    if (plot.type === "road") {
-      openSideRoad(plot, normal);
-      rows[plot.side].push({ s0: plot.s0, height: 0 }); // a gap, like a gali
-      continue;
+      if (plot.type === "road") {
+        openSideRoad(road, plot, normal);
+        rows[plot.side].push({ s0: plot.s0, height: 0 }); // a gap, like a gali
+        continue;
+      }
+      if (plot.type === "open") {
+        rows[plot.side].push({ s0: plot.s0, height: 0 }); // left empty: another road leads off here
+        continue;
+      }
+      if (plot.type === "gali") {
+        closeGali(road, plot, normal);
+        rows[plot.side].push({ s0: plot.s0, height: 0 }); // a gap: the walls either side are exposed to the ground
+        continue;
+      }
+      const shopName = plot.type === "shop" ? shopOrder[shopCount++ % shopOrder.length] : undefined;
+      // (named for finding it while testing; the bazaar's keep their old names)
+      const name = `${plot.type}@${road === BAZAAR ? "" : road.name + ":"}${plot.side}${plot.s0.toFixed(0)}`;
+      const built = place(plot.type, a, b, normal, name, shopName, random);
+      rows[plot.side].push({ s0: plot.s0, ...built });
     }
-    if (plot.type === "gali") {
-      closeGali(plot, normal);
-      rows[plot.side].push({ s0: plot.s0, height: 0 }); // a gap: the walls either side are exposed to the ground
-      continue;
-    }
-    const shopName = plot.type === "shop" ? shopOrder[shopCount++ % shopOrder.length] : undefined;
-    const built = place(plot.type, a, b, normal, `${plot.type}@${plot.side}${plot.s0.toFixed(0)}`, shopName);
-    rows[plot.side].push({ s0: plot.s0, ...built });
+    addWallAds(rows, addSign);
+    murals.push(...findMuralWalls(rows));
   }
-
-  addWallAds(rows, addSign);
-  const murals = findMuralWalls(rows);
 
   /**
    * A side road (layout.ts, SIDE_ROADS): a gap in the row leading to a lane
@@ -236,47 +263,62 @@ export function buildStreet(): Street {
    * wall across each end of it. From the street you see into the gap, the
    * lane and the house; the lane runs off round the corners, out of sight.
    */
-  function openSideRoad(plot: Plot, normal: THREE.Vector2) {
-    const road = plot.s0 < STREET_LENGTH / 2 ? SIDE_ROADS.south : SIDE_ROADS.north;
+  function openSideRoad(road: Road, plot: Plot, normal: THREE.Vector2) {
+    const side = plot.s0 < STREET_LENGTH / 2 ? SIDE_ROADS.south : SIDE_ROADS.north;
     const sign = plot.side === "left" ? -1 : 1;
     const near = plot.setback + PLOT_DEPTH; // where the lane starts (behind the row)
-    const far = near + road.lane; // and ends (the closing house's front)
-    const s0 = plot.s0 - road.reach, s1 = plot.s1 + road.reach;
-    place("house", pointAt(s0, sign * far), pointAt(s1, sign * far), normal, `road-end@${plot.s0}`);
+    const far = near + side.lane; // and ends (the closing house's front)
+    const s0 = plot.s0 - side.reach, s1 = plot.s1 + side.reach;
+    place("house", road.pointAt(s0, sign * far), road.pointAt(s1, sign * far), normal, `road-end@${plot.s0}`);
     // walls across both ends of the lane; their fronts face into the lane
-    const h = centreAt(plot.s0).heading;
+    const h = road.centreAt(plot.s0).heading;
     const along = new THREE.Vector2(Math.sin(h), -Math.cos(h));
-    place("wall", pointAt(s0, sign * (near - 1.5)), pointAt(s0, sign * far), along.clone(), `road-wall@${s0}`);
-    place("wall", pointAt(s1, sign * far), pointAt(s1, sign * (near - 1.5)), along.clone().negate(), `road-wall@${s1}`);
+    place("wall", road.pointAt(s0, sign * (near - 1.5)), road.pointAt(s0, sign * far), along.clone(), `road-wall@${s0}`);
+    place("wall", road.pointAt(s1, sign * far), road.pointAt(s1, sign * (near - 1.5)), along.clone().negate(), `road-wall@${s1}`);
   }
 
   /** A gali is a gap in the row; a house across its far end makes it a short dead end. */
-  function closeGali(plot: Plot, normal: THREE.Vector2) {
+  function closeGali(road: Road, plot: Plot, normal: THREE.Vector2) {
     const sign = plot.side === "left" ? -1 : 1;
     const back = sign * (plot.setback + PLOT_DEPTH);
-    place("house", pointAt(plot.s0 - 1, back), pointAt(plot.s1 + 1, back), normal, `gali-end@${plot.s0.toFixed(0)}`);
+    place("house", road.pointAt(plot.s0 - 1, back), road.pointAt(plot.s1 + 1, back), normal, `gali-end@${plot.s0.toFixed(0)}`);
   }
 
-  // --- close both ends of the street with three buildings across it ----------------
-  for (const end of [0, STREET_LENGTH]) {
-    const facing = end === 0 ? 1 : -1; // the south end faces north, the north end south
-    const h = centreAt(end).heading;
-    const normal = new THREE.Vector2(Math.sin(h), -Math.cos(h)).multiplyScalar(facing);
-    // lower houses, so the hills and the fort show over the far end
-    const types = ["house", "house", "house"] as const;
+  // --- close the south end with three houses across it: the middle one, behind where you start, is home ---
+  {
+    const h = centreAt(0).heading;
+    const normal = new THREE.Vector2(Math.sin(h), -Math.cos(h));
     for (let k = -1; k <= 1; k++) {
       // three 9 m frontages side by side, 13.5 m either side of the centre
-      const from = pointAt(end, (k - 0.5) * 9 * facing);
-      const to = pointAt(end, (k + 0.5) * 9 * facing);
-      // the middle house at the south end, behind where you start, is home
-      place(end === 0 && k === 0 ? "home" : types[k + 1], from, to, normal, `end@${end}:${k}`);
+      place(k === 0 ? "home" : "house", pointAt(0, (k - 0.5) * 9), pointAt(0, (k + 0.5) * 9), normal, `end@0:${k}`);
     }
   }
+
+  // --- the town beyond the bazaar (world/town.ts) ------------------------------------------------
+  // (its signs go in their own list, painted after everything else: main.ts)
+  signList = townSigns;
+  // the chowk, where the bazaar's north end opens out: its three edges of buildings, each with its
+  // own random numbers and the chowk's own shop names; the paving, the island and the clock tower
+  CHOWK_ROWS.forEach(({ road, plan, seed }) => {
+    const random = makeRng(seed);
+    const names = shuffled(CHOWK_SHOPS.count, seed).map((k) => CHOWK_SHOPS.from + k);
+    buildRow(road, planPlots(random, plan), random, names);
+  });
+  {
+    // a wall closing the gap at the chowk's south-east corner, between the bazaar's last building and the east edge
+    const random = makeRng(7104);
+    const a = pointAt(STREET_LENGTH, CHOWK.half + 0.3), b = pointAt(STREET_LENGTH, 11.6);
+    place("wall", a, b, new THREE.Vector2(0, -1), "chowk-se-wall", undefined, random);
+  }
+  const chowk = buildChowk();
+  group.add(chowk.group);
+  colliders.push(...chowk.colliders);
+  lamps.push(...chowk.lamps);
 
   // south to north, so whoever picks from them can space them out along the walk
   const along = (p: THREE.Vector3) => streetCoords(p.x, p.z).s;
   people.sort((a, b) => along(a.position) - along(b.position));
-  return { group, colliders, floors, cafeFrame, signs, spawn: { ...pointAt(1.5, 0), yaw: yawAlong(1.5) }, people, lamps, plates, labels, murals, fans, lines, homeDoor };
+  return { group, colliders, floors, cafeFrame, signs, spawn: { ...pointAt(1.5, 0), yaw: yawAlong(1.5) }, people, lamps, plates, labels, murals, fans, lines, homeDoor, townSigns, chowk };
 }
 
 /** A plain boundary wall with a coping on top (the ends of the side roads' back lanes). */

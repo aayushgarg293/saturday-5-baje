@@ -88,7 +88,7 @@ if (nameplates) scene.add(nameplates);
 const shopFans = buildFans(street.fans); // (the shops' ceiling fans, turning: one mesh)
 const laundry = buildLaundry(street.lines); // (washing on the balconies and roofs, swaying: one mesh, and the roof lines)
 scene.add(shopFans.mesh, laundry.group);
-scene.add(sky.group, street.group, life.group, buildSigns([...street.signs, ...life.signs, ...wires.signs, ...pcoSigns(street.cafeFrame)]), wires.group, backdrop.group);
+scene.add(sky.group, street.group, life.group, buildSigns([...street.signs, ...life.signs, ...wires.signs, ...pcoSigns(street.cafeFrame), ...street.townSigns]), wires.group, backdrop.group);
 
 // --- the player ----------------------------------------------------------------
 const input = new Input(canvas);
@@ -275,6 +275,7 @@ function update(dt: number) {
   shopFans.update(dt);
   laundry.update(time);
   cafeRoom.setClock(gameClock.hours, gameClock.minute);
+  street.chowk.setClock(gameClock.hours, gameClock.minute); // (the clock tower keeps the same time)
   yourScreen.update(dt, gameClock.label());
   desktop.update(dt);
   desktop.setTime(gameClock.label());
