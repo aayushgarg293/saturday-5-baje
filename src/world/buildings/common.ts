@@ -146,7 +146,9 @@ export type SignSpot = {
     // the vacant plots (world/buildings/vacant.ts)
     | "plotBoard"
     // the railway (world/places/station.ts)
-    | "railBoard";
+    | "railBoard"
+    // the school (world/places/school.ts)
+    | "schoolBoard";
   /** The word(s) on a stall's board. */
   label?: string;
   /** Which entry of SHOP_NAMES (world/names.ts) a shop board shows. */

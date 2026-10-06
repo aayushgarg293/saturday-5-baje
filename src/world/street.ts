@@ -17,15 +17,19 @@ import { buildVacant } from "./buildings/vacant";
 import { buildTemple } from "./props/temple";
 import { Parts, ribbon } from "./kit";
 import { addRoadPatches } from "./roadPatches";
-import { BAZAAR_SHOPS, BUS_STAND_SHOPS, CHOWK_SHOPS, COURT_SHOPS } from "./names";
+import { BAZAAR_SHOPS, BUS_STAND_SHOPS, CHOWK_SHOPS, COURT_SHOPS, SCHOOL_SHOPS } from "./names";
 import { type Chowk, buildChowk } from "./places/chowk";
 import { buildBusStand } from "./places/busStand";
 import { buildCourt } from "./places/court";
 import { buildMohallaSquare } from "./places/mohalla";
 import { buildStation } from "./places/station";
+import { buildPark } from "./places/park";
+import { buildSchool } from "./places/school";
+import { buildTuition } from "./places/tuition";
+import { CRICKET, CRICKET_GALI_S0, CRICKET_LANE, CRICKET_LANE_HALF, CRICKET_ROWS, PARK_ROWS, SCHOOL, SCHOOL_ROAD, SCHOOL_ROWS } from "./schoolRoad";
 import { STATION, STATION_LANE, STATION_ROWS } from "./station";
 import { LANE, LANE_PAVING, MOHALLA, MOHALLA_LANES, MOHALLA_ROWS, SQUARE_AXIS, SQUARE_EDGES, fitMohallaPlots } from "./mohalla";
-import { BUS_STAND_ROWS, CHOWK, CHOWK_ROWS, COURT_ROAD, COURT_ROWS, TOWN_GROUND } from "./town";
+import { BUS_STAND_EDGES, BUS_STAND_ROWS, CHOWK, CHOWK_ROWS, COURT_ROAD, COURT_ROWS, TOWN_GROUND } from "./town";
 import {
   CAFE, DRAIN, PLOT_DEPTH, ROAD_WIDTH, SIDE_ROADS, STREET_LENGTH,
   BAZAAR, type Plot, type VacantKind, centreAt, planPlots, pointAt, streetCoords, yawAlong,
@@ -294,14 +298,24 @@ export function buildStreet(): Street {
 
   /** A gali is a gap in the row; a house across its far end makes it a short dead end. */
   function closeGali(road: Road, plot: Plot, normal: THREE.Vector2) {
-    if (road === BAZAAR && plot.s0 === MOHALLA.gali.s0) {
-      // the left gali leads into the old mohalla now: the house that closed it stands at the far side
-      // of the mohalla's square instead, looking back down the lane. (Still built here, in the same
-      // order: everything built after it, and its own looks, stay exactly as they were.)
-      const edge = SQUARE_EDGES.west, { s0, s1 } = MOHALLA.endHouse;
-      const a = edge.pointAt(s0, LANE), b = edge.pointAt(s1, LANE);
-      const inward = edge.pointAt((s0 + s1) / 2, 0), mid = edge.pointAt((s0 + s1) / 2, LANE);
+    // Galis that lead somewhere now: the house that closed each one is built somewhere else instead,
+    // facing a road from beside it (`side`: its left or right). (Still built here, in the same order:
+    // everything built after it, and its own looks, stay exactly as they were.)
+    const moveTo = (to: Road, s0: number, s1: number, side: number, offset: number) => {
+      const a = to.pointAt(s0, side * offset), b = to.pointAt(s1, side * offset);
+      const inward = to.pointAt((s0 + s1) / 2, 0), mid = to.pointAt((s0 + s1) / 2, side * offset);
       place("house", a, b, new THREE.Vector2(inward.x - mid.x, inward.z - mid.z).normalize(), `gali-end@${plot.s0.toFixed(0)}`);
+    };
+    // the left gali leads into the old mohalla: its house stands across the far side of the square
+    if (road === BAZAAR && plot.s0 === MOHALLA.gali.s0) return moveTo(SQUARE_EDGES.west, MOHALLA.endHouse.s0, MOHALLA.endHouse.s1, 1, LANE);
+    // the cricket gali goes through to school road: its house stands along the lane, on its north side
+    if (road === BAZAAR && plot.s0 === CRICKET_GALI_S0) return moveTo(CRICKET_LANE, CRICKET.endHouse.s0, CRICKET.endHouse.s1, -1, CRICKET_LANE_HALF);
+    // the bus stand's mouth is school road's start: its house closes school road's far end, for now
+    if (road === BUS_STAND_EDGES.south) {
+      // (across the road's end: "along" this house is across the road, so it's placed from the end's two sides)
+      const end = SCHOOL_ROAD.length;
+      const a = SCHOOL_ROAD.pointAt(end, -5), b = SCHOOL_ROAD.pointAt(end, 5), back = SCHOOL_ROAD.pointAt(end - 1, 0), here = SCHOOL_ROAD.pointAt(end, 0);
+      place("house", a, b, new THREE.Vector2(back.x - here.x, back.z - here.z).normalize(), `gali-end@school`);
       return;
     }
     const sign = plot.side === "left" ? -1 : 1;
@@ -407,6 +421,28 @@ export function buildStreet(): Street {
   floors.push(...station.floors);
   lamps.push(...station.lamps);
   townSigns.push(...station.signs);
+
+  // school road, south from the bus stand (world/schoolRoad.ts): its road and drains, its shops and
+  // houses, the school on the east side, the park on the west
+  group.add(roadSurface(SCHOOL_ROAD, 0, SCHOOL_ROAD.length));
+  SCHOOL_ROWS.forEach(({ road, plan, seed }) => {
+    const random = makeRng(seed);
+    const names = shuffled(SCHOOL_SHOPS.count, seed).map((k) => SCHOOL_SHOPS.from + k);
+    buildRow(road, planPlots(random, plan), random, names);
+  });
+  // the cricket lane, from the cricket gali through to school road at the park's corner
+  group.add(laneSurface(CRICKET_LANE, CRICKET_LANE_HALF, 0, CRICKET_LANE.length + SCHOOL.setback - ROAD_WIDTH / 2));
+  [...CRICKET_ROWS, ...PARK_ROWS].forEach(({ road, plan, seed }) => {
+    const random = makeRng(seed);
+    buildRow(road, planPlots(random, plan), random, []);
+  });
+  const school = buildSchool(), tuition = buildTuition(), park = buildPark();
+  for (const it of [school, tuition, park]) {
+    group.add(it.group);
+    colliders.push(...it.colliders);
+    lamps.push(...it.lamps);
+  }
+  townSigns.push(...school.signs, ...tuition.signs);
 
 
   // south to north, so whoever picks from them can space them out along the walk

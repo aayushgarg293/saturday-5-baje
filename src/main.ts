@@ -94,7 +94,7 @@ scene.add(sky.group, street.group, life.group, signs, wires.group, backdrop.grou
 // only drawing what's near (world/areas.ts): the town's buildings, its signs, its people, sorted once by where they are
 const areas = buildAreas();
 areas.assign([...street.group.children, ...signs.children]);
-for (const name of ["courtPeople", "busStandPeople", "construction", "mohallaPeople", "stationPeople"]) areas.assign([scene.getObjectByName(name)!]);
+for (const name of ["courtPeople", "busStandPeople", "construction", "mohallaPeople", "stationPeople", "schoolRoadPeople"]) areas.assign([scene.getObjectByName(name)!]);
 
 // --- the player ----------------------------------------------------------------
 const input = new Input(canvas);

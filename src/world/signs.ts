@@ -281,6 +281,23 @@ const PAINTERS: Partial<Record<WorldSign["kind"], PainterSpec>> = {
     weather(ctx, w, h, rng, 0.8);
   } },
 
+  /**
+   * The school's painted words (world/places/school.ts): its name over the
+   * gate and on the parapet, the slogans on its wall, the tuition's board:
+   * deep blue letters on whitewash, a maroon border; a second line smaller,
+   * in maroon.
+   */
+  schoolBoard: { ppm: 220, weather: 0.6, paint(ctx, w, h, _i, rng, sign) {
+    background(ctx, w, h, "#f4efe2", "#7a2a2a");
+    const [first, second] = (sign.label ?? "").split("\n");
+    if (second === undefined) text(ctx, first, w / 2, h * 0.54, w * 0.9, h * 0.62, "#1f3a7a", DEVANAGARI);
+    else {
+      text(ctx, first, w / 2, h * 0.38, w * 0.9, h * 0.44, "#1f3a7a", DEVANAGARI);
+      text(ctx, second, w / 2, h * 0.76, w * 0.86, h * 0.24, "#7a2a2a", DEVANAGARI);
+    }
+    weather(ctx, w, h, rng, 1.0);
+  } },
+
   /** An A4 printout taped to the wall, a rule in bold capitals, taped crooked. */
   notice: { ppm: 500, weather: 0.25, paint(ctx, w, h, _i, rng, sign) {
     ctx.fillStyle = "#f7f4ec";

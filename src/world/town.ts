@@ -221,7 +221,14 @@ export const BUS_STAND_ROWS: { road: Road; plan: RowPlan; seed: number }[] = [
  * (metres) for it to be drawn. Anything outside every box (the bazaar, the
  * chowk: its tower is seen all the way down the bazaar) is always drawn.
  */
-export type AreaSpec = { name: string; box: { x0: number; x1: number; z0: number; z1: number }; reach: number };
+export type AreaBox = { x0: number; x1: number; z0: number; z1: number };
+export type AreaSpec = {
+  name: string;
+  box: AreaBox;
+  reach: number;
+  /** Also shown from anywhere inside these (the far ends of long, straight views of it). */
+  seenFrom?: AreaBox[];
+};
 
 const courtStart = COURT_ROAD.pointAt(0, 0);
 export const AREAS: AreaSpec[] = [
@@ -242,7 +249,7 @@ export const AREAS: AreaSpec[] = [
 ];
 
 /** The world box round a stretch of a grid (the mohalla's, the station's: its corners, maybe turned a little). */
-function boxAround(e: { u0: number; u1: number; v0: number; v1: number }, grid: (u: number, v: number) => { x: number; z: number }) {
+export function boxAround(e: { u0: number; u1: number; v0: number; v1: number }, grid: (u: number, v: number) => { x: number; z: number }) {
   const corners = [grid(e.u0, e.v0), grid(e.u1, e.v0), grid(e.u1, e.v1), grid(e.u0, e.v1)];
   const xs = corners.map((c) => c.x), zs = corners.map((c) => c.z);
   return { x0: Math.min(...xs), x1: Math.max(...xs), z0: Math.min(...zs), z1: Math.max(...zs) };

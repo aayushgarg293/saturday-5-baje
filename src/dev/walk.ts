@@ -2,6 +2,7 @@ import { type Box, pushOut } from "../core/colliders";
 import { SIDE_ROADS, SLOTS, STREET_LENGTH, pointAt } from "../world/layout";
 import { MOHALLA, MOHALLA_EXTENT, inMohalla } from "../world/mohalla";
 import { STATION, inStation } from "../world/station";
+import { CRICKET_LANE, SCHOOL, SCHOOL_ROAD } from "../world/schoolRoad";
 import { BUS_STAND, CHOWK, COURT, COURT_ROAD } from "../world/town";
 
 /**
@@ -41,6 +42,7 @@ export function walkCheck(colliders: readonly Box[]): WalkReport {
   for (let s = 0; s <= COURT_ROAD.length + BUS_STAND.depth + 12; s += 2) for (const off of [-30, 30]) grow(COURT_ROAD.pointAt(s, off));
   for (let u = 0; u <= MOHALLA_EXTENT.u1; u += 2) for (const v of [MOHALLA_EXTENT.v0, MOHALLA_EXTENT.v1]) grow(inMohalla(u, v));
   for (const u of [0, STATION.enclosure.west + 2]) for (const v of [-STATION.line.walk - 2, STATION.line.walk + 2]) grow(inStation(u, v));
+  for (let s = 0; s <= SCHOOL_ROAD.length; s += 10) for (const off of [-SCHOOL.school.depth - 5, SCHOOL.park.depth + 5]) grow(SCHOOL_ROAD.pointAt(s, off));
   const nx = Math.ceil((maxX - minX) / CELL), nz = Math.ceil((maxZ - minZ) / CELL);
   const index = (x: number, z: number) => Math.round((x - minX) / CELL) + Math.round((z - minZ) / CELL) * nx;
 
@@ -130,6 +132,11 @@ export function walkCheck(colliders: readonly Box[]): WalkReport {
     mohallaLaneD: near(inMohalla(MOHALLA.laneD, MOHALLA.laneC / 2)),
     // the way to the station: round the back lane's corner, the crossing, along the line, up the
     // platform's ramp (the platform itself is up a step this check doesn't climb)
+    // school road: its far end, through the school's gate to the playground, into the park, along the cricket lane
+    schoolRoadEnd: near(SCHOOL_ROAD.pointAt(SCHOOL_ROAD.length - 3, 0)),
+    schoolPlayground: near(SCHOOL_ROAD.pointAt((SCHOOL.school.s0 + SCHOOL.school.s1) / 2 + 4, -SCHOOL.setback - 6)),
+    parkFountain: near(SCHOOL_ROAD.pointAt((SCHOOL.park.s0 + SCHOOL.park.s1) / 2 - 4, SCHOOL.setback + 12)),
+    cricketLane: near(CRICKET_LANE.pointAt(CRICKET_LANE.length / 2, 0)),
     stationLane: near(inStation(45, 0)),
     levelCrossing: near(inStation(STATION.railway.track, 0)),
     alongTheLine: near(inStation(STATION.railway.track + 3, 50)),

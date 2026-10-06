@@ -2,6 +2,7 @@ import { CAFE, pointAt, yawAlong } from "../world/layout";
 import type { Road } from "../world/roads";
 import { MOHALLA_LANES } from "../world/mohalla";
 import { STATION, STATION_LANE, inStation, laneS } from "../world/station";
+import { CRICKET_LANE, SCHOOL, SCHOOL_ROAD } from "../world/schoolRoad";
 import { COURT, COURT_ROAD } from "../world/town";
 
 /**
@@ -69,6 +70,14 @@ export const CAMERAS: Record<string, CameraSpot> = {
   alongLine: { pos: [inStation(STATION.railway.track + 3, 6).x, inStation(STATION.railway.track + 3, 6).z], yaw: -0.08, pitch: 0.02 },
   /** Up on the platform, by the name board, looking north along it. */
   platform: { pos: [inStation(STATION.platform.edge + 2.5, -9.5).x, inStation(STATION.platform.edge + 2.5, -9.5).z], yaw: 0.15, pitch: 0.04, floor: STATION.platform.height },
+  /** School road (world/schoolRoad.ts): from the bus stand's mouth, looking south down it. */
+  schoolRoad: onRoad(SCHOOL_ROAD, 4, 0.5, 0, 0.03),
+  /** The school, from across the road: the gate, the playground, the building. */
+  school: onRoad(SCHOOL_ROAD, (SCHOOL.school.s0 + SCHOOL.school.s1) / 2 + 6, 2.2, 1.0, 0.1),
+  /** The park, through its gate: the fountain, the gulmohars, the play corner. */
+  park: onRoad(SCHOOL_ROAD, (SCHOOL.park.s0 + SCHOOL.park.s1) / 2 + 1.5, -1.5, -1.4, 0.0),
+  /** The cricket lane, from just past the kids, looking east to school road. */
+  cricketLane: onRoad(CRICKET_LANE, 14, 0, 0, 0.04),
   /** The opening view: the south end, looking up the street. The cafe sign should be visible. */
   start: along(1.5),
   /** Shops on the left, early in the walk. */

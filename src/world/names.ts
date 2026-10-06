@@ -45,6 +45,8 @@ export const CHOWK_SHOPS = { from: 36, count: 10 };
 export const COURT_SHOPS = { from: 46, count: 8 };
 /** The bus stand's: the eight after court road's. */
 export const BUS_STAND_SHOPS = { from: 54, count: 8 };
+/** School road's: the ten after the bus stand's. */
+export const SCHOOL_SHOPS = { from: 62, count: 10 };
 
 export const SHOP_NAMES: ShopName[] = [
   { hi: "शर्मा जनरल स्टोर", en: "Sharma General Store", tag: "Kirana • Cold Drinks • Dry Fruits", trade: "kirana", shelf: "grocery" },
@@ -112,6 +114,17 @@ export const SHOP_NAMES: ShopName[] = [
   { hi: "न्यू शिव ऑटो गैराज", en: "New Shiv Auto Garage", tag: "Puncture • Welding • Service", trade: "cycle", shelf: "autoParts" },
   { hi: "यात्री विश्राम गृह", en: "Yatri Vishram Grih", tag: "Room ₹50 • Bathroom Attached", trade: "general", shelf: "gifts" },
   { hi: "गोयल मिठाई", en: "Goyal Mithai", tag: "Peda • Sohan Halwa • Gajak", trade: "sweets", shelf: "sweets" },
+  // --- school road (world/schoolRoad.ts) ---
+  { hi: "विद्या स्टेशनरी मार्ट", en: "Vidya Stationery Mart", tag: "Copy • Pen • Geometry Box", trade: "general", shelf: "stationery" },
+  { hi: "सरस्वती बुक डिपो", en: "Saraswati Book Depot", tag: "Guide • Kunji • Old Books", trade: "general", shelf: "books" },
+  { hi: "न्यू इंडिया फोटोस्टेट", en: "New India Photostat", tag: "Xerox ₹1 • Spiral Binding", trade: "general", shelf: "photo" },
+  { hi: "कृष्णा जूस कॉर्नर", en: "Krishna Juice Corner", tag: "Mosambi • Ganna • Shake", trade: "kirana", shelf: "juice" },
+  { hi: "बालाजी किराना स्टोर", en: "Balaji Kirana Store", tag: "Atta • Daal • Masala", trade: "kirana", shelf: "grocery" },
+  { hi: "शर्मा साइकिल वर्क्स", en: "Sharma Cycle Works", tag: "Repairing • Puncture • Tube", trade: "cycle", shelf: "cycle" },
+  { hi: "गणेश टॉफी भंडार", en: "Ganesh Toffee Bhandar", tag: "Toffee • Chooran • Cold Drink", trade: "kirana", shelf: "paan" },
+  { hi: "ड्रीम्स गिफ्ट सेंटर", en: "Dreams Gift Centre", tag: "Greeting Card • Teddy • Gift", trade: "general", shelf: "gifts" },
+  { hi: "महावीर बर्तन भंडार", en: "Mahaveer Bartan Bhandar", tag: "Steel • Pital • Crockery", trade: "general", shelf: "utensils" },
+  { hi: "आनंद टेलर्स", en: "Anand Tailors", tag: "School Uniform • Pant-Shirt", trade: "cloth", shelf: "cloth" },
 ];
 
 /** A painted wall ad for a look-alike brand of the period (slogans are invented). */
