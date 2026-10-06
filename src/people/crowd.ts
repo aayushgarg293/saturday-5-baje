@@ -11,6 +11,7 @@ import { buildDevotee } from "./devotee";
 import { buildBusStandPeople } from "./busStand";
 import { buildConstruction } from "./construction";
 import { buildMohallaPeople } from "./mohalla";
+import { buildStationPeople } from "./station";
 import { buildCourtPeople } from "./court";
 import { buildPco } from "./pco";
 import { type Saloon, buildSaloon } from "./saloon";
@@ -99,6 +100,8 @@ export function buildCrowd(spots: WorldPeopleSpot[]): Crowd {
   for (const spot of spots.filter((s) => s.kind === "construction")) groups.push(buildConstruction(spot));
   // the old mohalla's square: the old men under the peepal, the woman at the handpump, boys at marbles
   groups.push(buildMohallaPeople());
+  // …and the gateman at the level crossing, the coolie and a passenger on the station's platform
+  groups.push(buildStationPeople());
 
   // shopkeepers, spread out along the street (the rest of the shops' keepers are inside, out of sight)
   const taken: THREE.Vector3[] = [];

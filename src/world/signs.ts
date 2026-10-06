@@ -263,6 +263,24 @@ const PAINTERS: Partial<Record<WorldSign["kind"], PainterSpec>> = {
     weather(ctx, w, h, rng, 1.2);
   } },
 
+  /**
+   * The railway's boards (world/places/station.ts): black letters on
+   * railway yellow, a black border: the station's name, the gate number,
+   * the warnings. The first line big; any more lines under it, smaller.
+   */
+  railBoard: { ppm: 240, weather: 0.5, paint(ctx, w, h, _i, rng, sign) {
+    background(ctx, w, h, "#f2c81f", "#1a1714");
+    const lines = (sign.label ?? "").split("\n");
+    if (lines.length === 1) text(ctx, lines[0], w / 2, h * 0.53, w * 0.88, h * 0.62, "#1a1714", DEVANAGARI);
+    else {
+      // the first line takes half the board; the rest share the other half
+      text(ctx, lines[0], w / 2, h * 0.3, w * 0.88, h * 0.4, "#1a1714", DEVANAGARI);
+      const rest = lines.slice(1);
+      rest.forEach((line, k) => text(ctx, line, w / 2, h * (0.62 + (k * 0.3) / rest.length + (rest.length > 1 ? 0 : 0.06)), w * 0.86, (h * 0.34) / rest.length, "#1a1714", /[\u0900-\u097F]/.test(line) ? DEVANAGARI : LATIN_PLAIN));
+    }
+    weather(ctx, w, h, rng, 0.8);
+  } },
+
   /** An A4 printout taped to the wall, a rule in bold capitals, taped crooked. */
   notice: { ppm: 500, weather: 0.25, paint(ctx, w, h, _i, rng, sign) {
     ctx.fillStyle = "#f7f4ec";

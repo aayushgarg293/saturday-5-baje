@@ -1,6 +1,7 @@
 import type { Rng } from "../core/rng";
 import { BAZAAR, type PlotType, type RowPlan, STREET_LENGTH } from "./layout";
 import { MOHALLA_EXTENT, inMohalla } from "./mohalla";
+import { STATION_EXTENT, inStation } from "./station";
 import { Road } from "./roads";
 
 /**
@@ -23,7 +24,7 @@ import { Road } from "./roads";
  */
 
 /** The ground under the whole town (world x/z): the bazaar runs north from the origin, the town spreads east of it. */
-export const TOWN_GROUND = { x0: -70, x1: 210, z0: -300, z1: 45 };
+export const TOWN_GROUND = { x0: -130, x1: 210, z0: -340, z1: 45 };
 
 // --- the chowk ------------------------------------------------------------------------------------
 
@@ -235,12 +236,14 @@ export const AREAS: AreaSpec[] = [
   },
   // the old mohalla (world/mohalla.ts): seen only down its lanes, and from the bazaar only through the
   // gali, near it. (Its box starts well west of the bazaar's own buildings, whose fronts are what place them.)
-  { name: "mohalla", box: boxAround(MOHALLA_EXTENT), reach: 22 },
+  { name: "mohalla", box: boxAround(MOHALLA_EXTENT, inMohalla), reach: 22 },
+  // the way to the station (world/station.ts): round the corner of the north side road's back lane
+  { name: "station", box: boxAround(STATION_EXTENT, inStation), reach: 20 },
 ];
 
-/** The world box round a stretch of the mohalla's grid (its corners, which are turned a little). */
-function boxAround(e: { u0: number; u1: number; v0: number; v1: number }) {
-  const corners = [inMohalla(e.u0, e.v0), inMohalla(e.u1, e.v0), inMohalla(e.u1, e.v1), inMohalla(e.u0, e.v1)];
+/** The world box round a stretch of a grid (the mohalla's, the station's: its corners, maybe turned a little). */
+function boxAround(e: { u0: number; u1: number; v0: number; v1: number }, grid: (u: number, v: number) => { x: number; z: number }) {
+  const corners = [grid(e.u0, e.v0), grid(e.u1, e.v0), grid(e.u1, e.v1), grid(e.u0, e.v1)];
   const xs = corners.map((c) => c.x), zs = corners.map((c) => c.z);
   return { x0: Math.min(...xs), x1: Math.max(...xs), z0: Math.min(...zs), z1: Math.max(...zs) };
 }

@@ -22,6 +22,8 @@ import { type Chowk, buildChowk } from "./places/chowk";
 import { buildBusStand } from "./places/busStand";
 import { buildCourt } from "./places/court";
 import { buildMohallaSquare } from "./places/mohalla";
+import { buildStation } from "./places/station";
+import { STATION, STATION_LANE, STATION_ROWS } from "./station";
 import { LANE, LANE_PAVING, MOHALLA, MOHALLA_LANES, MOHALLA_ROWS, SQUARE_AXIS, SQUARE_EDGES, fitMohallaPlots } from "./mohalla";
 import { BUS_STAND_ROWS, CHOWK, CHOWK_ROWS, COURT_ROAD, COURT_ROWS, TOWN_GROUND } from "./town";
 import {
@@ -283,7 +285,10 @@ export function buildStreet(): Street {
     // walls across both ends of the lane; their fronts face into the lane
     const h = road.centreAt(plot.s0).heading;
     const along = new THREE.Vector2(Math.sin(h), -Math.cos(h));
-    place("wall", road.pointAt(s0, sign * (near - 1.5)), road.pointAt(s0, sign * far), along.clone(), `road-wall@${s0}`);
+    // (the north side road's back lane runs on south now, into the station lane: the wall that closed
+    // its south end closes the back lane on the station lane's far side instead: world/station.ts)
+    const wallAt = side === SIDE_ROADS.north ? STATION.laneS - STATION.half : s0;
+    place("wall", road.pointAt(wallAt, sign * (near - 1.5)), road.pointAt(wallAt, sign * far), along.clone(), `road-wall@${s0}`);
     place("wall", road.pointAt(s1, sign * far), road.pointAt(s1, sign * (near - 1.5)), along.clone().negate(), `road-wall@${s1}`);
   }
 
@@ -388,6 +393,20 @@ export function buildStreet(): Street {
   group.add(mohalla.group);
   colliders.push(...mohalla.colliders);
   lamps.push(...mohalla.lamps);
+
+  // the way to the station, west from the north side road's back lane (world/station.ts): the lane, its
+  // houses, the godown, the level crossing, the line, the station
+  group.add(laneSurface(STATION_LANE, STATION.half, 0, STATION_LANE.length, false, PAL.asphalt));
+  STATION_ROWS.forEach(({ road, plan, seed }) => {
+    const random = makeRng(seed);
+    buildRow(road, planPlots(random, plan), random, []);
+  });
+  const station = buildStation();
+  group.add(station.group);
+  colliders.push(...station.colliders);
+  floors.push(...station.floors);
+  lamps.push(...station.lamps);
+  townSigns.push(...station.signs);
 
 
   // south to north, so whoever picks from them can space them out along the walk
@@ -523,15 +542,15 @@ function roadSurface(road: Road, s0: number, s1: number): THREE.Mesh {
 }
 
 /**
- * A mohalla lane's paving (world/mohalla.ts), from s0 to s1 along it: bricks set on edge, house
- * front to house front (`half` either side of the middle), and a narrow
+ * A lane's paving (the mohalla's: world/mohalla.ts), from s0 to s1 along it: bricks set on edge (or
+ * `colour`: the station lane's worn tarmac), house front to house front (`half` either side of the middle), and a narrow
  * drain down each side in front of the houses (`drains`; the square has none).
  */
-function laneSurface(road: Road, half: number, s0: number, s1: number, drains = true): THREE.Mesh {
+function laneSurface(road: Road, half: number, s0: number, s1: number, drains = true, colour = 0x9c7a62): THREE.Mesh {
   const parts = new Parts();
   const steps = Math.ceil(s1 - s0);
   const along = (offset: number) => (t: number) => road.pointAt(s0 + t * (s1 - s0), offset);
-  parts.add(ribbon(along(-half), along(half), steps, 0.01), 0, 0, 0, 0x9c7a62);
+  parts.add(ribbon(along(-half), along(half), steps, 0.01), 0, 0, 0, colour);
   if (drains) {
     for (const side of [-1, 1]) {
       const inner = along(side * (half - 0.35)), outer = along(side * (half - 0.15));

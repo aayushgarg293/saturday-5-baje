@@ -1,6 +1,7 @@
 import { type Box, pushOut } from "../core/colliders";
 import { SIDE_ROADS, SLOTS, STREET_LENGTH, pointAt } from "../world/layout";
 import { MOHALLA, MOHALLA_EXTENT, inMohalla } from "../world/mohalla";
+import { STATION, inStation } from "../world/station";
 import { BUS_STAND, CHOWK, COURT, COURT_ROAD } from "../world/town";
 
 /**
@@ -39,6 +40,7 @@ export function walkCheck(colliders: readonly Box[]): WalkReport {
   for (let s = -2; s <= STREET_LENGTH + CHOWK.depth + 4; s += 2) for (const off of [-20, 20]) grow(pointAt(s, off));
   for (let s = 0; s <= COURT_ROAD.length + BUS_STAND.depth + 12; s += 2) for (const off of [-30, 30]) grow(COURT_ROAD.pointAt(s, off));
   for (let u = 0; u <= MOHALLA_EXTENT.u1; u += 2) for (const v of [MOHALLA_EXTENT.v0, MOHALLA_EXTENT.v1]) grow(inMohalla(u, v));
+  for (const u of [0, STATION.enclosure.west + 2]) for (const v of [-STATION.line.walk - 2, STATION.line.walk + 2]) grow(inStation(u, v));
   const nx = Math.ceil((maxX - minX) / CELL), nz = Math.ceil((maxZ - minZ) / CELL);
   const index = (x: number, z: number) => Math.round((x - minX) / CELL) + Math.round((z - minZ) / CELL) * nx;
 
@@ -126,6 +128,12 @@ export function walkCheck(colliders: readonly Box[]): WalkReport {
     mohallaSquare: near(inMohalla(MOHALLA.square.u1 - 2.5, MOHALLA.square.v0 + 2)),
     mohallaLoopCorner: near(inMohalla(MOHALLA.laneB, MOHALLA.laneC)),
     mohallaLaneD: near(inMohalla(MOHALLA.laneD, MOHALLA.laneC / 2)),
+    // the way to the station: round the back lane's corner, the crossing, along the line, up the
+    // platform's ramp (the platform itself is up a step this check doesn't climb)
+    stationLane: near(inStation(45, 0)),
+    levelCrossing: near(inStation(STATION.railway.track, 0)),
+    alongTheLine: near(inStation(STATION.railway.track + 3, 50)),
+    platformRamp: near(inStation(STATION.platform.edge + 3, STATION.platform.rampTop + 0.5)),
   };
 
   // the narrowest clear walkable width across the street, every metre

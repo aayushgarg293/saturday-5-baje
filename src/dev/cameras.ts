@@ -1,6 +1,7 @@
 import { CAFE, pointAt, yawAlong } from "../world/layout";
 import type { Road } from "../world/roads";
 import { MOHALLA_LANES } from "../world/mohalla";
+import { STATION, STATION_LANE, inStation, laneS } from "../world/station";
 import { COURT, COURT_ROAD } from "../world/town";
 
 /**
@@ -60,6 +61,14 @@ export const CAMERAS: Record<string, CameraSpot> = {
   mohallaSquare: onRoad(MOHALLA_LANES.a, 34, 0.5, 0.2, 0.12),
   /** Lane C, the bottom of the loop, looking east. */
   mohallaLoop: onRoad(MOHALLA_LANES.c, 3, 0, 0, 0.05),
+  /** The way to the station (world/station.ts): from the back lane's corner, looking west down the lane. */
+  stationLane: onRoad(STATION_LANE, 1, 0, 0, 0.03),
+  /** Coming up to the level crossing: the barriers, the gateman's hut, the station beyond. */
+  crossing: onRoad(STATION_LANE, laneS(66), 0.6, 0.12, 0.06),
+  /** On the line, looking north along it past the platform. */
+  alongLine: { pos: [inStation(STATION.railway.track + 3, 6).x, inStation(STATION.railway.track + 3, 6).z], yaw: -0.08, pitch: 0.02 },
+  /** Up on the platform, by the name board, looking north along it. */
+  platform: { pos: [inStation(STATION.platform.edge + 2.5, -9.5).x, inStation(STATION.platform.edge + 2.5, -9.5).z], yaw: 0.15, pitch: 0.04, floor: STATION.platform.height },
   /** The opening view: the south end, looking up the street. The cafe sign should be visible. */
   start: along(1.5),
   /** Shops on the left, early in the walk. */
