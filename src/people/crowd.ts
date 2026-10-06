@@ -10,7 +10,7 @@ import { buildCricket } from "./cricket";
 import { buildDevotee } from "./devotee";
 import { buildPco } from "./pco";
 import { buildSaloon } from "./saloon";
-import { golgappaCrew, iceGolaCrew, jalebiCrew, kachoriCrew } from "./sellers";
+import { type GolgappaCrew, golgappaCrew, iceGolaCrew, jalebiCrew, kachoriCrew } from "./sellers";
 import { buildShopkeeper } from "./shopkeepers";
 import { buildTailor } from "./tailor";
 
@@ -39,6 +39,8 @@ export type Crowd = {
   /** People standing outside their stall's footprint: you can't walk through them. */
   colliders: Box[];
   update(t: number, dt: number, player: THREE.Vector3): void;
+  /** The golgappa cart, which can also serve you (activities/paniPuri.ts). */
+  golgappa: GolgappaCrew;
 };
 
 /** `spots`: the places the buildings offer for people (world/street.ts), south to north. */
@@ -57,9 +59,11 @@ export function buildCrowd(spots: WorldPeopleSpot[]): Crowd {
     [jalebiCrew, SLOTS.jalebi],
     [iceGolaCrew, SLOTS.iceGola],
   ] as const;
+  let golgappa: GolgappaCrew | null = null;
   for (const [build, spot] of crews) {
     const where = placeOnStreet(spot.s, spot.offset);
     const crew = build(where, rng);
+    if (build === golgappaCrew) golgappa = crew as GolgappaCrew;
     groups.push(crew);
     for (const p of crew.standing) bodies.collide(where, 0.5, 0.5, p.x, p.z);
   }
@@ -100,6 +104,7 @@ export function buildCrowd(spots: WorldPeopleSpot[]): Crowd {
 
   return {
     group,
+    golgappa: golgappa!,
     colliders: bodies.colliders,
     update(t, dt, player) {
       groups.forEach((g, i) => {

@@ -31,6 +31,26 @@ export type Crew = {
   update(t: number, dt: number, player: THREE.Vector3): void;
 };
 
+/**
+ * The golgappa cart can also serve you (activities/paniPuri.ts): where you
+ * stand, where your leaf bowl is held out (in the world), and one puri made
+ * for you at a time. While he does, the woman beside you waits her turn.
+ */
+export type GolgappaCrew = Crew & {
+  you: {
+    /** Where you stand (on the ground), and where your leaf bowl is held, in the world. */
+    stand: THREE.Vector3;
+    bowl: THREE.Vector3;
+    /** What you look at while he works: his hands over the matka. */
+    hands: THREE.Vector3;
+    /** Seconds from the start of a serve until the puri's in your bowl, and the whole serve. */
+    lands: number;
+    takes: number;
+  };
+  /** He makes one for you: picks a puri, cracks it, fills it, dips it, and puts it in your bowl. */
+  serveYou(): void;
+};
+
 type At = { x: number; z: number; turn: number };
 const P = (at: At) => (x: number, y: number, z: number) => seenFrom(at, x, y, z);
 
@@ -62,7 +82,7 @@ function aim(tool: THREE.Object3D, hand: THREE.Vector3, tip: THREE.Vector3) {
 
 // --- golgappa -------------------------------------------------------------------------
 
-export function golgappaCrew(where: Placement, rng: Rng): Crew {
+export function golgappaCrew(where: Placement, rng: Rng): GolgappaCrew {
   const group = frame("golgappaCrew", where);
   const deck = 0.85;
   const sellerAt: At = { x: 1.05, z: 0.05, turn: -Math.PI / 2 }; // at the matka's end, facing along the cart
@@ -113,14 +133,52 @@ export function golgappaCrew(where: Placement, rng: Rng): Crew {
   const ball = puri();
   group.add(ball);
 
+  // --- serving you (activities/paniPuri.ts) ------------------------------------------------
+  // you stand further along the cart's front (he faces along the cart: toward you), she's to
+  // your right; your leaf bowl held out over the cart's edge, in front of the matka
+  const you = { x: -0.05, z: 0.85 };
+  const bowl = [0.42, 1.0, 0.45] as const;
+  const serveYou: Action = {
+    name: "serveYou",
+    duration: 4.2,
+    pose: (u) => ({
+      // the same as hers (pick, crack with his thumb, dip), but into your bowl, and a little quicker
+      right: track(u, [0, 0.6, 1.0, 1.5, 1.9, 2.2, 2.9, 3.3, 4.2], [
+        s(0.75, deck + 0.17, 0.2), s(0.3, deck + 0.53, 0), s(0.3, deck + 0.53, 0), s(0.52, deck + 0.47, 0),
+        s(0.52, deck + 0.37, 0), s(0.52, deck + 0.47, 0), s(bowl[0] + 0.04, bowl[1] + 0.07, bowl[2] - 0.04), s(bowl[0] + 0.04, bowl[1] + 0.07, bowl[2] - 0.04), s(0.75, deck + 0.17, 0.2),
+      ]),
+      left: s(0.7, deck + 0.13, -0.25),
+      look: u < 2.3 ? s(0.4, deck + 0.35, 0) : s(you.x, 1.5, you.z),
+      lean: u < 2.3 ? 0.25 : 0.2,
+    }),
+  };
+  // meanwhile she waits her turn, chewing the last one, watching his hands
+  const buyerWaits: Action = {
+    name: "waits", duration: 4.2,
+    pose: (u) => ({ right: buyerRest, left: v(0.05, 0.97, 0.25), look: b(0.45, deck + 0.4, 0), nod: Math.sin(u * 7) * 0.02 }),
+  };
+  const world = (x: number, y: number, z: number) => group.localToWorld(new THREE.Vector3(x, y, z));
+  group.updateMatrixWorld(true);
+
   return {
     group,
     standing: [sellerAt, buyerAt],
+    you: { stand: world(you.x, 0, you.z), bowl: world(...bowl), hands: world(0.5, deck + 0.3, 0.15), lands: 3.0, takes: serveYou.duration },
+    serveYou() {
+      seller.perform(serveYou);
+      buyer.perform(buyerWaits);
+    },
     update(t, dt, player) {
       seller.update(t, dt, player);
       buyer.update(t, dt, player);
       // the puri: in his fingers from the case to the handover, then in hers until it's eaten
+      // (yours: in his fingers until it's in your bowl; from there it's activities/paniPuri.ts's)
       const { name, u } = seller.now;
+      if (name === "serveYou") {
+        ball.visible = u > 0.9 && u < 3.0;
+        if (ball.visible) ball.position.copy(seller.grip("R", _at));
+        return;
+      }
       ball.visible = name === "serve" && u > 1.0 && u < 4.2;
       if (ball.visible) ball.position.copy(u < 3.4 ? seller.grip("R", _at) : buyer.grip("R", _at));
     },

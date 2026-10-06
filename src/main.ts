@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { PaniPuri } from "./activities/paniPuri";
 import { Bed } from "./audio/bed";
 import { CafeSounds } from "./audio/cafe";
 import { AudioEngine } from "./audio/engine";
@@ -95,6 +96,8 @@ player.place(street.spawn.x, street.spawn.z, street.spawn.yaw);
 // --- your seat, your computer, the time ------------------------------------------------
 const gameClock = new GameClock();
 const seat = new Seat(camera, player, input, yourSeat(street.cafeFrame));
+// eating pani puri at the golgappa cart (activities/paniPuri.ts)
+const paniPuri = new PaniPuri(camera, player, input, life.golgappa, scene);
 seat.onSit = () => {
   // the first time you sit down, the computer dials up (and every time, it's connected after; not after logging off)
   if (loggedOff) return;
@@ -203,6 +206,7 @@ desktop.onLogOff = () => {
   input.lock(); // (may be refused, after the wait: then a click on the view does it)
 };
 document.addEventListener("mousedown", () => {
+  if (input.locked && paniPuri.active) paniPuri.click();
   if (input.locked && seat.seated && yourScreen.ready()) seat.leanIn();
 });
 // Back in the booth with the mouse free (after Esc on the desktop): a click on the view captures it again
@@ -213,9 +217,11 @@ canvas.addEventListener("click", () => {
 window.addEventListener("keydown", (e) => {
   if (e.code === "KeyM" && !desktop.isOpen) audio.toggleMute();
   if (!input.locked || e.repeat) return;
+  if (paniPuri.key(e.code)) return; // (at the golgappa cart, the keys are for eating)
   // E: sit down at your computer, or get up; T: look up at the clock
   if (e.code === "KeyE") {
-    if (canGoHome()) goHome();
+    if (paniPuri.canStart()) paniPuri.start();
+    else if (canGoHome()) goHome();
     else if (canPay()) pay();
     else if (seat.seated) seat.standUp();
     else if (seat.canSit()) seat.sitDown();
@@ -248,6 +254,7 @@ function update(dt: number) {
   player.update(dt);
   stopAtTheStairs();
   seat.update(dt); // (after the player: when seated, the seat has the camera)
+  paniPuri.update(dt); // (at the cart, it has the camera)
   life.update(time, dt, player.pos);
   cafeRoom.update(dt);
   shopFans.update(dt);
@@ -287,6 +294,8 @@ function applyTimeOfDay() {
 function prompt(): string | null {
   if (ended) return null;
   if (desktop.isOpen || seat.leaned) return null;
+  if (paniPuri.active) return paniPuri.prompt();
+  if (paniPuri.canStart()) return "[E] pani puri khao (₹10 mein 6)";
   if (!input.locked && seat.seated) return "[Click] to look around again";
   if (seat.seated && loggedOff) return paid ? "[E] get up" : `[E] get up    (₹${charge(visitMinutes)} to pay at the counter)`;
   if (canPay()) return `[E] pay ₹${charge(visitMinutes)}`;
