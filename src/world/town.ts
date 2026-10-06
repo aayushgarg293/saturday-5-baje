@@ -1,5 +1,6 @@
 import type { Rng } from "../core/rng";
 import { BAZAAR, type PlotType, type RowPlan, STREET_LENGTH } from "./layout";
+import { MOHALLA_EXTENT, inMohalla } from "./mohalla";
 import { Road } from "./roads";
 
 /**
@@ -232,4 +233,14 @@ export const AREAS: AreaSpec[] = [
     box: { x0: courtStart.x + BUS_STAND.s0 + 1, x1: courtStart.x + BUS_STAND.s0 + BUS_STAND.depth + 14, z0: courtStart.z - 30, z1: courtStart.z + 30 },
     reach: 100,
   },
+  // the old mohalla (world/mohalla.ts): seen only down its lanes, and from the bazaar only through the
+  // gali, near it. (Its box starts well west of the bazaar's own buildings, whose fronts are what place them.)
+  { name: "mohalla", box: boxAround(MOHALLA_EXTENT), reach: 22 },
 ];
+
+/** The world box round a stretch of the mohalla's grid (its corners, which are turned a little). */
+function boxAround(e: { u0: number; u1: number; v0: number; v1: number }) {
+  const corners = [inMohalla(e.u0, e.v0), inMohalla(e.u1, e.v0), inMohalla(e.u1, e.v1), inMohalla(e.u0, e.v1)];
+  const xs = corners.map((c) => c.x), zs = corners.map((c) => c.z);
+  return { x0: Math.min(...xs), x1: Math.max(...xs), z0: Math.min(...zs), z1: Math.max(...zs) };
+}

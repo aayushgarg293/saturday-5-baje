@@ -21,6 +21,8 @@ import { BAZAAR_SHOPS, BUS_STAND_SHOPS, CHOWK_SHOPS, COURT_SHOPS } from "./names
 import { type Chowk, buildChowk } from "./places/chowk";
 import { buildBusStand } from "./places/busStand";
 import { buildCourt } from "./places/court";
+import { buildMohallaSquare } from "./places/mohalla";
+import { LANE, LANE_PAVING, MOHALLA, MOHALLA_LANES, MOHALLA_ROWS, SQUARE_AXIS, SQUARE_EDGES, fitMohallaPlots } from "./mohalla";
 import { BUS_STAND_ROWS, CHOWK, CHOWK_ROWS, COURT_ROAD, COURT_ROWS, TOWN_GROUND } from "./town";
 import {
   CAFE, DRAIN, PLOT_DEPTH, ROAD_WIDTH, SIDE_ROADS, STREET_LENGTH,
@@ -287,6 +289,16 @@ export function buildStreet(): Street {
 
   /** A gali is a gap in the row; a house across its far end makes it a short dead end. */
   function closeGali(road: Road, plot: Plot, normal: THREE.Vector2) {
+    if (road === BAZAAR && plot.s0 === MOHALLA.gali.s0) {
+      // the left gali leads into the old mohalla now: the house that closed it stands at the far side
+      // of the mohalla's square instead, looking back down the lane. (Still built here, in the same
+      // order: everything built after it, and its own looks, stay exactly as they were.)
+      const edge = SQUARE_EDGES.west, { s0, s1 } = MOHALLA.endHouse;
+      const a = edge.pointAt(s0, LANE), b = edge.pointAt(s1, LANE);
+      const inward = edge.pointAt((s0 + s1) / 2, 0), mid = edge.pointAt((s0 + s1) / 2, LANE);
+      place("house", a, b, new THREE.Vector2(inward.x - mid.x, inward.z - mid.z).normalize(), `gali-end@${plot.s0.toFixed(0)}`);
+      return;
+    }
     const sign = plot.side === "left" ? -1 : 1;
     const back = sign * (plot.setback + PLOT_DEPTH);
     place("house", road.pointAt(plot.s0 - 1, back), road.pointAt(plot.s1 + 1, back), normal, `gali-end@${plot.s0.toFixed(0)}`);
@@ -348,6 +360,34 @@ export function buildStreet(): Street {
   colliders.push(...busStand.colliders);
   lamps.push(...busStand.lamps);
   townSigns.push(...busStand.signs);
+
+  // the old mohalla, west through the left gali (world/mohalla.ts): brick-paved lanes and the square,
+  // the rows of houses (fitted round the corners), the peepal, the handpump, the shrine
+  for (const [key, lane] of Object.entries(MOHALLA_LANES)) {
+    const { s0, s1 } = LANE_PAVING[key as keyof typeof LANE_PAVING];
+    group.add(laneSurface(lane, LANE, s0, s1));
+  }
+  group.add(laneSurface(SQUARE_AXIS, (MOHALLA.square.v1 - MOHALLA.square.v0) / 2, 0, SQUARE_AXIS.length, false));
+  const mohallaRows = MOHALLA_ROWS.map(({ road, plan, seed }) => {
+    const random = makeRng(seed);
+    return { road, random, plots: planPlots(random, plan) };
+  });
+  const mohallaWalls = fitMohallaPlots(mohallaRows);
+  for (const { road, random, plots } of mohallaRows) buildRow(road, plots, random, []);
+  {
+    // the compound walls closing the gaps where a house had to be left out
+    const random = makeRng(7509);
+    for (const w of mohallaWalls) {
+      const sign = w.side === "left" ? -1 : 1;
+      const a = w.road.pointAt(w.s0, sign * w.setback), b = w.road.pointAt(w.s1, sign * w.setback);
+      const mid = w.road.pointAt((w.s0 + w.s1) / 2, sign * w.setback), inward = w.road.pointAt((w.s0 + w.s1) / 2, 0);
+      place("wall", a, b, new THREE.Vector2(inward.x - mid.x, inward.z - mid.z).normalize(), `mohalla-wall@${w.road.name}:${w.side}${w.s0.toFixed(0)}`, undefined, random);
+    }
+  }
+  const mohalla = buildMohallaSquare();
+  group.add(mohalla.group);
+  colliders.push(...mohalla.colliders);
+  lamps.push(...mohalla.lamps);
 
 
   // south to north, so whoever picks from them can space them out along the walk
@@ -480,6 +520,25 @@ function roadSurface(road: Road, s0: number, s1: number): THREE.Mesh {
     parts.add(ribbon(side < 0 ? outer : inner, side < 0 ? inner : outer, steps, 0.012), 0, 0, 0, PAL.drain);
   }
   return parts.build(`road:${road.name}`, { castShadow: false });
+}
+
+/**
+ * A mohalla lane's paving (world/mohalla.ts), from s0 to s1 along it: bricks set on edge, house
+ * front to house front (`half` either side of the middle), and a narrow
+ * drain down each side in front of the houses (`drains`; the square has none).
+ */
+function laneSurface(road: Road, half: number, s0: number, s1: number, drains = true): THREE.Mesh {
+  const parts = new Parts();
+  const steps = Math.ceil(s1 - s0);
+  const along = (offset: number) => (t: number) => road.pointAt(s0 + t * (s1 - s0), offset);
+  parts.add(ribbon(along(-half), along(half), steps, 0.01), 0, 0, 0, 0x9c7a62);
+  if (drains) {
+    for (const side of [-1, 1]) {
+      const inner = along(side * (half - 0.35)), outer = along(side * (half - 0.15));
+      parts.add(ribbon(side < 0 ? outer : inner, side < 0 ? inner : outer, steps, 0.012), 0, 0, 0, PAL.drain);
+    }
+  }
+  return parts.build(`lane:${road.name}`, { castShadow: false });
 }
 
 /**

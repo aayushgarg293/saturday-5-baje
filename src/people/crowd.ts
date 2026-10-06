@@ -10,6 +10,7 @@ import { type Cricket, buildCricket } from "./cricket";
 import { buildDevotee } from "./devotee";
 import { buildBusStandPeople } from "./busStand";
 import { buildConstruction } from "./construction";
+import { buildMohallaPeople } from "./mohalla";
 import { buildCourtPeople } from "./court";
 import { buildPco } from "./pco";
 import { type Saloon, buildSaloon } from "./saloon";
@@ -96,6 +97,8 @@ export function buildCrowd(spots: WorldPeopleSpot[]): Crowd {
   groups.push(buildBusStandPeople());
   // …and the labourers at the house going up there
   for (const spot of spots.filter((s) => s.kind === "construction")) groups.push(buildConstruction(spot));
+  // the old mohalla's square: the old men under the peepal, the woman at the handpump, boys at marbles
+  groups.push(buildMohallaPeople());
 
   // shopkeepers, spread out along the street (the rest of the shops' keepers are inside, out of sight)
   const taken: THREE.Vector3[] = [];

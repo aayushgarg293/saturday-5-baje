@@ -1,5 +1,6 @@
 import { CAFE, pointAt, yawAlong } from "../world/layout";
 import type { Road } from "../world/roads";
+import { MOHALLA_LANES } from "../world/mohalla";
 import { COURT, COURT_ROAD } from "../world/town";
 
 /**
@@ -51,6 +52,14 @@ export const CAMERAS: Record<string, CameraSpot> = {
   busStand: onRoad(COURT_ROAD, COURT_ROAD.length - 2, 3, 0.25, 0.05),
   /** The bus stand from its far (south-east) corner, looking back at the shed and the buses. */
   busStandBack: onRoad(COURT_ROAD, COURT_ROAD.length + 30, 14, 2.4, 0.08),
+  /** The old mohalla (world/mohalla.ts): looking into the left gali from the bazaar, down lane A. */
+  mohallaGali: along(59.5, -1.5, Math.PI / 2, 0.05),
+  /** Lane A, half-way along, looking west to the square and the peepal. */
+  mohallaLane: onRoad(MOHALLA_LANES.a, 18, 0, 0, 0.08),
+  /** Coming out into the square at the end of lane A. */
+  mohallaSquare: onRoad(MOHALLA_LANES.a, 34, 0.5, 0.2, 0.12),
+  /** Lane C, the bottom of the loop, looking east. */
+  mohallaLoop: onRoad(MOHALLA_LANES.c, 3, 0, 0, 0.05),
   /** The opening view: the south end, looking up the street. The cafe sign should be visible. */
   start: along(1.5),
   /** Shops on the left, early in the walk. */
