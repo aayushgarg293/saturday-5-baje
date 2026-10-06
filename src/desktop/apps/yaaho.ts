@@ -24,6 +24,8 @@ type Line = { from: "you" | "they" | "system" | "buzz"; text: string };
 
 type Person = {
   id: string;
+  /** Not on your friends list (story.ts). */
+  stranger?: boolean;
   presence: Presence;
   message: string;
   log: Line[];
@@ -108,6 +110,7 @@ export class Yaaho implements Chat {
   receive(id: string, text: string) {
     const p = this.person(id);
     this.add(p, { from: "they", text });
+    if (p.stranger) this.drawList(); // (the first time, they appear under "Others")
     this.popUp(p);
     this.sounds.play("ding");
   }
@@ -268,12 +271,20 @@ export class Yaaho implements Chat {
       body.innerHTML = `<div class="ym-brand">Yaaho!</div><div class="ym-signin"><div class="ym-spin"></div>Signing in as<br><b>${YOU.id}</b>…</div>`;
       return;
     }
-    const all = [...this.people.values()];
+    // your friends; and, below them, anyone else who's messaged you (a stranger: story.ts)
+    const all = [...this.people.values()].filter((p) => !p.stranger);
+    const others = [...this.people.values()].filter((p) => p.stranger && p.log.length);
     const on = all.filter((p) => p.presence !== "offline").length;
     body.innerHTML = `<div class="ym-brand">Yaaho! <span>Messenger</span></div>
       <div class="ym-me"><div class="pic"></div><div><b>${YOU.id}</b><span>● ${YOU.status}</span></div></div>
       <div class="ym-group">▾ Friends (${on}/${all.length})</div>`;
-    for (const p of all) {
+    for (const p of [...all, ...others]) {
+      if (p === others[0]) {
+        const g = document.createElement("div");
+        g.className = "ym-group";
+        g.textContent = "▾ Others";
+        body.append(g);
+      }
       const row = document.createElement("div");
       row.className = `ym-buddy ${p.presence}`;
       row.innerHTML = `<div class="ym-face ${p.presence}"></div><div><div class="name"></div><div class="msg"></div></div>`;

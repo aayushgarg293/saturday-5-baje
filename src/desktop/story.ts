@@ -37,7 +37,13 @@ import type { Thread } from "./thread";
 export const YOU = { id: "cricket_king_07", status: "Available" };
 
 export type Presence = "online" | "idle" | "offline";
-export type Buddy = { id: string; presence: Presence; message: string };
+export type Buddy = {
+  id: string;
+  presence: Presence;
+  message: string;
+  /** Not on your friends list: someone who messages you out of nowhere (shown under "Others" once they have). */
+  stranger?: boolean;
+};
 
 /** The friends list, in order. */
 export const BUDDIES: Buddy[] = [
@@ -47,6 +53,7 @@ export const BUDDIES: Buddy[] = [
   { id: "rohan_rockstar", presence: "offline", message: "PUNE :)" },
   { id: "neha_sweetu", presence: "offline", message: "~*~ smile always ~*~" },
   { id: "ankit_bhaiya", presence: "offline", message: "Prison Brake S3 anyone??" },
+  { id: "lonely_raj_143", presence: "online", message: "", stranger: true },
 ];
 
 /** Priya from tuition: they've never really talked. She's online "till 6". */
@@ -264,7 +271,41 @@ const sunny: Thread = {
   ],
 };
 
-export const THREADS: Thread[] = [priya, rohan, sunny];
+/**
+ * A stranger, out of nowhere, as one always did on Yaaho!: "asl?" (age, sex,
+ * location). Tell the truth and he's gone; ask first and he's an 18-year-old
+ * girl from Mumbai who wants your number.
+ */
+const stranger: Thread = {
+  buddy: "lonely_raj_143",
+  start: { after: 240 },
+  steps: [
+    { they: "hi" },
+    { wait: 2 },
+    { they: "asl?" },
+    { you: [
+      { say: "16 m ajmer", then: [{ they: "oh m" }, { they: "bye" }] },
+      { say: "pehle tu bata", then: [
+        { they: "18 f mumbai :)" },
+        { you: [
+          { say: "sach me??", then: [{ they: "haan :) apna number do na" }, { you: [
+            { say: "nahi :P", then: [{ they: "ok bye" }] },
+            { say: "pehle tera number", then: [{ they: "lol" }, { they: "bye" }] },
+          ] }] },
+          { say: "jhooth mat bol", then: [{ they: "lol" }, { they: "kaise pata chala" }] },
+        ] },
+      ] },
+      { say: "kaun ho tum??", then: [{ they: "dost banoge?" }, { you: [
+        { say: "nahi", then: [{ they: "ok" }] },
+        { say: "pehle naam batao", then: [{ they: "raj" }, { they: "bye" }] },
+      ] }] },
+    ] },
+    { wait: 2 },
+    { status: "offline" },
+  ],
+};
+
+export const THREADS: Thread[] = [priya, rohan, sunny, stranger];
 
 /** Quick reactions to things you do (not part of a conversation): who says what. */
 export const REACTIONS: Record<string, { buddy: string; says: string }> = {
@@ -272,4 +313,13 @@ export const REACTIONS: Record<string, { buddy: string; says: string }> = {
   "wrongFile:sunny_4_six": { buddy: "sunny_4_six", says: "ye kya bheja?" },
   wrongPhoto: { buddy: "rohan_rockstar", says: "ye kaunsi photo hai lol. team wali bhej na" },
   testimonial: { buddy: "priya_cute_angel", says: "testimonial?!?! :) :) thanks!!!" },
+  // scraps on Yorkut, and posts in its communities (sites/yorkut.ts): whoever's online notices
+  "scrap:sunny": { buddy: "sunny_4_six", says: "lol scrap mila. yahan bhi baat kar sakta hai :P" },
+  "scrap:rohan": { buddy: "rohan_rockstar", says: "scrap kyu bhej raha hai, yahin baat kar na :P" },
+  "scrap:vicky": { buddy: "vicky_the_rocker", says: "thanks bro \\m/" },
+  "post:dmgy": { buddy: "priya_cute_angel", says: "tum bhi DMGY community me ho?? :P maine dekha" },
+  // the match on Rediffit (cricket.ts): Sunny's watching it too
+  cricketSix: { buddy: "sunny_4_six", says: "SIXERRR!!!! dekha?? rediffit pe score dekh" },
+  cricketWicket: { buddy: "sunny_4_six", says: "OUT!!! ab to gaye :(" },
+  cricketOver: { buddy: "sunny_4_six", says: "JEET GAYEEE!!!!! last over me!!! INDIA INDIA" },
 };

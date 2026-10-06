@@ -19,6 +19,7 @@ export const ICONS = {
   file: "linear-gradient(90deg, #fff 80%, #ccc 80%)",
   paint: "conic-gradient(#e53935 0 25%, #fdd835 0 50%, #43a047 0 75%, #1e88e5 0)",
   game: "linear-gradient(135deg, #2e7d32 50%, #c62828 50%)",
+  mines: "radial-gradient(circle at 50% 55%, #222 30%, transparent 31%), linear-gradient(#c0c0c0, #c0c0c0)",
   control: "linear-gradient(#90caf9 50%, #6d8faf 50%)",
   logoff: "radial-gradient(circle, #f2c542 55%, #b8860b 56%)",
   power: "radial-gradient(circle, #e74c3c 55%, #8e1f14 56%)",

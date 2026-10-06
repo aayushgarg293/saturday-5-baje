@@ -1,9 +1,11 @@
 import type { AudioEngine } from "../audio/engine";
 import { YOUR_BOOTH } from "../world/cafe/plan";
 import { ICONS, messageBox, openFolder, openMyComputer, openMyDocuments, openRecycleBin } from "./apps/basic";
+import { openMinesweeper } from "./apps/minesweeper";
 import { Xplorer } from "./apps/xplorer";
 import { Yaaho } from "./apps/yaaho";
 import { CafeTimer } from "./cafeTimer";
+import { MATCH } from "./cricket";
 import { Files } from "./files";
 import { type Kit, Tasks } from "./kit";
 import { type DesktopSounds, desktopSounds } from "./sounds";
@@ -92,11 +94,22 @@ export class Desktop {
       },
     };
     this.yaaho = new Yaaho(this.kit);
+    // the match on Rediffit (cricket.ts): the story hears of the first six, the first wicket, and
+    // the result (Sunny shouts about each on Yaaho!: story.ts, REACTIONS)
+    const heard = new Set<string>();
+    MATCH.onBall.add((b) => {
+      const event = MATCH.score.result ? "cricketOver" : b.runs === 6 ? "cricketSix" : b.out ? "cricketWicket" : null;
+      if (event && !heard.has(event)) {
+        heard.add(event);
+        this.kit.tasks.complete(event);
+      }
+    });
     this.xplorer = new Xplorer(this.kit);
     this.addApp("computer", "My Computer", ICONS.computer, () => openMyComputer(this.kit));
     this.addApp("documents", "My Documents", ICONS.documents, () => openMyDocuments(this.kit));
     this.addApp("xplorer", "Internet Xplorer", ICONS.xplorer, () => this.xplorer.open());
     this.addApp("yaaho", "Yaaho! Messenger", ICONS.yaaho, () => this.yaaho.openList());
+    this.addApp("minesweeper", "Minesweeper", ICONS.mines, () => openMinesweeper(this.kit));
     this.addApp("recycle", "Recycle Bin", ICONS.recycle, () => openRecycleBin(this.windows));
 
     // the taskbar: start, the open windows, the tray (the time)
@@ -171,6 +184,7 @@ export class Desktop {
   update(dt: number) {
     if (!this.isOpen) return;
     this.yaaho.update(dt);
+    MATCH.update(dt);
     for (const fn of this.tickers) fn(dt);
   }
 
@@ -261,7 +275,7 @@ export class Desktop {
       item(ICONS.yaaho, "Yaaho! Messenger", byName("yaaho")),
       item(ICONS.paint, "Paint", denied),
       item(ICONS.game, "Solitaire", denied),
-      item(ICONS.game, "Minesweeper", denied),
+      item(ICONS.mines, "Minesweeper", byName("minesweeper")),
     );
     right.append(
       item(ICONS.documents, "My Documents", byName("documents")),
