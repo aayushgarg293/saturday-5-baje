@@ -43,7 +43,12 @@ export type Outfit = {
   feet: "chappals" | "shoes" | "barefoot";
 };
 
-export type HairStyle = "short" | "receding" | "kid" | "bun" | "braid";
+/**
+ * Hair. Besides everyone's usual styles, your own at the saloon
+ * (activities/haircut.ts): "shaggy" (overgrown: due for a cut), "crop" (short
+ * at the sides), and "long" (to the collar: the cricket captain's, that year).
+ */
+export type HairStyle = "short" | "receding" | "kid" | "bun" | "braid" | "shaggy" | "crop" | "long";
 
 /** What the body builder needs to add shapes (see body.ts). */
 export type Kit = {
@@ -289,6 +294,23 @@ export function hair(kit: Kit, style: HairStyle, colour: number) {
     case "kid":
       cap(1.25, -0.15);
       back(1.05);
+      break;
+    case "shaggy":
+      // overgrown: fuller all round, a fringe falling over the forehead, over the ears
+      cap(1.32, -0.3);
+      back(1.2);
+      p.add(new THREE.SphereGeometry(rad * 0.55, 12, 8).scale(sc.x * 1.6, sc.y * 0.5, sc.z * 0.8), c.x, c.y + rad * 0.55, c.z + rad * 0.62, colour);
+      break;
+    case "crop":
+      // short at the sides and back, a little longer on top
+      cap(1.05, -0.2);
+      back(0.8);
+      break;
+    case "long":
+      // to the collar, all round, a fringe swept to one side
+      cap(1.36, -0.25);
+      back(1.55);
+      p.add(new THREE.SphereGeometry(rad * 0.5, 12, 8).scale(sc.x * 1.4, sc.y * 0.45, sc.z * 0.7), c.x + rad * 0.2, c.y + rad * 0.6, c.z + rad * 0.6, colour);
       break;
     case "bun":
     case "braid":

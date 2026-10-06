@@ -9,7 +9,7 @@ import { buildChaiwala } from "./chaiwala";
 import { buildCricket } from "./cricket";
 import { buildDevotee } from "./devotee";
 import { buildPco } from "./pco";
-import { buildSaloon } from "./saloon";
+import { type Saloon, buildSaloon } from "./saloon";
 import { type GolgappaCrew, golgappaCrew, iceGolaCrew, jalebiCrew, kachoriCrew } from "./sellers";
 import { buildShopkeeper } from "./shopkeepers";
 import { buildTailor } from "./tailor";
@@ -41,6 +41,8 @@ export type Crowd = {
   update(t: number, dt: number, player: THREE.Vector3): void;
   /** The golgappa cart, which can also serve you (activities/paniPuri.ts). */
   golgappa: GolgappaCrew;
+  /** The saloon, whose chair can be yours (activities/haircut.ts). */
+  saloon: Saloon;
 };
 
 /** `spots`: the places the buildings offer for people (world/street.ts), south to north. */
@@ -77,7 +79,8 @@ export function buildCrowd(spots: WorldPeopleSpot[]): Crowd {
   // the old woman at the temple
   for (const spot of spots.filter((s) => s.kind === "temple")) groups.push(buildDevotee(spot, rng));
   // the saloon: a barber at work on a customer
-  for (const spot of spots.filter((s) => s.kind === "saloon")) groups.push(buildSaloon(spot));
+  let saloon: Saloon | null = null;
+  for (const spot of spots.filter((s) => s.kind === "saloon")) groups.push((saloon = buildSaloon(spot)));
   // the tailor at his sewing machine
   for (const spot of spots.filter((s) => s.kind === "tailor")) groups.push(buildTailor(spot));
   // the STD booth under the cafe: a caller in cabin 1, a man waiting, the owner at the counter
@@ -105,6 +108,7 @@ export function buildCrowd(spots: WorldPeopleSpot[]): Crowd {
   return {
     group,
     golgappa: golgappa!,
+    saloon: saloon!,
     colliders: bodies.colliders,
     update(t, dt, player) {
       groups.forEach((g, i) => {

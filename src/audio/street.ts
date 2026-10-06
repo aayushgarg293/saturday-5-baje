@@ -3,7 +3,7 @@ import { type Cue, onCue } from "../core/cues";
 import { SLOTS } from "../world/layout";
 import { placeOnStreet } from "../world/props/batch";
 import type { AudioEngine } from "./engine";
-import { type Ctx, filter, gain, noiseSource, rand } from "./synth";
+import { type Ctx, envelope, filter, gain, noiseSource, rand, stopAt } from "./synth";
 
 /**
  * Sounds that belong to things in the street, played where they happen:
@@ -59,6 +59,8 @@ export class StreetSounds {
       case "ballBounce": return ballBounce(this.ctx, out(1.5, 0.1), t);
       case "glassClink": return glassClink(this.ctx, out(1.2, 0.1), t);
       case "cycleBell": return cycleBell(this.ctx, out(2, 0.15), t);
+      // (a small sound: heard in the saloon and just outside it, not across the street)
+      case "snip": return snip(this.ctx, this.engine.place("street", where.x, where.y, where.z, 0.8, 0.05, 6), t);
     }
   }
 
@@ -173,6 +175,20 @@ function ballBounce(ctx: Ctx, out: AudioNode, t: number) {
 function glassClink(ctx: Ctx, out: AudioNode, t: number) {
   const f = rand(2900, 3300);
   partials(ctx, out, t, [[f, 1, 0.25], [f * 1.52, 0.5, 0.15], [f * 2.36, 0.25, 0.1]], 0.18);
+}
+
+/**
+ * The barber's scissors: the blades sliding over each other (a quick bright
+ * "shk" of noise), and the little metal tick as they close.
+ */
+function snip(ctx: Ctx, out: AudioNode, t: number) {
+  const slide = noiseSource(ctx, "white");
+  const level = gain(ctx, 0);
+  slide.connect(filter(ctx, "highpass", 3800)).connect(filter(ctx, "bandpass", rand(6500, 7800), 1.6)).connect(level).connect(out);
+  const end = envelope(level.gain, t, rand(0.22, 0.3), 0.012, 0.03, 0.03);
+  slide.start(t, rand(0, 1));
+  stopAt(end, slide);
+  partials(ctx, out, t + 0.05, [[rand(3100, 3400), 1, 0.04], [5200, 0.5, 0.025]], 0.07);
 }
 
 /**

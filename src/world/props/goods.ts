@@ -260,6 +260,9 @@ const BANGLES = [0xc62f2a, 0x2e7d32, 0xf2c81f, 0x1565c0, 0x8e24aa, 0xd4a017, 0xe
  * the left-hand side wall (x0), halfway back. `turn` faces −x (the mirror).
  * (world/buildings/shop.ts puts the barber and customer here: people/saloon.ts.)
  */
+/** The height of the middle of the saloon's mirror, above the shop floor. */
+export const SALOON_MIRROR_Y = 1.4;
+
 export function saloonChair(room: { x0: number; face: number; back: number }) {
   return { x: room.x0 + 0.95, z: (room.face + room.back) / 2 + 0.1, turn: -Math.PI / 2 };
 }
@@ -271,12 +274,13 @@ function saloon(c: BuildContext, room: ShopRoom) {
   const f = room.floor;
   // the mirror: a wooden frame, the glass (a pale, cool grey: it "reflects" the light)
   const mz = chair.z;
-  p.box(0.03, 1.2, 1.1, room.x0 + 0.015, f + 1.55, mz, PAL.wood);
-  p.box(0.01, 1.08, 0.98, room.x0 + 0.035, f + 1.55, mz, 0xc9d6de);
+  // (hung low enough that someone in the chair sees himself in it: people/saloon.ts reflects in it)
+  p.box(0.03, 1.2, 1.1, room.x0 + 0.015, f + SALOON_MIRROR_Y, mz, PAL.wood);
+  p.box(0.01, 1.08, 0.98, room.x0 + 0.035, f + SALOON_MIRROR_Y, mz, 0xc9d6de);
   // the ledge under it, with the barber's things: bottles, a tin of powder, a steel bowl
-  p.box(0.16, 0.03, 1.1, room.x0 + 0.08, f + 0.95, mz, PAL.wood);
+  p.box(0.16, 0.03, 1.1, room.x0 + 0.08, f + 0.78, mz, PAL.wood);
   const things: [number, number, number, number][] = [[-0.4, 0.2, 0.03, 0x1f5f3a], [-0.3, 0.16, 0.028, 0xc62f2a], [-0.2, 0.22, 0.025, 0xf4efe2], [0.25, 0.08, 0.05, 0xb9bcc0], [0.38, 0.14, 0.03, 0xe8c24a]];
-  for (const [dz, h, r, colour] of things) p.cylinder(r, r, h, room.x0 + 0.08, f + 0.965 + h / 2, mz + dz, colour, { segments: 8 });
+  for (const [dz, h, r, colour] of things) p.cylinder(r, r, h, room.x0 + 0.08, f + 0.795 + h / 2, mz + dz, colour, { segments: 8 });
   // the chair: a chrome pedestal and footrest, a red seat, back and armrests, a headrest
   const cx = chair.x, cz = chair.z;
   p.cylinder(0.24, 0.26, 0.05, cx, f + 0.025, cz, 0xb9bcc0, { segments: 14 });

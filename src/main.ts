@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { Haircut } from "./activities/haircut";
 import { PaniPuri } from "./activities/paniPuri";
 import { Bed } from "./audio/bed";
 import { CafeSounds } from "./audio/cafe";
@@ -98,6 +99,8 @@ const gameClock = new GameClock();
 const seat = new Seat(camera, player, input, yourSeat(street.cafeFrame));
 // eating pani puri at the golgappa cart (activities/paniPuri.ts)
 const paniPuri = new PaniPuri(camera, player, input, life.golgappa, scene);
+// a haircut at the saloon (activities/haircut.ts)
+const haircut = new Haircut(camera, player, input, life.saloon.you);
 seat.onSit = () => {
   // the first time you sit down, the computer dials up (and every time, it's connected after; not after logging off)
   if (loggedOff) return;
@@ -218,9 +221,11 @@ window.addEventListener("keydown", (e) => {
   if (e.code === "KeyM" && !desktop.isOpen) audio.toggleMute();
   if (!input.locked || e.repeat) return;
   if (paniPuri.key(e.code)) return; // (at the golgappa cart, the keys are for eating)
+  if (haircut.key(e.code)) return; // (in the barber's chair, the keys are for the barber)
   // E: sit down at your computer, or get up; T: look up at the clock
   if (e.code === "KeyE") {
     if (paniPuri.canStart()) paniPuri.start();
+    else if (haircut.canStart()) haircut.start();
     else if (canGoHome()) goHome();
     else if (canPay()) pay();
     else if (seat.seated) seat.standUp();
@@ -255,6 +260,7 @@ function update(dt: number) {
   stopAtTheStairs();
   seat.update(dt); // (after the player: when seated, the seat has the camera)
   paniPuri.update(dt); // (at the cart, it has the camera)
+  haircut.update(dt); // (in the barber's chair, it has the camera)
   life.update(time, dt, player.pos);
   cafeRoom.update(dt);
   shopFans.update(dt);
@@ -295,6 +301,7 @@ function prompt(): string | null {
   if (ended) return null;
   if (desktop.isOpen || seat.leaned) return null;
   if (paniPuri.active) return paniPuri.prompt();
+  if (haircut.active || haircut.canStart()) return haircut.prompt();
   if (paniPuri.canStart()) return "[E] pani puri khao (₹10 mein 6)";
   if (!input.locked && seat.seated) return "[Click] to look around again";
   if (seat.seated && loggedOff) return paid ? "[E] get up" : `[E] get up    (₹${charge(visitMinutes)} to pay at the counter)`;

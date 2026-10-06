@@ -19,6 +19,7 @@ export type Cue =
   | "ballBounce" // the ball bouncing
   | "glassClink" // a chai glass set down, or knocked by the pan as he pours
   | "cycleBell" // the doodhwala's bicycle bell
+  | "snip" // the barber's scissors closing
   | "keyClick" // a key pressed, in the cafe
   | "mouseClick" // a mouse button clicked, in the cafe
   | "modem"; // your computer's dial-up modem connecting
