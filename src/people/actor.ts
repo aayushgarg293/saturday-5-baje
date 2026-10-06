@@ -133,7 +133,7 @@ export function makeActor(spec: ActorSpec): Actor {
       const hips = person.bone("hips");
       const breath = Math.sin(t * 1.7 + (spec.phase ?? 0)) * 0.012;
       if (spec.seat !== undefined) {
-        hips.position.set(0, spec.seat + 0.1 * k, 0);
+        hips.position.set(0, spec.seat + person.seatDrop, 0); // (on the seat, not sunk into it: body.ts, seatDrop)
         hips.rotation.set(-0.08, 0, 0); // sitting back a little
       } else {
         // weight shifting slowly from hip to hip; the spine leans back the other way

@@ -66,7 +66,8 @@ export function buildMohallaPeople(): MohallaPeople {
 
   // --- the old men on the chabutra -------------------------------------------------------------------
   // two on its east side, facing the lane you come in by (+x: a quarter turn)
-  const east = (dz: number) => ({ x: CHABUTRA.x + CHABUTRA.half - 0.3, z: CHABUTRA.z + dz, turn: Math.PI / 2 });
+  // (right at its edge: it's knee-high, and sitting further back, their legs went down through its corner)
+  const east = (dz: number) => ({ x: CHABUTRA.x + CHABUTRA.half - 0.12, z: CHABUTRA.z + dz, turn: Math.PI / 2 });
   actors.push(makeActor({
     person: person("uncle", true), at: east(-0.45), seat, notice: "glance", phase: 0,
     actions: [
@@ -93,7 +94,7 @@ export function buildMohallaPeople(): MohallaPeople {
   actors.push(listener);
   // on the north side, facing north (−z): telling his beads, eyes closed
   actors.push(makeActor({
-    person: person("uncle", true), at: { x: CHABUTRA.x + 0.6, z: CHABUTRA.z - CHABUTRA.half + 0.3, turn: Math.PI }, seat, notice: "none", phase: 1,
+    person: person("uncle", true), at: { x: CHABUTRA.x + 0.6, z: CHABUTRA.z - CHABUTRA.half + 0.12, turn: Math.PI }, seat, notice: "none", phase: 1,
     actions: [{ name: "beads", duration: 8, pose: (u) => ({ right: v(-0.05, 0.92 + (u % 1) * 0.03, 0.3), left: v(0.06, 0.88, 0.3), look: v(0, 0.9, 0.5), nod: 0.25, closed: true }) }],
   }));
 

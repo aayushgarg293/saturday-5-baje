@@ -41,6 +41,13 @@ export type Person = {
   face: Face;
   /** Height scale (1 = an adult man of about 1.68 m). */
   scale: number;
+  /**
+   * Sitting, how far below the hip joint the body's underside reaches (the
+   * seat of the pelvis, or loose trousers, a dhoti, a skirt over the thighs):
+   * a seated actor's hips go this far above the seat, so they sit ON it.
+   * (They were put a fixed 10 cm up once, and sank into their chairs.)
+   */
+  seatDrop: number;
 };
 
 const HEAD_R = 0.122; // a touch large, for the stylised look
@@ -158,5 +165,7 @@ export function buildPerson(r: PersonRecipe): Person {
 
   const root = new THREE.Group();
   root.add(mesh);
-  return { root, mesh, bones, bone: (name) => bones[J[name]], face, scale: k };
+  // (the pelvis: its blob's bottom; the thighs: from the hip joints, 4 cm below, down their tube's radius)
+  const seatDrop = Math.max(0.01 + 0.15 * 0.82, 0.04 + 0.072 * cover.loose) * k;
+  return { root, mesh, bones, bone: (name) => bones[J[name]], face, scale: k, seatDrop };
 }

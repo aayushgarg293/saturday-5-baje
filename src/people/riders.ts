@@ -105,9 +105,8 @@ export function buildRiders(kind: VehicleKind, ride: Ride, rng: Rng): Riders {
 
       for (const s of seats) {
         const { person, ride: r } = s;
-        const k = person.scale;
         // the body: on the seat (or standing), leaning into the ride, breathing
-        if (!s.standing) person.bone("hips").position.set(0, r.seat.y + 0.1 * k, 0);
+        if (!s.standing) person.bone("hips").position.set(0, r.seat.y + person.seatDrop, 0); // (on the seat: body.ts, seatDrop)
         person.bone("spine").rotation.set(r.lean * 0.4 + Math.sin(t * 1.7) * 0.012, 0, 0);
         person.bone("chest").rotation.set(r.lean * 0.6, 0, 0);
         person.root.updateMatrixWorld(true);

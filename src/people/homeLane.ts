@@ -51,7 +51,7 @@ export function buildHomeLanePeople(): HomeLanePeople {
   };
   group.add(mesh(c, "charpai"));
   const plate = mesh(thali, "thaliOfPeas");
-  plate.position.set(0.3, 0.72, -0.05);
+  plate.position.set(0.3, 0.72, -0.55);
   group.add(plate);
 
   // --- the amma: on the charpai's edge, facing the lane (north: −z) ---------------------------------------------
@@ -63,7 +63,8 @@ export function buildHomeLanePeople(): HomeLanePeople {
   group.add(amma.root);
   const lap = v(0, 0.66, 0.32);
   const actor = makeActor({
-    person: amma, at: { x: 0.3, z: 0.1, turn: Math.PI }, seat: 0.45, notice: "greet", phase: 0,
+    // (on its front edge, her feet on the ground in front: sitting in the middle, they went through the charpai)
+    person: amma, at: { x: 0.3, z: -0.42 + 0.16, turn: Math.PI }, seat: 0.45, notice: "greet", phase: 0,
     actions: [
       { name: "shell", duration: 8, pose: (u) => ({ right: v(-0.06 + Math.sin(u * 5) * 0.03, 0.72, 0.3), left: v(0.07, 0.72 + Math.abs(Math.sin(u * 5)) * 0.02, 0.32), look: lap, nod: 0.3, lean: 0.15 }) },
       { name: "look", duration: 4, pose: () => ({ right: v(-0.08, 0.7, 0.3), left: v(0.08, 0.7, 0.3), look: v(-2.5, 1.3, 5), lean: 0.05 }) },
