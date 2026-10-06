@@ -143,6 +143,12 @@ export function buildPerson(r: PersonRecipe): Person {
   mesh.receiveShadow = true;
   mesh.add(bones[0]);
   mesh.bind(new THREE.Skeleton(bones));
+  // What the renderer checks to skip people out of view: a sphere round them. Three.js would
+  // work it out once, from whatever pose the body happens to be in at that moment, and never
+  // again: if that was a bad moment, the body was skipped when it was in view and only the
+  // face (a separate mesh, with its own sphere) was drawn: a walking head. So: a fixed sphere,
+  // big enough for any pose (standing, sitting up high, arms raised, bent over).
+  mesh.boundingSphere = new THREE.Sphere(new THREE.Vector3(0, 0.95 * k, 0), 1.35 * k);
 
   // the face shell rides on the head joint
   const face = faceMesh(r.face, headR);
