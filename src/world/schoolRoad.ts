@@ -152,7 +152,7 @@ export const CRICKET_BOX = { x0: laneStart.x + BAZAAR_BACK + 6, x1: SCHOOL.x - S
 /** School road and the cricket lane, drawn only near (world/areas.ts adds these to town.ts's AREAS). */
 export const SCHOOL_AREAS: AreaSpec[] = [
   // school road: seen from the bus stand down its length, and from the end of the cricket lane
-  { name: "school road", box: SCHOOL_BOX, reach: 25 },
+  { name: "school road", box: SCHOOL_BOX, reach: 80 },
   // the cricket lane: from the bazaar, only through the gali, when you're near it
-  { name: "cricket lane", box: CRICKET_BOX, reach: 20 },
+  { name: "cricket lane", box: CRICKET_BOX, reach: 70 },
 ];

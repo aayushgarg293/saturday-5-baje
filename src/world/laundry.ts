@@ -50,7 +50,12 @@ const SHEET = { w: 1024, h: 512, cols: 4, rows: 2 };
 
 export type Laundry = { group: THREE.Group; update(t: number): void };
 
-export function buildLaundry(lines: WorldLine[]): Laundry {
+/**
+ * `include`: which of the lines to build here (main.ts builds the town's washing one batch per part of
+ * the town). Every line's random choices are still made, in order, so each piece of washing is the
+ * same whichever batch it's in.
+ */
+export function buildLaundry(lines: WorldLine[], include: (line: WorldLine) => boolean = () => true): Laundry {
   const rng = makeRng(5151);
   const group = new THREE.Group();
   group.name = "laundry";
@@ -69,6 +74,7 @@ export function buildLaundry(lines: WorldLine[]): Laundry {
 
   for (const line of lines) {
     const rail = line.kind === "rail";
+    const keep = include(line);
     if (rng.next() * 100 >= (rail ? USED.rail : USED.roof)) continue;
     const length = line.a.distanceTo(line.b);
     const along = line.b.clone().sub(line.a).normalize();
@@ -80,17 +86,19 @@ export function buildLaundry(lines: WorldLine[]): Laundry {
       const size = KINDS[kind];
       const w = size.w * rng.range(0.9, 1.08);
       if (d + w > stop) break;
-      pieces.push({
+      // (its random choices are made whether it's kept in this batch or not: every batch makes them all, in order)
+      const piece: Piece = {
         kind, w, h: rail ? Math.min(size.h, RAIL_DROP) : size.h,
         at: line.a.clone().addScaledVector(along, d + w / 2),
         turn: line.rotationY, colour: rng.pick(size.colours),
         // up on the roofs the breeze is stronger; a big saree or sheet swings less
         swing: (rail ? 0.03 : 0.1) * (w > 1 ? 0.5 : 1) * rng.range(0.7, 1.3),
         speed: rng.range(1.4, 2.2), phase: rng.range(0, Math.PI * 2), rail,
-      });
+      };
+      if (keep) pieces.push(piece);
       d += w + rng.range(0.06, 0.3);
     }
-    if (!rail) {
+    if (!rail && keep) {
       // the line: a bamboo pole at each end, the rope between (only for lines with washing on)
       roofLines++;
       for (const end of [line.a, line.b]) poles.strut({ x: end.x, y: end.y - 2.0, z: end.z }, { x: end.x, y: end.y + 0.12, z: end.z }, 0.025, 0x9a7a4a);
@@ -102,7 +110,7 @@ export function buildLaundry(lines: WorldLine[]): Laundry {
   // --- the washing: one square, many copies ------------------------------------------------
   const square = new THREE.PlaneGeometry(1, 1).translate(0, -0.5, 0); // (hangs from the middle of its top edge)
   // which picture each copy shows: where it is on the sheet (left, bottom, width, height)
-  const cell = new Float32Array(pieces.length * 4);
+  const cell = new Float32Array(Math.max(1, pieces.length) * 4);
   pieces.forEach((pc, i) => {
     const k = ORDER.indexOf(pc.kind);
     const col = k % SHEET.cols, row = Math.floor(k / SHEET.cols);
@@ -110,10 +118,11 @@ export function buildLaundry(lines: WorldLine[]): Laundry {
   });
   square.setAttribute("aCell", new THREE.InstancedBufferAttribute(cell, 4));
 
-  const material = toon({ color: 0xffffff, map: paintSheet(), alphaTest: 0.5, paint: 0.5 });
+  const material = toon({ color: 0xffffff, map: sheet(), alphaTest: 0.5, paint: 0.5 });
   material.side = THREE.DoubleSide;
   showOwnPicture(material);
-  const mesh = new THREE.InstancedMesh(square, material, pieces.length);
+  const mesh = new THREE.InstancedMesh(square, material, Math.max(1, pieces.length));
+  mesh.count = pieces.length; // (a batch can have no washing out at all)
   mesh.name = "washing";
   mesh.receiveShadow = true;
   mesh.frustumCulled = false; // (its copies are spread along the whole street)
@@ -159,6 +168,10 @@ function showOwnPicture(material: THREE.MeshToonMaterial) {
 }
 
 // --- the pictures ------------------------------------------------------------------------------
+
+/** Painted once and shared: the town's extras are built in batches, one per part of the town (main.ts). */
+let painted: THREE.CanvasTexture | null = null;
+const sheet = () => (painted ??= paintSheet());
 
 /** White cloth, grey folds and seams: the tint gives each piece its colour. */
 const CLOTH = "#ffffff", FOLD = "rgba(0, 0, 0, 0.13)", SEAM = "rgba(0, 0, 0, 0.3)", PEG = "#8a6a45";

@@ -74,28 +74,70 @@ const wires = buildWires();
 const sky = buildSky();
 const backdrop = buildBackdrop();
 const life = buildLife(street.people, [...street.colliders, ...wires.colliders]);
-const evening = buildEvening([...street.lamps, ...life.lamps, ...wires.lamps]);
 const cafeRoom = buildRoom(street.cafeFrame);
 const cafePeople = buildCafePeople(street.cafeFrame, makeRng(2007));
 const yourScreen = buildYourScreen(street.cafeFrame);
-scene.add(cafeRoom.group, cafePeople.group, yourScreen.mesh, evening.group);
+scene.add(cafeRoom.group, cafePeople.group, yourScreen.mesh);
 const ownerScreen = buildOwnerScreen(street.cafeFrame); // (the cafe software on the owner's CRT)
 scene.add(ownerScreen.mesh);
-const wallArt = buildWallArt(street.murals); // (painted ads, warnings and chalk by the galis: one mesh)
-if (wallArt) scene.add(wallArt);
-const labels = buildLabels(street.labels); // (the shops' goods, printed: one mesh)
-if (labels) scene.add(labels);
-const nameplates = buildNameplates(street.plates); // (the houses' nameplates and blessings: one mesh)
-if (nameplates) scene.add(nameplates);
-const shopFans = buildFans(street.fans); // (the shops' ceiling fans, turning: one mesh)
-const laundry = buildLaundry(street.lines); // (washing on the balconies and roofs, swaying: one mesh, and the roof lines)
-scene.add(shopFans.mesh, laundry.group);
 const signs = buildSigns([...street.signs, ...life.signs, ...wires.signs, ...pcoSigns(street.cafeFrame), ...street.townSigns]);
 scene.add(sky.group, street.group, life.group, signs, wires.group, backdrop.group);
-// only drawing what's near (world/areas.ts): the town's buildings, its signs, its people, sorted once by where they are
+
+// only drawing what's near (world/areas.ts): each part of the town shown only within reach of it. Sorted
+// once, by where things are: the buildings, their signs, the people (the crowd's groups), the animals
 const areas = buildAreas();
 areas.assign([...street.group.children, ...signs.children]);
-for (const name of ["courtPeople", "busStandPeople", "construction", "mohallaPeople", "stationPeople", "schoolRoadPeople", "tuitionPeople", "homeLanePeople"]) areas.assign([scene.getObjectByName(name)!]);
+for (const child of life.group.children) {
+  if (child.name === "crowd") areas.assign(child.children);
+  // (the stalls and parked vehicles, their plates, the moving traffic and the walkers are each one thing
+  // spread along the bazaar: they go with it)
+  else if (child.position.lengthSq() === 0) areas.add("bazaar", child);
+  else areas.assign([child]);
+}
+areas.add("bazaar", wires.group); // (the bazaar's poles and wires, one mesh)
+
+// What's along the buildings but drawn apart from them: built one batch per part of the town, so each is
+// shown and hidden with its buildings (one batch for the whole town, the washing hung in the air while
+// its building was hidden).
+// (the washing, the fans and the lights make random choices as they go, and the nameplates and wall
+// paintings are dealt out in turn: each batch is built from the whole list, keeping only its own, so
+// every one comes out as it always did)
+const allLamps = [...street.lamps, ...life.lamps, ...wires.lamps];
+const evenings = areas.split(allLamps, (l) => l.position).map(([area, lamps]) => {
+  const mine = new Set(lamps);
+  const e = buildEvening(allLamps, (l) => mine.has(l)); // (the lights that come on at dusk)
+  scene.add(e.group);
+  areas.add(area, e.group);
+  return e;
+});
+for (const [area, murals] of areas.split(street.murals, (m) => m.position)) {
+  const mine = new Set(murals);
+  const mesh = buildWallArt(street.murals, (m) => mine.has(m)); // (painted ads, warnings and chalk by the galis)
+  if (mesh) { scene.add(mesh); areas.add(area, mesh); }
+}
+for (const [area, spots] of areas.split(street.labels, (l) => l.position)) {
+  const mesh = buildLabels(spots); // (the shops' goods, printed)
+  if (mesh) { scene.add(mesh); areas.add(area, mesh); }
+}
+for (const [area, plates] of areas.split(street.plates, (pl) => pl.position)) {
+  const mine = new Set(plates);
+  const mesh = buildNameplates(street.plates, (pl) => mine.has(pl)); // (the houses' nameplates and blessings)
+  if (mesh) { scene.add(mesh); areas.add(area, mesh); }
+}
+const shopFans = areas.split(street.fans, (f) => f.position).map(([area, fans]) => {
+  const mine = new Set(fans);
+  const f = buildFans(street.fans, (fan) => mine.has(fan)); // (the shops' ceiling fans, turning)
+  scene.add(f.mesh);
+  areas.add(area, f.mesh);
+  return f;
+});
+const laundry = areas.split(street.lines, (line) => line.a).map(([area, lines]) => {
+  const mine = new Set(lines);
+  const l = buildLaundry(street.lines, (line) => mine.has(line)); // (washing on the balconies and roofs, swaying, and the roof lines)
+  scene.add(l.group);
+  areas.add(area, l.group);
+  return l;
+});
 
 // --- the player ----------------------------------------------------------------
 const input = new Input(canvas);
@@ -281,8 +323,8 @@ function update(dt: number) {
   areas.update(player.pos); // (show the parts of the town you're near)
   life.update(time, dt, player.pos);
   cafeRoom.update(dt);
-  shopFans.update(dt);
-  laundry.update(time);
+  for (const f of shopFans) f.update(dt);
+  for (const l of laundry) l.update(time);
   cafeRoom.setClock(gameClock.hours, gameClock.minute);
   street.chowk.setClock(gameClock.hours, gameClock.minute); // (the clock tower keeps the same time)
   yourScreen.update(dt, gameClock.label());
@@ -311,7 +353,7 @@ function applyTimeOfDay() {
   backdrop.setLook(look);
   (scene.fog as THREE.Fog).color.copy(look.haze);
   pipeline.setGrade(look);
-  evening.update(gameClock.minutes, look.evening, time);
+  for (const e of evenings) e.update(gameClock.minutes, look.evening, time);
   // once the sun is down its shadows can't be seen: stop redrawing them
   renderer.shadowMap.autoUpdate = lights.shadowsVisible;
 }

@@ -34,6 +34,10 @@ const MURALS: Mural[] = [
   { kind: "chalk", draw: "names" },
 ];
 
+/** Painted once and shared: the town's extras are built in batches, one per part of the town (main.ts). */
+let painted: THREE.CanvasTexture | null = null;
+const sheet = () => (painted ??= paintSheet());
+
 /** A painted piece's place: on a side wall, facing into the gali or road. */
 export type WorldMural = { position: THREE.Vector3; rotationY: number; w: number; h: number };
 
@@ -157,9 +161,10 @@ function paint(ctx: CanvasRenderingContext2D, w: number, h: number, m: Mural, se
 }
 
 /** Every painted piece, as one mesh (pieces handed out in turn). */
-export function buildWallArt(spots: WorldMural[]): THREE.Mesh | null {
-  if (!spots.length) return null;
+/** `include`: which to build here (one batch per part of the town: main.ts); the pictures are still dealt over them all, in turn, so each wall keeps its own. */
+export function buildWallArt(spots: WorldMural[], include: (mural: WorldMural) => boolean = () => true): THREE.Mesh | null {
   const parts = spots.map((sp, n) => {
+    if (!include(sp)) return null;
     const i = n % MURALS.length;
     const x = (i % SLOT.cols) * SLOT.w, y = Math.floor(i / SLOT.cols) * SLOT.h;
     const g = new THREE.PlaneGeometry(sp.w, sp.h);
@@ -167,8 +172,9 @@ export function buildWallArt(spots: WorldMural[]): THREE.Mesh | null {
     for (let k = 0; k < uv.count; k++) uv.setXY(k, (x + uv.getX(k) * SLOT.w) / SHEET.w, 1 - (y + (1 - uv.getY(k)) * SLOT.h) / SHEET.h);
     g.rotateY(sp.rotationY);
     return g.translate(sp.position.x, sp.position.y, sp.position.z);
-  });
-  const material = toon({ color: 0xffffff, map: paintSheet(), alphaTest: 0.4, paint: 0.4 });
+  }).filter((g) => g !== null);
+  if (!parts.length) return null;
+  const material = toon({ color: 0xffffff, map: sheet(), alphaTest: 0.4, paint: 0.4 });
   material.polygonOffset = true;
   material.polygonOffsetFactor = -1;
   material.polygonOffsetUnits = -2;

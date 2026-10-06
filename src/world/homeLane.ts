@@ -83,7 +83,7 @@ export const HOME_ROWS: { road: Road; plan: RowPlan; seed: number }[] = [
 
 /** Shown only when near (world/areas.ts): the lane, and the tail with its corner. */
 export const HOME_AREAS: AreaSpec[] = [
-  { name: "home lane", box: { x0: 16, x1: SCHOOL.x + SCHOOL.setback + 10, z0: LANE_Z - HALF - 10, z1: LANE_Z + HALF + 10 }, reach: 25 },
+  { name: "home lane", box: { x0: 16, x1: SCHOOL.x + SCHOOL.setback + 10, z0: LANE_Z - HALF - 10, z1: LANE_Z + HALF + 10 }, reach: 80 },
 ];
 
 /** A point in the back lane's new stretch, between the side road and the home lane (for tests and cameras). */

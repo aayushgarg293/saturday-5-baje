@@ -77,9 +77,10 @@ export type Evening = {
   update(minutes: number, evening: number, t: number): void;
 };
 
-export function buildEvening(spots: WorldLamp[]): Evening {
+/** `include`: which lamps to build here (one batch per part of the town: main.ts); every lamp's random choices (and which tube flickers) are still made over them all, in order. */
+export function buildEvening(spots: WorldLamp[], include: (lamp: WorldLamp) => boolean = () => true): Evening {
   const rng = makeRng(1810);
-  const lamps: Lamp[] = spots.map((sp) => {
+  const every: Lamp[] = spots.map((sp) => {
     const kind = sp.pole ? "pole" : sp.kind;
     const colours = COLOUR[sp.kind];
     const [from, spread] = sp.kind === "fire" ? [0, 0] : ON[kind as keyof typeof ON];
@@ -90,8 +91,9 @@ export function buildEvening(spots: WorldLamp[]): Evening {
     return { ...sp, on: sp.always ? 18 * 60 : on, colour, bad: false, flicker, lit: lit || !!sp.always };
   });
   // one tube that never quite settles
-  const tubes = lamps.filter((l) => l.kind === "tube");
+  const tubes = every.filter((l) => l.kind === "tube");
   if (tubes.length) tubes[Math.floor(rng.next() * tubes.length)].bad = true;
+  const lamps = every.filter((_, i) => include(spots[i]));
 
   // --- the four instanced meshes -------------------------------------------------------
   const soft = softTexture();

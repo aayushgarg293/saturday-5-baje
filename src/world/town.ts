@@ -218,7 +218,9 @@ export const BUS_STAND_ROWS: { road: Road; plan: RowPlan; seed: number }[] = [
 /**
  * The parts of the town shown only while you're near them (world/areas.ts):
  * a box on the ground (world x/z) round each, and how near you must be to it
- * (metres) for it to be drawn. Anything outside every box (the bazaar, the
+ * (metres) for it to be drawn: 70–100 m, out in the haze, so you don't see
+ * them come on. (They were 20–25 m once: buildings appeared as you came up,
+ * washing hung in the air before them.) Anything outside every box (the bazaar, the
  * chowk: its tower is seen all the way down the bazaar) is always drawn.
  */
 export type AreaBox = { x0: number; x1: number; z0: number; z1: number };
@@ -234,7 +236,7 @@ const courtStart = COURT_ROAD.pointAt(0, 0);
 export const AREAS: AreaSpec[] = [
   // court road: seen from the chowk, not from the bazaar (the chowk's east edge is in the way). Its box
   // starts 2 m in, so the chowk's own east buildings, whose fronts are on the edge, aren't in it.
-  { name: "court road", box: { x0: courtStart.x + 2, x1: courtStart.x + COURT_ROAD.length, z0: courtStart.z - 20, z1: courtStart.z + 20 }, reach: 25 },
+  { name: "court road", box: { x0: courtStart.x + 2, x1: courtStart.x + COURT_ROAD.length, z0: courtStart.z - 20, z1: courtStart.z + 20 }, reach: 80 },
   // the bus stand: seen all down court road (it closes the view), and from the chowk
   {
     name: "bus stand",
@@ -243,9 +245,9 @@ export const AREAS: AreaSpec[] = [
   },
   // the old mohalla (world/mohalla.ts): seen only down its lanes, and from the bazaar only through the
   // gali, near it. (Its box starts well west of the bazaar's own buildings, whose fronts are what place them.)
-  { name: "mohalla", box: boxAround(MOHALLA_EXTENT, inMohalla), reach: 22 },
+  { name: "mohalla", box: boxAround(MOHALLA_EXTENT, inMohalla), reach: 70 },
   // the way to the station (world/station.ts): round the corner of the north side road's back lane
-  { name: "station", box: boxAround(STATION_EXTENT, inStation), reach: 20 },
+  { name: "station", box: boxAround(STATION_EXTENT, inStation), reach: 70 },
 ];
 
 /** The world box round a stretch of a grid (the mohalla's, the station's: its corners, maybe turned a little). */

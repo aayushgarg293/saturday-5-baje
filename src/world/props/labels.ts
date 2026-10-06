@@ -223,6 +223,10 @@ export type WorldLabel = LabelSpot & { position: THREE.Vector3; rotationY: numbe
 // --- the sheet --------------------------------------------------------------------------------
 
 const SHEET = 2048;
+/** Painted once and shared: the town's extras are built in batches, one per part of the town (main.ts). */
+let painted: THREE.CanvasTexture | null = null;
+const sheet = () => (painted ??= paintSheet());
+
 /** Every product gets a cell: a tall version (96 × 144) and a wide one (144 × 96) side by side; 8 cells across, 14 down. */
 const CELL = { w: 240, h: 144, cols: 8 };
 const TALL = { w: 96, h: 144 }, WIDE = { w: 144, h: 96 };
@@ -351,7 +355,7 @@ export function buildLabels(spots: WorldLabel[]): THREE.Mesh | null {
     return [g.translate(sp.position.x, sp.position.y, sp.position.z)];
   });
   if (!parts.length) return null;
-  const material = toon({ color: 0xffffff, map: paintSheet(), paint: 0.2 });
+  const material = toon({ color: 0xffffff, map: sheet(), paint: 0.2 });
   material.polygonOffset = true;
   material.polygonOffsetFactor = -1;
   material.polygonOffsetUnits = -2;

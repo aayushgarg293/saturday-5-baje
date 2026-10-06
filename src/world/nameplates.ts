@@ -66,6 +66,10 @@ export type WorldPlate = { kind: "name" | "haveli" | "blessing"; position: THREE
 // --- the sheet: every plate painted once ------------------------------------------------------
 
 const SHEET = { w: 2048, h: 1024 };
+/** Painted once and shared: the town's extras are built in batches, one per part of the town (main.ts). */
+let painted: THREE.CanvasTexture | null = null;
+const sheet = () => (painted ??= paintSheet());
+
 /** Nameplates: 256 × 160 each, 8 across; blessings (long and low): 512 × 96, 4 across, below them. */
 const SLOT = { w: 256, h: 160, cols: 8 };
 const LONG = { w: 512, h: 96, cols: 4, top: 4 * 160 };
@@ -231,8 +235,8 @@ function paint(ctx: CanvasRenderingContext2D, w: number, h: number, plate: Plate
 // --- the mesh ------------------------------------------------------------------------------
 
 /** Every plate in the street, as one mesh. Names and blessings are handed out in turn, down the street. */
-export function buildNameplates(spots: WorldPlate[]): THREE.Mesh | null {
-  if (!spots.length) return null;
+/** `include`: which to build here (one batch per part of the town: main.ts); the names are still handed out over them all, in turn, so each house keeps its own. */
+export function buildNameplates(spots: WorldPlate[], include: (plate: WorldPlate) => boolean = () => true): THREE.Mesh | null {
   const turn = { name: 0, haveli: 0, blessing: 0 };
   const parts = spots.map((sp) => {
     // which picture on the sheet
@@ -250,9 +254,10 @@ export function buildNameplates(spots: WorldPlate[]): THREE.Mesh | null {
       uv.setXY(k, (x + uv.getX(k) * w) / SHEET.w, 1 - (y + (1 - uv.getY(k)) * h) / SHEET.h);
     }
     g.rotateY(sp.rotationY);
-    return g.translate(sp.position.x, sp.position.y, sp.position.z);
-  });
-  const material = toon({ color: 0xffffff, map: paintSheet(), alphaTest: 0.4, paint: 0.25 });
+    return include(sp) ? g.translate(sp.position.x, sp.position.y, sp.position.z) : null;
+  }).filter((g) => g !== null);
+  if (!parts.length) return null;
+  const material = toon({ color: 0xffffff, map: sheet(), alphaTest: 0.4, paint: 0.25 });
   material.polygonOffset = true; // (a hair in front of the wall it's on, always)
   material.polygonOffsetFactor = -1;
   material.polygonOffsetUnits = -2;

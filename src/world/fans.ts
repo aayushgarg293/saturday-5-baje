@@ -26,7 +26,8 @@ const OFF = 12;
 
 export type Fans = { mesh: THREE.InstancedMesh; update(dt: number): void };
 
-export function buildFans(spots: WorldFan[]): Fans {
+/** `include`: which fans to build here (one batch per part of the town: main.ts); every fan's random choices are still made, in order. */
+export function buildFans(all: WorldFan[], include: (fan: WorldFan) => boolean = () => true): Fans {
   const rng = makeRng(8181);
   // the shape, built for blades that reach 1 m (each fan is scaled to its own size)
   const p = new Parts();
@@ -39,19 +40,24 @@ export function buildFans(spots: WorldFan[]): Fans {
   }
   const shape = p.build("fan", { smooth: true, castShadow: false });
 
-  const mesh = new THREE.InstancedMesh(shape.geometry, shape.material, spots.length);
-  mesh.name = "shopFans";
-  mesh.receiveShadow = true;
-  mesh.frustumCulled = false; // (its copies are spread along the whole street)
-  const fans = spots.map((sp, i) => {
-    mesh.setColorAt(i, new THREE.Color(rng.pick(COLOURS)));
+  const every = all.map((sp) => {
+    const colour = new THREE.Color(rng.pick(COLOURS));
     return {
+      spot: sp,
+      colour,
       position: sp.position,
       scale: new THREE.Vector3(sp.r, sp.r, sp.r),
       speed: rng.next() * 100 < OFF ? 0 : rng.range(SPEED.min, SPEED.max),
       angle: rng.range(0, Math.PI * 2),
     };
   });
+  const fans = every.filter((f) => include(f.spot));
+  const mesh = new THREE.InstancedMesh(shape.geometry, shape.material, Math.max(1, fans.length));
+  mesh.name = "shopFans";
+  mesh.receiveShadow = true;
+  mesh.frustumCulled = false; // (its copies are spread along the whole street)
+  mesh.count = fans.length;
+  fans.forEach((f, i) => mesh.setColorAt(i, f.colour));
 
   const turn = new THREE.Quaternion();
   const up = new THREE.Vector3(0, 1, 0);
