@@ -15,6 +15,7 @@ import { buildHouse } from "./buildings/house";
 import { buildShop } from "./buildings/shop";
 import { buildTemple } from "./props/temple";
 import { Parts, ribbon } from "./kit";
+import { addRoadPatches } from "./roadPatches";
 import { SHOP_NAMES } from "./names";
 import {
   CAFE, DRAIN, PLOT_DEPTH, ROAD_WIDTH, SIDE_ROADS, STREET_LENGTH,
@@ -381,6 +382,7 @@ function buildGround(): THREE.Mesh {
   const along = (offset: number) => (t: number) => pointAt(t * STREET_LENGTH, offset);
   // road, 1 cm up so it doesn't flicker against the ground ("z-fighting")
   parts.add(ribbon(along(-ROAD_WIDTH / 2), along(ROAD_WIDTH / 2), steps, 0.01), 0, 0, 0, PAL.asphalt);
+  addRoadPatches(parts); // (the mended patches on it: world/roadPatches.ts)
   for (const side of [-1, 1]) {
     // ribbon(left edge, right edge): keep the edges in that order on both sides
     const inner = along(side * DRAIN.inner), outer = along(side * DRAIN.outer);

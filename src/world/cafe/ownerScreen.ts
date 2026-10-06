@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { charge } from "../../desktop/cafeTimer";
 import { flat } from "../../render/toon";
-import { COUNTER, HALL, OWNER_PC_TURN, YOUR_BOOTH } from "./plan";
+import { COUNTER, HALL, OWNER_CRT_LIFT, OWNER_PC_TURN, YOUR_BOOTH } from "./plan";
 
 /**
  * What's on the owner's own screen at the counter: the cafe's management
@@ -47,7 +47,7 @@ export function buildOwnerScreen(frame: THREE.Matrix4): OwnerScreen {
   const toHim = new THREE.Matrix4().makeBasis(new THREE.Vector3(0, 0, 1), new THREE.Vector3(0, 1, 0), new THREE.Vector3(-1, 0, 0));
   mesh.geometry.applyMatrix4(toHim).rotateY(t);
   const front = new THREE.Vector3(-0.1625, 0, 0).applyAxisAngle(new THREE.Vector3(0, 1, 0), t);
-  mesh.position.set(x0 + 0.33 + front.x, HALL.floor + top + 0.21, z0 + 0.35 + front.z);
+  mesh.position.set(x0 + 0.33 + front.x, HALL.floor + top + 0.21 + OWNER_CRT_LIFT, z0 + 0.35 + front.z);
   mesh.applyMatrix4(frame);
 
   let shown = "";

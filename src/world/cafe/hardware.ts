@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 import { toon } from "../../render/toon";
-import { BOOTH, BOOTHS, COUNTER, DESK, HALL, OWNER_PC_TURN, boothPoint } from "./plan";
+import { BOOTH, BOOTHS, COUNTER, DESK, HALL, OWNER_CRT_LIFT, OWNER_PC_TURN, boothPoint } from "./plan";
 
 /**
  * The computers' faces: what makes a beige box read as a monitor, a keyboard,
@@ -432,7 +432,7 @@ function counterPanels(): THREE.BufferGeometry[] {
   // his screen's brand strip: on the CRT's front face, below the screen
   const toHim = new THREE.Matrix4().makeBasis(new THREE.Vector3(0, 0, 1), new THREE.Vector3(0, 1, 0), new THREE.Vector3(-1, 0, 0));
   const front = new THREE.Vector3(-0.15 - PROUD, 0, 0).applyAxisAngle(new THREE.Vector3(0, 1, 0), t);
-  put(panel("bezelSamsang", 0.38, 0.06, toHim), x0 + 0.33 + front.x, y + 0.053, z0 + 0.35 + front.z, t);
+  put(panel("bezelSamsang", 0.38, 0.06, toHim), x0 + 0.33 + front.x, y + 0.053 + OWNER_CRT_LIFT, z0 + 0.35 + front.z, t);
   // his keyboard: keys toward him (+x is away from him, before the turn)
   const keysUp = new THREE.Matrix4().makeBasis(new THREE.Vector3(0, 0, 1), new THREE.Vector3(1, 0, 0), new THREE.Vector3(0, 1, 0));
   put(panel("keysLogitek", 0.42, 0.15, keysUp).translate(0, 0.01 + PROUD, 0), x0 + 0.08, y + 0.02, z0 + 0.62, t, 0.06);

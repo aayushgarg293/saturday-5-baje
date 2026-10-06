@@ -2,7 +2,7 @@ import * as THREE from "three";
 import { PAL } from "../../render/palette";
 import type { LocalBox, SignSpot } from "../buildings/common";
 import type { Parts } from "../kit";
-import { COOLER, OWNER_PC_TURN, BOOTH, BOOTHS, type Booth, CLOCK, COUNTER, DESK, FANS, HALL, OWNER_SEAT, TUBES, YOUR_BOOTH, boothPoint } from "./plan";
+import { COOLER, OWNER_CRT_LIFT, OWNER_PC_TURN, BOOTH, BOOTHS, type Booth, CLOCK, COUNTER, DESK, FANS, HALL, OWNER_SEAT, TUBES, YOUR_BOOTH, boothPoint } from "./plan";
 
 /**
  * The cafe's furniture that never moves, built into the cafe building's own
@@ -121,7 +121,10 @@ function booth(p: Parts, b: Booth, i: number, floorY: number, colliders: LocalBo
 
   // the computer: a beige CRT (a box, and its tapering back), keyboard, mouse, speakers, the tower underneath
   const crtV = DESK.crt;
-  at(0, BOOTH.deskTop + 0.03, crtV, 0.2, 0.03, 0.18, C.beigeDark); // the stand
+  // its round swivel stand: a wide disc on the desk, a short neck up to the monitor
+  const standAt = boothPoint(b, 0, crtV);
+  p.cylinder(0.12, 0.125, 0.018, standAt.x, floorY + BOOTH.deskTop + 0.009, standAt.z, C.beigeDark, { segments: 20 });
+  p.cylinder(0.07, 0.09, 0.034, standAt.x, floorY + BOOTH.deskTop + 0.034, standAt.z, C.beige, { segments: 16 });
   at(0, BOOTH.deskTop + 0.23, crtV, 0.4, 0.36, 0.3, C.beige);
   at(0, BOOTH.deskTop + 0.22, crtV + 0.14, 0.28, 0.26, 0.12, C.beigeDark); // the back
   at(0, DESK.screen.y, crtV - 0.152, 0.32, 0.25, 0.01, C.screenOff); // the screen, off (lit ones: world/cafe/screens.ts)
@@ -153,8 +156,12 @@ function counter(p: Parts, floorY: number, colliders: LocalBox[], UP: { y0: numb
   // His CRT at the far end, turned toward him: not between him and the
   // stairs, so he sees who comes up (and you see him). Its keyboard in front.
   const crtTurn = OWNER_PC_TURN; // turned from facing −x round toward his seat (his screen faces him; hardware.ts paints its faces)
-  p.box(0.3, 0.36, 0.4, x0 + 0.33, y + 0.2, z0 + 0.35, C.beige, { ry: crtTurn });
-  p.box(0.01, 0.25, 0.32, x0 + 0.33 - 0.155 * Math.cos(crtTurn), y + 0.21, z0 + 0.35 + 0.155 * Math.sin(crtTurn), C.screenOff, { ry: crtTurn });
+  // (on its round swivel stand: a disc on the counter, a short neck)
+  const lift = OWNER_CRT_LIFT;
+  p.cylinder(0.12, 0.125, 0.018, x0 + 0.33, y + 0.009, z0 + 0.35, C.beigeDark, { segments: 20 });
+  p.cylinder(0.07, 0.09, lift, x0 + 0.33, y + lift / 2, z0 + 0.35, C.beige, { segments: 16 });
+  p.box(0.3, 0.36, 0.4, x0 + 0.33, y + 0.2 + lift, z0 + 0.35, C.beige, { ry: crtTurn });
+  p.box(0.01, 0.25, 0.32, x0 + 0.33 - 0.155 * Math.cos(crtTurn), y + 0.21 + lift, z0 + 0.35 + 0.155 * Math.sin(crtTurn), C.screenOff, { ry: crtTurn });
   p.box(0.15, 0.02, 0.42, x0 + 0.08, y + 0.02, z0 + 0.62, C.beige, { ry: crtTurn, rz: 0.06 });
   // the register (a long red book) open in the middle, where he writes
   p.box(0.22, 0.03, 0.32, x0 + 0.13, y + 0.015, midZ + 0.2, 0x9e2b2b);
