@@ -7,7 +7,7 @@ import type { WorldPeopleSpot } from "../world/street";
 import { type Action, type Actor, makeActor, seenFrom, v } from "./actor";
 import { buildPerson } from "./body";
 import type { HairStyle } from "./clothes";
-import { SALOON_MIRROR_Y } from "../world/props/goods";
+import { SALOON_MIRROR_Y, SALOON_RADIO } from "../world/props/goods";
 import { recipeFor } from "./recipes";
 
 /**
@@ -40,6 +40,8 @@ export type SaloonChair = {
   front: THREE.Vector3;
   /** The middle of the mirror (world). */
   mirror: THREE.Vector3;
+  /** Its radio, on the mirror ledge (world): it plays the station (audio/radio.ts). */
+  radio: THREE.Vector3;
   /** You sit down (in place of the customer), with this hair. */
   sit(hair: HairStyle): void;
   /** Your hair, as it is now (the barber's work, in the mirror). */
@@ -182,9 +184,12 @@ export function buildSaloon(spot: WorldPeopleSpot): Saloon {
   let reflection: Reflector | null = null;
   const mirrorWorld = group.localToWorld(MIRROR.clone().setY(SALOON_MIRROR_Y));
   const frontWorld = group.localToWorld(v(2.8, -spot.position.y, 0));
+  // (the ledge is 0.87 m in front of the chair, 0.8 m up: world/props/goods.ts)
+  const radioWorld = group.localToWorld(v(0, 0.795 + SALOON_RADIO.y, 0.87));
 
   const chair: SaloonChair = {
     front: frontWorld,
+    radio: radioWorld,
     mirror: mirrorWorld,
     sit(style) {
       customerPerson.root.visible = false;

@@ -175,11 +175,13 @@ function goHome() {
 const audio = new AudioEngine();
 let bed: Bed | null = null;
 let radio: Radio | null = null;
+let saloonRadio: Radio | null = null; // (the same station, on the saloon's mirror ledge)
 let streetSounds: StreetSounds | null = null;
 let cafeSounds: CafeSounds | null = null;
 audio.onStart((ctx) => {
   bed = new Bed(audio, ctx);
   radio = new Radio(audio, ctx, life.radioAt);
+  saloonRadio = new Radio(audio, ctx, life.saloon.you.radio);
   streetSounds = new StreetSounds(audio, ctx);
   cafeSounds = new CafeSounds(audio, ctx, street.cafeFrame);
 });
@@ -283,6 +285,7 @@ function update(dt: number) {
   lights.followPlayer(player.pos);
   bed?.update(dt, player.pos);
   radio?.update(dt, player.pos);
+  saloonRadio?.update(dt, player.pos);
   streetSounds?.update(dt, player.pos);
   cafeSounds?.update(dt, player.pos);
   applyTimeOfDay();

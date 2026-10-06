@@ -260,6 +260,9 @@ const BANGLES = [0xc62f2a, 0x2e7d32, 0xf2c81f, 0x1565c0, 0x8e24aa, 0xd4a017, 0xe
  * the left-hand side wall (x0), halfway back. `turn` faces −x (the mirror).
  * (world/buildings/shop.ts puts the barber and customer here: people/saloon.ts.)
  */
+/** The saloon's radio: on its mirror ledge, in the middle; the height of its middle above the ledge. */
+export const SALOON_RADIO = { y: 0.055 };
+
 /** The height of the middle of the saloon's mirror, above the shop floor. */
 export const SALOON_MIRROR_Y = 1.4;
 
@@ -281,6 +284,11 @@ function saloon(c: BuildContext, room: ShopRoom) {
   p.box(0.16, 0.03, 1.1, room.x0 + 0.08, f + 0.78, mz, PAL.wood);
   const things: [number, number, number, number][] = [[-0.4, 0.2, 0.03, 0x1f5f3a], [-0.3, 0.16, 0.028, 0xc62f2a], [-0.2, 0.22, 0.025, 0xf4efe2], [0.25, 0.08, 0.05, 0xb9bcc0], [0.38, 0.14, 0.03, 0xe8c24a]];
   for (const [dz, h, r, colour] of things) p.cylinder(r, r, h, room.x0 + 0.08, f + 0.795 + h / 2, mz + dz, colour, { segments: 8 });
+  // the transistor radio, in the middle of the ledge (it plays the station: audio/radio.ts, people/saloon.ts)
+  p.box(0.07, 0.11, 0.2, room.x0 + 0.08, f + 0.795 + SALOON_RADIO.y, mz, 0x2a2622);
+  p.box(0.005, 0.07, 0.09, room.x0 + 0.118, f + 0.795 + SALOON_RADIO.y, mz - 0.04, 0x8f8a80); // the speaker grille
+  p.cylinder(0.018, 0.018, 0.01, room.x0 + 0.118, f + 0.795 + SALOON_RADIO.y + 0.02, mz + 0.06, 0xd8b04a, { rz: Math.PI / 2, segments: 10 }); // the tuning dial
+  p.box(0.004, 0.004, 0.25, room.x0 + 0.06, f + 0.795 + 0.11 + 0.12, mz + 0.05, 0xb9bcc0, { rx: -0.5 }); // the aerial
   // the chair: a chrome pedestal and footrest, a red seat, back and armrests, a headrest
   const cx = chair.x, cz = chair.z;
   p.cylinder(0.24, 0.26, 0.05, cx, f + 0.025, cz, 0xb9bcc0, { segments: 14 });
