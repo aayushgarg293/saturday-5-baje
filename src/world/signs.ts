@@ -203,6 +203,14 @@ const PAINTERS: Partial<Record<WorldSign["kind"], PainterSpec>> = {
     weather(ctx, w, h, rng, 0.4);
   } },
 
+  /** The court's name board, under its pediment: a government board, white on maroon, in both languages. */
+  courtBoard: { ppm: 300, weather: 0.25, paint(ctx, w, h, _i, rng) {
+    background(ctx, w, h, "#6e1f22", "#e8d9b0");
+    text(ctx, "जिला एवं सत्र न्यायालय", w / 2, h * 0.38, w * 0.86, h * 0.42, "#fbf6ea", DEVANAGARI);
+    text(ctx, "DISTRICT & SESSIONS COURT", w / 2, h * 0.76, w * 0.78, h * 0.22, "#e8d9b0", LATIN);
+    weather(ctx, w, h, rng, 0.4);
+  } },
+
   /** An A4 printout taped to the wall, a rule in bold capitals, taped crooked. */
   notice: { ppm: 500, weather: 0.25, paint(ctx, w, h, _i, rng, sign) {
     ctx.fillStyle = "#f7f4ec";

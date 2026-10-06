@@ -41,6 +41,8 @@ export type Shelf =
 export const BAZAAR_SHOPS = 36;
 /** The chowk's shops' names: the ten after the bazaar's. */
 export const CHOWK_SHOPS = { from: 36, count: 10 };
+/** Court road's: the eight after the chowk's. */
+export const COURT_SHOPS = { from: 46, count: 8 };
 
 export const SHOP_NAMES: ShopName[] = [
   { hi: "शर्मा जनरल स्टोर", en: "Sharma General Store", tag: "Kirana • Cold Drinks • Dry Fruits", trade: "kirana", shelf: "grocery" },
@@ -90,6 +92,15 @@ export const SHOP_NAMES: ShopName[] = [
   { hi: "श्याम रेडियो सर्विस", en: "Shyam Radio Service", tag: "Radio • Tape • TV Repairing", trade: "electrical", shelf: "electronics" },
   { hi: "होटल अन्नपूर्णा", en: "Hotel Annapurna", tag: "Shudh Shakahari Bhojnalaya", trade: "sweets", shelf: "sweets" },
   { hi: "गुरु कृपा किराना", en: "Guru Kripa Kirana", tag: "Sab Saman Uchit Daam", trade: "kirana", shelf: "grocery" },
+  // --- court road (world/town.ts) ---
+  { hi: "शर्मा टाइपिंग सेंटर", en: "Sharma Typing Centre", tag: "Hindi • English Typing • Affidavit", trade: "general", shelf: "stationery" },
+  { hi: "आर. के. वर्मा, एडवोकेट", en: "R.K. Verma, Advocate", tag: "Civil • Criminal • Revenue", trade: "general", shelf: "books" },
+  { hi: "न्याय स्टाम्प वेंडर", en: "Nyay Stamp Vendor", tag: "Stamp Paper • Court Fee Ticket", trade: "general", shelf: "stationery" },
+  { hi: "कचहरी टी स्टॉल", en: "Kachehri Tea Stall", tag: "Chai • Samosa • Bread Pakoda", trade: "sweets", shelf: "sweets" },
+  { hi: "भारत फोटोस्टेट", en: "Bharat Photostat", tag: "Xerox • Lamination • Passport Photo", trade: "general", shelf: "photo" },
+  { hi: "एस. एल. गुप्ता, नोटरी", en: "S.L. Gupta, Notary", tag: "Notary • Oath Commissioner", trade: "general", shelf: "books" },
+  { hi: "श्री गणेश बुक बाइंडर्स", en: "Shri Ganesh Book Binders", tag: "Binding • File Cover • Register", trade: "general", shelf: "stationery" },
+  { hi: "न्यू लक्ष्मी भोजनालय", en: "New Laxmi Bhojnalaya", tag: "Thali ₹25 • Dal Baati Churma", trade: "sweets", shelf: "sweets" },
 ];
 
 /** A painted wall ad for a look-alike brand of the period (slogans are invented). */

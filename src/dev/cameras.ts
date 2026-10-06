@@ -1,4 +1,6 @@
 import { CAFE, pointAt, yawAlong } from "../world/layout";
+import type { Road } from "../world/roads";
+import { COURT, COURT_ROAD } from "../world/town";
 
 /**
  * Saved camera spots for `__shot`.
@@ -26,6 +28,12 @@ function along(s: number, offset = 0, turn = 0, pitch = 0): CameraSpot {
   return { pos: [p.x, p.z], yaw: yawAlong(s, turn), pitch };
 }
 
+/** A spot on one of the town's other roads (world/town.ts), the same way. */
+function onRoad(road: Road, s: number, offset = 0, turn = 0, pitch = 0): CameraSpot {
+  const p = road.pointAt(s, offset);
+  return { pos: [p.x, p.z], yaw: road.yawAlong(s, turn), pitch };
+}
+
 const cafeMid = (CAFE.s0 + CAFE.s1) / 2;
 
 export const CAMERAS: Record<string, CameraSpot> = {
@@ -35,6 +43,10 @@ export const CAMERAS: Record<string, CameraSpot> = {
   tower: along(209, -9, -0.5, 0.35),
   /** The chowk's east edge: court road's mouth. */
   courtMouth: along(222, -8, -Math.PI / 2, 0.05),
+  /** Court road, from its start at the chowk, looking east down it. */
+  courtRoad: onRoad(COURT_ROAD, 2, 0, 0, 0.02),
+  /** The court, from across court road: the wall and gate, the neem, the typists. */
+  court: onRoad(COURT_ROAD, (COURT.s0 + COURT.s1) / 2 - 4, 2.6, 1.1, 0.12),
   /** The opening view: the south end, looking up the street. The cafe sign should be visible. */
   start: along(1.5),
   /** Shops on the left, early in the walk. */

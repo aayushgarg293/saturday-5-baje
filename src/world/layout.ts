@@ -136,8 +136,10 @@ export function planPlots(rng: Rng, plan: RowPlan = BAZAAR_ROWS): Plot[] {
       while (end - s > 0.01) {
         const type = plan.pick(rng, s);
         let width = type === "haveli" ? rng.range(7, 10) : rng.range(3.6, 6.2);
-        // don't leave a sliver too narrow to be a building: absorb it now
+        // don't leave a sliver too narrow to be a building: absorb it now; and never run on past
+        // the next fixed plot (a wide haveli could: it once stood across court road's mouth)
         if (end - s - width < 3.4) width = end - s;
+        width = Math.min(width, end - s);
         plots.push({ side, s0: s, s1: s + width, type, setback: rng.range(plan.setback.min, plan.setback.max) });
         s += width;
       }

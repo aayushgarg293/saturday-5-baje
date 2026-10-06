@@ -138,7 +138,9 @@ export type SignSpot = {
     // inside the cafe (world/cafe/furniture.ts)
     | "rateBoard" | "notice" | "gamePoster" | "calendar" | "boothNumber"
     // in the STD booth under it (world/cafe/pco.ts)
-    | "pcoRates";
+    | "pcoRates"
+    // the town (world/places/)
+    | "courtBoard";
   /** The word(s) on a stall's board. */
   label?: string;
   /** Which entry of SHOP_NAMES (world/names.ts) a shop board shows. */

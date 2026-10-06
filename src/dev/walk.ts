@@ -1,6 +1,6 @@
 import { type Box, pushOut } from "../core/colliders";
 import { SIDE_ROADS, SLOTS, STREET_LENGTH, pointAt } from "../world/layout";
-import { CHOWK } from "../world/town";
+import { CHOWK, COURT, COURT_ROAD } from "../world/town";
 
 /**
  * Dev-only walk check: can the player actually get everywhere?
@@ -30,14 +30,13 @@ export function walkCheck(colliders: readonly Box[]): WalkReport {
   const t0 = performance.now();
   // the area to search: the street's bounding box, with room for galis and side roads
   let minX = Infinity, maxX = -Infinity, minZ = Infinity, maxZ = -Infinity;
-  // (and on into the chowk at the bazaar's north end: world/town.ts)
-  for (let s = -2; s <= STREET_LENGTH + CHOWK.depth + 4; s += 2) {
-    for (const off of [-20, 20]) {
-      const p = pointAt(s, off);
-      minX = Math.min(minX, p.x); maxX = Math.max(maxX, p.x);
-      minZ = Math.min(minZ, p.z); maxZ = Math.max(maxZ, p.z);
-    }
-  }
+  // (and on into the chowk at the bazaar's north end, and court road: world/town.ts)
+  const grow = (p: { x: number; z: number }) => {
+    minX = Math.min(minX, p.x); maxX = Math.max(maxX, p.x);
+    minZ = Math.min(minZ, p.z); maxZ = Math.max(maxZ, p.z);
+  };
+  for (let s = -2; s <= STREET_LENGTH + CHOWK.depth + 4; s += 2) for (const off of [-20, 20]) grow(pointAt(s, off));
+  for (let s = 0; s <= COURT_ROAD.length + 2; s += 2) for (const off of [-30, 20]) grow(COURT_ROAD.pointAt(s, off));
   const nx = Math.ceil((maxX - minX) / CELL), nz = Math.ceil((maxZ - minZ) / CELL);
   const index = (x: number, z: number) => Math.round((x - minX) / CELL) + Math.round((z - minZ) / CELL) * nx;
 
@@ -84,14 +83,15 @@ export function walkCheck(colliders: readonly Box[]): WalkReport {
       queue.push(j);
     }
   }
-  const isReached = (s: number, off: number) => {
-    const p = pointAt(s, off);
+  const isReached = (s: number, off: number) => near(pointAt(s, off));
+  const onCourtRoad = (s: number, off: number) => near(COURT_ROAD.pointAt(s, off));
+  function near(p: { x: number; z: number }) {
     // any reachable cell within a cell's width counts
     for (const [dx, dz] of [[0, 0], [CELL, 0], [-CELL, 0], [0, CELL], [0, -CELL]]) {
       if (seen[index(p.x + dx, p.z + dz)] === 1) return true;
     }
     return false;
-  };
+  }
 
   // the places that must be reachable
   const toward = (o: number) => o - Math.sign(o) * 1.4; // in front of a stall, on the street side
@@ -112,6 +112,10 @@ export function walkCheck(colliders: readonly Box[]): WalkReport {
     chowkByTower: isReached(STREET_LENGTH + CHOWK.depth / 2, CHOWK.island + 1.2),
     chowkNorthWest: isReached(STREET_LENGTH + CHOWK.depth - 2, -CHOWK.half + 2),
     chowkNorthEast: isReached(STREET_LENGTH + CHOWK.depth - 2, CHOWK.half - 2),
+    // court road: the footpath by the typists, the court's yard (through the gate), the far end
+    typists: onCourtRoad(COURT.s0 + 3, -4.6),
+    courtYard: onCourtRoad((COURT.s0 + COURT.s1) / 2, COURT.building.front + 4),
+    courtRoadEnd: onCourtRoad(COURT_ROAD.length - 3, 0),
   };
 
   // the narrowest clear walkable width across the street, every metre

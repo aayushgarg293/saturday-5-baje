@@ -13,12 +13,16 @@ import { Road } from "./roads";
  *    │                                        │
  *  HOME ──────────── HOME LANE ───────────────┘
  *
- * Built so far: the bazaar (world/layout.ts) and the chowk at its north end.
+ * Built so far: the bazaar (world/layout.ts), the chowk at its north end,
+ * and court road, with the court.
  *
  * Every row of buildings here is laid out like the bazaar's (layout.ts,
  * `planPlots`), with its own random numbers, so adding to the town never
  * changes the bazaar.
  */
+
+/** The ground under the whole town (world x/z): the bazaar runs north from the origin, the town spreads east of it. */
+export const TOWN_GROUND = { x0: -70, x1: 210, z0: -300, z1: 45 };
 
 // --- the chowk ------------------------------------------------------------------------------------
 
@@ -81,8 +85,8 @@ export const CHOWK_ROWS: { road: Road; plan: RowPlan; seed: number }[] = [
     road: CHOWK_EDGES.east, seed: 7103,
     plan: {
       length: CHOWK.depth, sides: ["right"], pick: chowkShops, setback: { min: EDGE_SETBACK, max: EDGE_SETBACK },
-      // court road's mouth: a short dead end for now (a house across it a few metres in), until court road is built
-      fixed: [{ side: "right", s0: CHOWK.courtRoad.s0, s1: CHOWK.courtRoad.s1, type: "gali" }],
+      // court road's mouth: left open, court road runs on from here
+      fixed: [{ side: "right", s0: CHOWK.courtRoad.s0, s1: CHOWK.courtRoad.s1, type: "open" }],
     },
   },
 ];
@@ -91,3 +95,55 @@ export const CHOWK_ROWS: { road: Road; plan: RowPlan; seed: number }[] = [
 export function inChowk(s: number, offset: number): { x: number; z: number } {
   return along(s, offset);
 }
+
+// --- court road ----------------------------------------------------------------------------------
+
+/**
+ * Court road: from the middle of the chowk's east edge, 80 m due east to the
+ * bus stand. On its north side (its left, going east), set back behind a
+ * whitewashed compound wall, the district court; on the wide footpath in
+ * front of the wall, under a neem tree, the typists at their tables and the
+ * stamp vendor (world/places/court.ts, people/court.ts). Opposite, a row of
+ * advocates' chambers, typing and photostat shops, a bhojnalaya, a tea stall.
+ *
+ *     north   ┌────────── the court ──────────┐
+ *             │        (the yard, the gate)    │
+ *    ═════════╧═══ wall ══ gate ═══ wall ══════╧═════════  ← the footpath, the neem,
+ *    chowk →   ─────────── court road ─────────────────── → bus stand        the typists
+ *    ═══════════ chambers, typists, chai ═════════════════
+ */
+export const COURT_ROAD = new Road({ name: "court", start: along(CHOWK.depth / 2, CHOWK.half), heading: Math.PI / 2, length: 80 });
+
+/**
+ * The court's frontage on court road (metres along it), and in the court's own
+ * frame (world/places/court.ts: x along the road from the frontage's middle,
+ * z toward the road; the road's centre line is at z = 0, north is −z): where
+ * the compound wall runs, its gate, the neem tree, and the court building.
+ */
+export const COURT = {
+  s0: 24,
+  s1: 48,
+  wall: -7.6,
+  gate: 2.2, // the gate opening's half-width
+  tree: { x: -6.5, z: -6.1 },
+  building: { front: -19, back: -32, half: 10 },
+};
+
+/** The court road's shops and chambers. */
+const courtShops = (rng: Rng): PlotType => (rng.next() < 0.8 ? "shop" : "house");
+
+export const COURT_ROWS: { road: Road; plan: RowPlan; seed: number }[] = [
+  {
+    road: COURT_ROAD, seed: 7201,
+    plan: {
+      length: COURT_ROAD.length, sides: ["left", "right"], pick: courtShops, setback: { min: 3.35, max: 4.2 },
+      fixed: [
+        // the first 9 m are the backs of the chowk's corner buildings: left open
+        { side: "left", s0: 0, s1: 9, type: "open" },
+        { side: "right", s0: 0, s1: 9, type: "open" },
+        // the court: its compound and building are world/places/court.ts
+        { side: "left", s0: COURT.s0, s1: COURT.s1, type: "open" },
+      ],
+    },
+  },
+];

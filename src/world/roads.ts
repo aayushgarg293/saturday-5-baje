@@ -65,8 +65,21 @@ export class Road {
     }
   }
 
-  /** Where the centre line is at `s`, and which way the road runs there. */
+  /**
+   * Where the centre line is at `s`, and which way the road runs there.
+   * Past either end (beyond the margin worked out), the road carries straight
+   * on the way it was going: the chowk, beyond the bazaar's end, is placed
+   * that way. (It once stopped dead at the margin: the chowk came out
+   * squashed, and court road started behind a haveli.)
+   */
   centreAt(s: number): { x: number; z: number; heading: number } {
+    const first = this.table[0], last = this.table[this.table.length - 1];
+    const lastS = (this.table.length - 1) * STEP - MARGIN;
+    if (s > lastS || s < -MARGIN) {
+      const from = s > lastS ? last : first;
+      const d = s > lastS ? s - lastS : s + MARGIN;
+      return { x: from.x + Math.sin(from.heading) * d, z: from.z - Math.cos(from.heading) * d, heading: from.heading };
+    }
     const f = (s + MARGIN) / STEP;
     const i = Math.max(0, Math.min(this.table.length - 2, Math.floor(f)));
     const t = Math.max(0, Math.min(1, f - i));

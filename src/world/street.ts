@@ -16,9 +16,10 @@ import { buildShop } from "./buildings/shop";
 import { buildTemple } from "./props/temple";
 import { Parts, ribbon } from "./kit";
 import { addRoadPatches } from "./roadPatches";
-import { BAZAAR_SHOPS, CHOWK_SHOPS } from "./names";
+import { BAZAAR_SHOPS, CHOWK_SHOPS, COURT_SHOPS } from "./names";
 import { type Chowk, buildChowk } from "./places/chowk";
-import { CHOWK, CHOWK_ROWS } from "./town";
+import { buildCourt } from "./places/court";
+import { CHOWK, CHOWK_ROWS, COURT_ROAD, COURT_ROWS, TOWN_GROUND } from "./town";
 import {
   CAFE, DRAIN, PLOT_DEPTH, ROAD_WIDTH, SIDE_ROADS, STREET_LENGTH,
   BAZAAR, type Plot, centreAt, planPlots, pointAt, streetCoords, yawAlong,
@@ -315,6 +316,32 @@ export function buildStreet(): Street {
   colliders.push(...chowk.colliders);
   lamps.push(...chowk.lamps);
 
+  // court road, east from the chowk: its road and drains, its rows of chambers and shops (the court's
+  // frontage left open), the court itself; closed at its far end by houses for now (the bus stand comes there)
+  group.add(roadSurface(COURT_ROAD, 0, COURT_ROAD.length));
+  COURT_ROWS.forEach(({ road, plan, seed }) => {
+    const random = makeRng(seed);
+    const names = shuffled(COURT_SHOPS.count, seed).map((k) => COURT_SHOPS.from + k);
+    buildRow(road, planPlots(random, plan), random, names);
+  });
+  const court = buildCourt();
+  group.add(court.group);
+  colliders.push(...court.colliders);
+  townSigns.push(...court.signs);
+  closeEnd(COURT_ROAD, COURT_ROAD.length, makeRng(7202));
+
+  /**
+   * Close a road at `s` with three houses across it, facing back down it
+   * (as the bazaar's south end is closed, with home in the middle).
+   */
+  function closeEnd(road: Road, s: number, random: Rng) {
+    const h = road.centreAt(s).heading;
+    const normal = new THREE.Vector2(-Math.sin(h), Math.cos(h)); // (back down the road)
+    for (let k = -1; k <= 1; k++) {
+      place("house", road.pointAt(s, (0.5 - k) * 9), road.pointAt(s, (-0.5 - k) * 9), normal, `end@${road.name}:${k}`, undefined, random);
+    }
+  }
+
   // south to north, so whoever picks from them can space them out along the walk
   const along = (p: THREE.Vector3) => streetCoords(p.x, p.z).s;
   people.sort((a, b) => along(a.position) - along(b.position));
@@ -414,11 +441,11 @@ function addWallAds(
 /** The ground: a big dusty plane, the road ribbon down the middle, and the two drains. */
 function buildGround(): THREE.Mesh {
   const parts = new Parts();
-  // one big plane under everything (the street wanders, so make it generous)
-  const mid = centreAt(STREET_LENGTH / 2);
-  const plane = new THREE.PlaneGeometry(140, STREET_LENGTH + 80);
+  // one big plane under the whole town (world/town.ts, TOWN_GROUND)
+  const g = TOWN_GROUND;
+  const plane = new THREE.PlaneGeometry(g.x1 - g.x0, g.z1 - g.z0);
   plane.rotateX(-Math.PI / 2);
-  parts.add(plane, mid.x, 0, mid.z, PAL.dust);
+  parts.add(plane, (g.x0 + g.x1) / 2, 0, (g.z0 + g.z1) / 2, PAL.dust);
 
   const steps = STREET_LENGTH;
   const along = (offset: number) => (t: number) => pointAt(t * STREET_LENGTH, offset);
@@ -433,6 +460,19 @@ function buildGround(): THREE.Mesh {
   return parts.build("ground", { castShadow: false });
 }
 
+
+/** A road's paved strip and its two drains, from `s0` to `s1` metres along it (as the bazaar's, in buildGround). */
+function roadSurface(road: Road, s0: number, s1: number): THREE.Mesh {
+  const parts = new Parts();
+  const steps = Math.ceil(s1 - s0);
+  const along = (offset: number) => (t: number) => road.pointAt(s0 + t * (s1 - s0), offset);
+  parts.add(ribbon(along(-ROAD_WIDTH / 2), along(ROAD_WIDTH / 2), steps, 0.01), 0, 0, 0, PAL.asphalt);
+  for (const side of [-1, 1]) {
+    const inner = along(side * DRAIN.inner), outer = along(side * DRAIN.outer);
+    parts.add(ribbon(side < 0 ? outer : inner, side < 0 ? inner : outer, steps, 0.012), 0, 0, 0, PAL.drain);
+  }
+  return parts.build(`road:${road.name}`, { castShadow: false });
+}
 
 /**
  * Each building gets its own random sequence, seeded from the street's. That
