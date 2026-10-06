@@ -95,7 +95,11 @@ export function coverage(o: Outfit, skin: number): Coverage {
           : o.top === "shirt" ? "rolled"
             : "full";
   const longTop = o.top === "kurta" || o.top === "kameez";
-  const legColour = o.bottom === "ghagra" ? skin : bottom; // (hidden under the skirt anyway)
+  // Under a ghagra the legs are dressed in its cloth, loose: the skirt is a stiff cone from the hips, and
+  // when she sits (her thighs come forward) or walks (they swing), the legs come out from under it. In the
+  // skirt's colour they read as the skirt falling over her knees and shins. (They were skin once, "hidden
+  // under the skirt anyway": they weren't.)
+  const legColour = bottom;
   return {
     chest: top,
     yoke: o.top === "vest" ? skin : top,
@@ -106,7 +110,7 @@ export function coverage(o: Outfit, skin: number): Coverage {
     thighs: legColour,
     shins: o.bottom === "shorts" ? skin : legColour,
     knees: o.bottom === "shorts" ? skin : legColour,
-    loose: o.bottom === "dhoti" ? 1.45 : o.bottom === "pyjama" || o.bottom === "salwar" ? 1.3 : o.bottom === "jeans" ? 1.02 : 1.08,
+    loose: o.bottom === "ghagra" ? 1.8 : o.bottom === "dhoti" ? 1.45 : o.bottom === "pyjama" || o.bottom === "salwar" ? 1.3 : o.bottom === "jeans" ? 1.02 : 1.08,
     feet: o.feet === "shoes" ? 0x2f2a27 : skin,
   };
 }
@@ -143,8 +147,8 @@ export function dress(kit: Kit, o: Outfit) {
   if (o.bottom === "ghagra") {
     p.setJoint(J.hips);
     const top = hips.y + 0.05 * k, h = top - 0.03;
-    p.add(new THREE.CylinderGeometry(0.16 * k * g, 0.36 * k, h, 22), 0, top - h / 2, 0, o.bottomColour);
-    p.add(new THREE.CylinderGeometry(0.335 * k, 0.365 * k, 0.1 * k, 22), 0, 0.08 * k, 0, trim); // hem
+    p.add(new THREE.CylinderGeometry(0.16 * k * g, 0.4 * k, h, 22), 0, top - h / 2, 0, o.bottomColour);
+    p.add(new THREE.CylinderGeometry(0.375 * k, 0.405 * k, 0.1 * k, 22), 0, 0.08 * k, 0, trim); // hem
     p.add(new THREE.CylinderGeometry(0.265 * k, 0.285 * k, 0.04 * k, 22), 0, top - h * 0.55, 0, trim); // band
   }
   // the salwar gathers at the ankle: a small cuff there

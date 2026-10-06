@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import type { Box } from "../core/colliders";
+import { type Box, boxAt } from "../core/colliders";
 import { makeRng } from "../core/rng";
 import { SLOTS } from "../world/layout";
 import { StaticBatch, placeOnStreet } from "../world/props/batch";
@@ -14,6 +14,7 @@ import { buildMohallaPeople } from "./mohalla";
 import { buildStationPeople } from "./station";
 import { buildSchoolRoadPeople } from "./schoolRoad";
 import { buildTuitionPeople } from "./tuition";
+import { buildHomeLanePeople } from "./homeLane";
 import { buildCourtPeople } from "./court";
 import { buildPco } from "./pco";
 import { type Saloon, buildSaloon } from "./saloon";
@@ -108,6 +109,10 @@ export function buildCrowd(spots: WorldPeopleSpot[]): Crowd {
   groups.push(buildSchoolRoadPeople());
   // …and the tuition letting out at six, the kulfi-wala, Priya and Neha
   groups.push(buildTuitionPeople());
+  // …and on the home lane, the amma on her charpai and a cow (both to walk round)
+  const homeLane = buildHomeLanePeople();
+  groups.push(homeLane);
+  const extraColliders = homeLane.colliders.map((c) => boxAt(c.x, c.z, c.sx, c.sz, 0));
 
   // shopkeepers, spread out along the street (the rest of the shops' keepers are inside, out of sight)
   const taken: THREE.Vector3[] = [];
@@ -133,7 +138,7 @@ export function buildCrowd(spots: WorldPeopleSpot[]): Crowd {
     golgappa: golgappa!,
     saloon: saloon!,
     cricket,
-    colliders: bodies.colliders,
+    colliders: [...bodies.colliders, ...extraColliders],
     update(t, dt, player) {
       groups.forEach((g, i) => {
         const d = centres[i].distanceTo(player);

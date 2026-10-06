@@ -3,6 +3,7 @@ import type { Road } from "../world/roads";
 import { MOHALLA_LANES } from "../world/mohalla";
 import { STATION, STATION_LANE, inStation, laneS } from "../world/station";
 import { CRICKET_LANE, SCHOOL, SCHOOL_ROAD } from "../world/schoolRoad";
+import { LANE_ROAD, MOUTH_POINT, SCHOOL_TAIL } from "../world/homeLane";
 import { COURT, COURT_ROAD } from "../world/town";
 
 /**
@@ -78,6 +79,14 @@ export const CAMERAS: Record<string, CameraSpot> = {
   park: onRoad(SCHOOL_ROAD, (SCHOOL.park.s0 + SCHOOL.park.s1) / 2 + 1.5, -1.5, -1.4, 0.0),
   /** The cricket lane, from just past the kids, looking east to school road. */
   cricketLane: onRoad(CRICKET_LANE, 14, 0, 0, 0.04),
+  /** The home lane (world/homeLane.ts): at school road's corner, looking west down the lane. */
+  homeLane: onRoad(LANE_ROAD, 4, 0, 0, 0.03),
+  /** School road's last stretch: the corner house closing the view, the lane turning off right. */
+  schoolCorner: onRoad(SCHOOL_TAIL, -25, 0.5, 0, 0.03),
+  /** Coming home: from the home lane, up the back lane (the autos waiting) toward the side road and the bazaar. */
+  homeMouth: { pos: [MOUTH_POINT.x, MOUTH_POINT.z + 5], yaw: 0, pitch: 0.03 },
+  /** The lane from its west end, looking east (the amma, the cow, the way to school road). */
+  homeLaneWest: onRoad(LANE_ROAD, LANE_ROAD.length - 6, 0, Math.PI, 0.03),
   /** The opening view: the south end, looking up the street. The cafe sign should be visible. */
   start: along(1.5),
   /** Shops on the left, early in the walk. */

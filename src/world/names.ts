@@ -47,6 +47,8 @@ export const COURT_SHOPS = { from: 46, count: 8 };
 export const BUS_STAND_SHOPS = { from: 54, count: 8 };
 /** School road's: the ten after the bus stand's. */
 export const SCHOOL_SHOPS = { from: 62, count: 10 };
+/** The home lane's (and school road's last few metres'): the six after school road's. */
+export const HOME_SHOPS = { from: 72, count: 6 };
 
 export const SHOP_NAMES: ShopName[] = [
   { hi: "शर्मा जनरल स्टोर", en: "Sharma General Store", tag: "Kirana • Cold Drinks • Dry Fruits", trade: "kirana", shelf: "grocery" },
@@ -125,6 +127,13 @@ export const SHOP_NAMES: ShopName[] = [
   { hi: "ड्रीम्स गिफ्ट सेंटर", en: "Dreams Gift Centre", tag: "Greeting Card • Teddy • Gift", trade: "general", shelf: "gifts" },
   { hi: "महावीर बर्तन भंडार", en: "Mahaveer Bartan Bhandar", tag: "Steel • Pital • Crockery", trade: "general", shelf: "utensils" },
   { hi: "आनंद टेलर्स", en: "Anand Tailors", tag: "School Uniform • Pant-Shirt", trade: "cloth", shelf: "cloth" },
+  // --- the home lane (world/homeLane.ts) ---
+  { hi: "गोपाल डेयरी", en: "Gopal Dairy", tag: "Doodh • Dahi • Paneer", trade: "kirana", shelf: "dairy" },
+  { hi: "शर्मा आटा चक्की", en: "Sharma Atta Chakki", tag: "Gehu • Bajra • Masala Pisai", trade: "kirana", shelf: "masala" },
+  { hi: "मनोज किराना", en: "Manoj Kirana", tag: "Daily Needs • Biscuit • Sabun", trade: "kirana", shelf: "grocery" },
+  { hi: "राधे राधे जनरल स्टोर", en: "Radhe Radhe General Store", tag: "Toffee • Stationery • Recharge", trade: "general", shelf: "stationery" },
+  { hi: "कमला ब्यूटी पार्लर", en: "Kamla Beauty Parlour", tag: "Threading • Mehendi • Bridal", trade: "general", shelf: "beauty" },
+  { hi: "न्यू हनुमान फ्लोर मिल", en: "New Hanuman Flour Mill", tag: "Chakki Fresh Atta", trade: "kirana", shelf: "masala" },
 ];
 
 /** A painted wall ad for a look-alike brand of the period (slogans are invented). */

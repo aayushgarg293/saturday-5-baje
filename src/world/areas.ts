@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { BAZAAR, STREET_LENGTH } from "./layout";
+import { HOME_AREAS } from "./homeLane";
 import { MOHALLA, inMohalla } from "./mohalla";
 import { CRICKET_LANE, CRICKET_Z, SCHOOL, SCHOOL_AREAS } from "./schoolRoad";
 import { STATION, inStation } from "./station";
@@ -58,7 +59,7 @@ export type Areas = {
 };
 
 export function buildAreas(): Areas {
-  const areas: Area[] = [...AREAS, ...SCHOOL_AREAS, bazaarArea()].map((a) => ({ ...a, objects: [], shown: true }));
+  const areas: Area[] = [...AREAS, ...SCHOOL_AREAS, ...HOME_AREAS, bazaarArea()].map((a) => ({ ...a, objects: [], shown: true }));
   const at = new THREE.Vector3();
   const inside = (b: AreaBox, x: number, z: number) => x >= b.x0 && x <= b.x1 && z >= b.z0 && z <= b.z1;
   return {

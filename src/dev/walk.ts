@@ -3,6 +3,7 @@ import { SIDE_ROADS, SLOTS, STREET_LENGTH, pointAt } from "../world/layout";
 import { MOHALLA, MOHALLA_EXTENT, inMohalla } from "../world/mohalla";
 import { STATION, inStation } from "../world/station";
 import { CRICKET_LANE, SCHOOL, SCHOOL_ROAD } from "../world/schoolRoad";
+import { HOME_LANE, LANE_ROAD, MOUTH_POINT, SCHOOL_TAIL } from "../world/homeLane";
 import { BUS_STAND, CHOWK, COURT, COURT_ROAD } from "../world/town";
 
 /**
@@ -43,6 +44,7 @@ export function walkCheck(colliders: readonly Box[]): WalkReport {
   for (let u = 0; u <= MOHALLA_EXTENT.u1; u += 2) for (const v of [MOHALLA_EXTENT.v0, MOHALLA_EXTENT.v1]) grow(inMohalla(u, v));
   for (const u of [0, STATION.enclosure.west + 2]) for (const v of [-STATION.line.walk - 2, STATION.line.walk + 2]) grow(inStation(u, v));
   for (let s = 0; s <= SCHOOL_ROAD.length; s += 10) for (const off of [-SCHOOL.school.depth - 5, SCHOOL.park.depth + 5]) grow(SCHOOL_ROAD.pointAt(s, off));
+  for (let s = 0; s <= LANE_ROAD.length; s += 10) for (const off of [-HOME_LANE.half - 12, HOME_LANE.half + 12]) grow(LANE_ROAD.pointAt(s, off));
   const nx = Math.ceil((maxX - minX) / CELL), nz = Math.ceil((maxZ - minZ) / CELL);
   const index = (x: number, z: number) => Math.round((x - minX) / CELL) + Math.round((z - minZ) / CELL) * nx;
 
@@ -133,7 +135,10 @@ export function walkCheck(colliders: readonly Box[]): WalkReport {
     // the way to the station: round the back lane's corner, the crossing, along the line, up the
     // platform's ramp (the platform itself is up a step this check doesn't climb)
     // school road: its far end, through the school's gate to the playground, into the park, along the cricket lane
-    schoolRoadEnd: near(SCHOOL_ROAD.pointAt(SCHOOL_ROAD.length - 3, 0)),
+    schoolRoadEnd: near(SCHOOL_TAIL.pointAt(SCHOOL_TAIL.length - HOME_LANE.half, 0)),
+    // the home lane: its middle, and its mouth beside home's door (the loop closed)
+    homeLaneMiddle: near(LANE_ROAD.pointAt(LANE_ROAD.length / 2, 0)),
+    homeLaneMouth: near(MOUTH_POINT),
     schoolPlayground: near(SCHOOL_ROAD.pointAt((SCHOOL.school.s0 + SCHOOL.school.s1) / 2 + 4, -SCHOOL.setback - 6)),
     parkFountain: near(SCHOOL_ROAD.pointAt((SCHOOL.park.s0 + SCHOOL.park.s1) / 2 - 4, SCHOOL.setback + 12)),
     cricketLane: near(CRICKET_LANE.pointAt(CRICKET_LANE.length / 2, 0)),

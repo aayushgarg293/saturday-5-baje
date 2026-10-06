@@ -17,7 +17,7 @@ import { buildVacant } from "./buildings/vacant";
 import { buildTemple } from "./props/temple";
 import { Parts, ribbon } from "./kit";
 import { addRoadPatches } from "./roadPatches";
-import { BAZAAR_SHOPS, BUS_STAND_SHOPS, CHOWK_SHOPS, COURT_SHOPS, SCHOOL_SHOPS } from "./names";
+import { BAZAAR_SHOPS, BUS_STAND_SHOPS, CHOWK_SHOPS, COURT_SHOPS, HOME_SHOPS, SCHOOL_SHOPS } from "./names";
 import { type Chowk, buildChowk } from "./places/chowk";
 import { buildBusStand } from "./places/busStand";
 import { buildCourt } from "./places/court";
@@ -26,6 +26,7 @@ import { buildStation } from "./places/station";
 import { buildPark } from "./places/park";
 import { buildSchool } from "./places/school";
 import { buildTuition } from "./places/tuition";
+import { CORNER_HOUSE_HALF, HOME_LANE, HOME_ROWS, LANE_ROAD, MOVED_HOUSE, SCHOOL_TAIL } from "./homeLane";
 import { CRICKET, CRICKET_GALI_S0, CRICKET_LANE, CRICKET_LANE_HALF, CRICKET_ROWS, PARK_ROWS, SCHOOL, SCHOOL_ROAD, SCHOOL_ROWS } from "./schoolRoad";
 import { STATION, STATION_LANE, STATION_ROWS } from "./station";
 import { LANE, LANE_PAVING, MOHALLA, MOHALLA_LANES, MOHALLA_ROWS, SQUARE_AXIS, SQUARE_EDGES, fitMohallaPlots } from "./mohalla";
@@ -291,8 +292,15 @@ export function buildStreet(): Street {
     const along = new THREE.Vector2(Math.sin(h), -Math.cos(h));
     // (the north side road's back lane runs on south now, into the station lane: the wall that closed
     // its south end closes the back lane on the station lane's far side instead: world/station.ts)
-    const wallAt = side === SIDE_ROADS.north ? STATION.laneS - STATION.half : s0;
-    place("wall", road.pointAt(wallAt, sign * (near - 1.5)), road.pointAt(wallAt, sign * far), along.clone(), `road-wall@${s0}`);
+    if (side === SIDE_ROADS.south) {
+      // (and the south side road's back lane runs on south into the home lane: its wall closes the home
+      // lane's far end instead, behind home, facing east down the lane: world/homeLane.ts)
+      const x = HOME_LANE.end, z0 = HOME_LANE.z - HOME_LANE.half;
+      place("wall", { x, z: z0 }, { x, z: z0 + far - near + 1.5 }, new THREE.Vector2(1, 0), `road-wall@${s0}`);
+    } else {
+      const wallAt = side === SIDE_ROADS.north ? STATION.laneS - STATION.half : s0;
+      place("wall", road.pointAt(wallAt, sign * (near - 1.5)), road.pointAt(wallAt, sign * far), along.clone(), `road-wall@${s0}`);
+    }
     place("wall", road.pointAt(s1, sign * far), road.pointAt(s1, sign * (near - 1.5)), along.clone().negate(), `road-wall@${s1}`);
   }
 
@@ -310,11 +318,12 @@ export function buildStreet(): Street {
     if (road === BAZAAR && plot.s0 === MOHALLA.gali.s0) return moveTo(SQUARE_EDGES.west, MOHALLA.endHouse.s0, MOHALLA.endHouse.s1, 1, LANE);
     // the cricket gali goes through to school road: its house stands along the lane, on its north side
     if (road === BAZAAR && plot.s0 === CRICKET_GALI_S0) return moveTo(CRICKET_LANE, CRICKET.endHouse.s0, CRICKET.endHouse.s1, -1, CRICKET_LANE_HALF);
-    // the bus stand's mouth is school road's start: its house closes school road's far end, for now
+    // the bus stand's mouth is school road's start: its house closes the corner where school road meets the home lane
     if (road === BUS_STAND_EDGES.south) {
-      // (across the road's end: "along" this house is across the road, so it's placed from the end's two sides)
-      const end = SCHOOL_ROAD.length;
-      const a = SCHOOL_ROAD.pointAt(end, -5), b = SCHOOL_ROAD.pointAt(end, 5), back = SCHOOL_ROAD.pointAt(end - 1, 0), here = SCHOOL_ROAD.pointAt(end, 0);
+      // (across the end of school road's last stretch, the home lane turning off just before it: you see it
+      // all the way down school road)
+      const end = SCHOOL_TAIL.length;
+      const a = SCHOOL_TAIL.pointAt(end, -CORNER_HOUSE_HALF), b = SCHOOL_TAIL.pointAt(end, CORNER_HOUSE_HALF), back = SCHOOL_TAIL.pointAt(end - 1, 0), here = SCHOOL_TAIL.pointAt(end, 0);
       place("house", a, b, new THREE.Vector2(back.x - here.x, back.z - here.z).normalize(), `gali-end@school`);
       return;
     }
@@ -329,6 +338,14 @@ export function buildStreet(): Street {
     const normal = new THREE.Vector2(Math.sin(h), -Math.cos(h));
     for (let k = -1; k <= 1; k++) {
       // three 9 m frontages side by side, 13.5 m either side of the centre
+      if (k === 1) {
+        // the house right of home: where it stood, the home lane comes out now (world/homeLane.ts), so it's
+        // built along the lane instead, on its south side, facing it (still here, in the same order: nothing
+        // after it changes)
+        const a = LANE_ROAD.pointAt(MOVED_HOUSE.s0, -HOME_LANE.half), b = LANE_ROAD.pointAt(MOVED_HOUSE.s1, -HOME_LANE.half);
+        place("house", a, b, new THREE.Vector2(0, -1), `end@0:${k}`);
+        continue;
+      }
       place(k === 0 ? "home" : "house", pointAt(0, (k - 0.5) * 9), pointAt(0, (k + 0.5) * 9), normal, `end@0:${k}`);
     }
   }
@@ -443,6 +460,16 @@ export function buildStreet(): Street {
     lamps.push(...it.lamps);
   }
   townSigns.push(...school.signs, ...tuition.signs);
+
+  // the home lane (world/homeLane.ts): school road's last few metres to the corner, then the lane west, to
+  // behind home, where the south side road's back lane comes into it (the wall at its far end is built above)
+  group.add(roadSurface(SCHOOL_TAIL, 0, SCHOOL_TAIL.length));
+  group.add(laneSurface(LANE_ROAD, HOME_LANE.half, ROAD_WIDTH / 2, LANE_ROAD.length, true, 0x9a958c));
+  HOME_ROWS.forEach(({ road, plan, seed }) => {
+    const random = makeRng(seed);
+    const names = shuffled(HOME_SHOPS.count, seed).map((k) => HOME_SHOPS.from + k);
+    buildRow(road, planPlots(random, plan), random, names);
+  });
 
 
   // south to north, so whoever picks from them can space them out along the walk
