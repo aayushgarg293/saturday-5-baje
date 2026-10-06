@@ -1,6 +1,6 @@
 import { type Box, pushOut } from "../core/colliders";
 import { SIDE_ROADS, SLOTS, STREET_LENGTH, pointAt } from "../world/layout";
-import { CHOWK, COURT, COURT_ROAD } from "../world/town";
+import { BUS_STAND, CHOWK, COURT, COURT_ROAD } from "../world/town";
 
 /**
  * Dev-only walk check: can the player actually get everywhere?
@@ -36,7 +36,7 @@ export function walkCheck(colliders: readonly Box[]): WalkReport {
     minZ = Math.min(minZ, p.z); maxZ = Math.max(maxZ, p.z);
   };
   for (let s = -2; s <= STREET_LENGTH + CHOWK.depth + 4; s += 2) for (const off of [-20, 20]) grow(pointAt(s, off));
-  for (let s = 0; s <= COURT_ROAD.length + 2; s += 2) for (const off of [-30, 20]) grow(COURT_ROAD.pointAt(s, off));
+  for (let s = 0; s <= COURT_ROAD.length + BUS_STAND.depth + 12; s += 2) for (const off of [-30, 30]) grow(COURT_ROAD.pointAt(s, off));
   const nx = Math.ceil((maxX - minX) / CELL), nz = Math.ceil((maxZ - minZ) / CELL);
   const index = (x: number, z: number) => Math.round((x - minX) / CELL) + Math.round((z - minZ) / CELL) * nx;
 
@@ -116,6 +116,10 @@ export function walkCheck(colliders: readonly Box[]): WalkReport {
     typists: onCourtRoad(COURT.s0 + 3, -4.6),
     courtYard: onCourtRoad((COURT.s0 + COURT.s1) / 2, COURT.building.front + 4),
     courtRoadEnd: onCourtRoad(COURT_ROAD.length - 3, 0),
+    // the bus stand: under the shed, by the booking windows, the far corner
+    busShed: onCourtRoad(BUS_STAND.s0 + 6, -BUS_STAND.half + 2.6),
+    bookingWindow: onCourtRoad(BUS_STAND.s0 + BUS_STAND.depth - 5, -BUS_STAND.half + 4.7),
+    busStandFarCorner: onCourtRoad(BUS_STAND.s0 + BUS_STAND.depth - 2, BUS_STAND.half - 2),
   };
 
   // the narrowest clear walkable width across the street, every metre

@@ -13,16 +13,18 @@ import { buildHaveli } from "./buildings/haveli";
 import { buildHome } from "./buildings/home";
 import { buildHouse } from "./buildings/house";
 import { buildShop } from "./buildings/shop";
+import { buildVacant } from "./buildings/vacant";
 import { buildTemple } from "./props/temple";
 import { Parts, ribbon } from "./kit";
 import { addRoadPatches } from "./roadPatches";
-import { BAZAAR_SHOPS, CHOWK_SHOPS, COURT_SHOPS } from "./names";
+import { BAZAAR_SHOPS, BUS_STAND_SHOPS, CHOWK_SHOPS, COURT_SHOPS } from "./names";
 import { type Chowk, buildChowk } from "./places/chowk";
+import { buildBusStand } from "./places/busStand";
 import { buildCourt } from "./places/court";
-import { CHOWK, CHOWK_ROWS, COURT_ROAD, COURT_ROWS, TOWN_GROUND } from "./town";
+import { BUS_STAND_ROWS, CHOWK, CHOWK_ROWS, COURT_ROAD, COURT_ROWS, TOWN_GROUND } from "./town";
 import {
   CAFE, DRAIN, PLOT_DEPTH, ROAD_WIDTH, SIDE_ROADS, STREET_LENGTH,
-  BAZAAR, type Plot, centreAt, planPlots, pointAt, streetCoords, yawAlong,
+  BAZAAR, type Plot, type VacantKind, centreAt, planPlots, pointAt, streetCoords, yawAlong,
 } from "./layout";
 import type { Road } from "./roads";
 
@@ -96,8 +98,13 @@ export type WorldLine = { kind: LineSpot["kind"]; a: THREE.Vector3; b: THREE.Vec
 const SEED = 2006;
 
 type Builder = (c: BuildContext) => BuildResult;
-const BUILDERS: Record<"shop" | "haveli" | "house" | "home" | "cafe" | "temple" | "wall", Builder> = {
+const BUILDERS: Record<"shop" | "haveli" | "house" | "home" | "cafe" | "temple" | "wall" | VacantKind, Builder> = {
   wall: buildBoundaryWall,
+  // the plots nobody's built on (yet): world/buildings/vacant.ts
+  fenced: buildVacant("fenced"),
+  bare: buildVacant("bare"),
+  halfBuilt: buildVacant("halfBuilt"),
+  construction: buildVacant("construction"),
   home: buildHome,
   shop: buildShop,
   haveli: buildHaveli,
@@ -250,8 +257,8 @@ export function buildStreet(): Street {
       }
       const shopName = plot.type === "shop" ? shopOrder[shopCount++ % shopOrder.length] : undefined;
       // (named for finding it while testing; the bazaar's keep their old names)
-      const name = `${plot.type}@${road === BAZAAR ? "" : road.name + ":"}${plot.side}${plot.s0.toFixed(0)}`;
-      const built = place(plot.type, a, b, normal, name, shopName, random);
+      const name = `${plot.vacant ?? plot.type}@${road === BAZAAR ? "" : road.name + ":"}${plot.side}${plot.s0.toFixed(0)}`;
+      const built = place(plot.type === "vacant" ? plot.vacant! : plot.type, a, b, normal, name, shopName, random);
       rows[plot.side].push({ s0: plot.s0, ...built });
     }
     addWallAds(rows, addSign);
@@ -328,19 +335,20 @@ export function buildStreet(): Street {
   group.add(court.group);
   colliders.push(...court.colliders);
   townSigns.push(...court.signs);
-  closeEnd(COURT_ROAD, COURT_ROAD.length, makeRng(7202));
 
-  /**
-   * Close a road at `s` with three houses across it, facing back down it
-   * (as the bazaar's south end is closed, with home in the middle).
-   */
-  function closeEnd(road: Road, s: number, random: Rng) {
-    const h = road.centreAt(s).heading;
-    const normal = new THREE.Vector2(-Math.sin(h), Math.cos(h)); // (back down the road)
-    for (let k = -1; k <= 1; k++) {
-      place("house", road.pointAt(s, (0.5 - k) * 9), road.pointAt(s, (-0.5 - k) * 9), normal, `end@${road.name}:${k}`, undefined, random);
-    }
-  }
+  // the bus stand where court road ends: its east and south edges of shops (school road's mouth in
+  // the south edge), the yard, the shed, the booking office, the buses
+  BUS_STAND_ROWS.forEach(({ road, plan, seed }) => {
+    const random = makeRng(seed);
+    const names = shuffled(BUS_STAND_SHOPS.count, seed).map((k) => BUS_STAND_SHOPS.from + k);
+    buildRow(road, planPlots(random, plan), random, names);
+  });
+  const busStand = buildBusStand();
+  group.add(busStand.group);
+  colliders.push(...busStand.colliders);
+  lamps.push(...busStand.lamps);
+  townSigns.push(...busStand.signs);
+
 
   // south to north, so whoever picks from them can space them out along the walk
   const along = (p: THREE.Vector3) => streetCoords(p.x, p.z).s;

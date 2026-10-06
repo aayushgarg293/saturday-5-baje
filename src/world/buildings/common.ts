@@ -119,12 +119,14 @@ export type LampSpot = {
  * kind of place it is. people/crowd.ts decides who's there.
  */
 export type PeopleSpot = {
-  kind: "counter" | "platform" | "temple" | "door" | "saloon" | "tailor" | "pco";
+  kind: "counter" | "platform" | "temple" | "door" | "saloon" | "tailor" | "pco" | "construction";
   x: number;
   /** The floor they're on. */
   y: number;
   z: number;
   turn: number;
+  /** For the construction site: the plot's frontage (the labourers' places are worked out from it). */
+  w?: number;
   /** The shop's trade, for a shopkeeper. */
   trade?: import("../names").Trade;
   /** For the temple: the bell, relative to the spot, in the spot's own frame. */
@@ -140,7 +142,9 @@ export type SignSpot = {
     // in the STD booth under it (world/cafe/pco.ts)
     | "pcoRates"
     // the town (world/places/)
-    | "courtBoard";
+    | "courtBoard" | "busSide" | "busDestination" | "timetable"
+    // the vacant plots (world/buildings/vacant.ts)
+    | "plotBoard";
   /** The word(s) on a stall's board. */
   label?: string;
   /** Which entry of SHOP_NAMES (world/names.ts) a shop board shows. */

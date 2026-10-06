@@ -211,6 +211,58 @@ const PAINTERS: Partial<Record<WorldSign["kind"], PainterSpec>> = {
     weather(ctx, w, h, rng, 0.4);
   } },
 
+  /**
+   * A bus's side: "राजस्थान रोडवेज" in big blue letters (the state roadways' real name: the owner's
+   * choice, an exception to the look-alike rule, as for the court and the flag).
+   */
+  busSide: { ppm: 160, weather: 0.35, cutout: true, paint(ctx, w, h, _i, rng) {
+    text(ctx, "राजस्थान रोडवेज", w / 2, h * 0.52, w * 0.8, h * 0.85, "#2f4f9a", DEVANAGARI);
+    weather(ctx, w, h, rng, 0.5);
+  } },
+
+  /** The destination board over a bus's windscreen: the place, big, in yellow on black. */
+  busDestination: { ppm: 400, weather: 0.2, paint(ctx, w, h, _i, _rng, sign) {
+    ctx.fillStyle = "#14120f";
+    ctx.fillRect(0, 0, w, h);
+    text(ctx, sign.label ?? "", w / 2, h * 0.54, w * 0.86, h * 0.8, "#f4c542", DEVANAGARI);
+  } },
+
+  /** The timetable painted on the bus stand's wall: where to, when, and the fare. */
+  timetable: { ppm: 260, weather: 0.5, paint(ctx, w, h, _i, rng) {
+    background(ctx, w, h, "#f2ecd8", "#2f4f9a");
+    ctx.fillStyle = "#2f4f9a";
+    ctx.fillRect(0, 0, w, h * 0.17);
+    text(ctx, "समय सारणी  •  TIME TABLE", w / 2, h * 0.085, w * 0.86, h * 0.11, "#f2ecd8", DEVANAGARI);
+    const rows = [["जयपुर", "Jaipur", "5:15  6:45  8:30", "₹62"], ["किशनगढ़", "Kishangarh", "5:30  6:15  7:00", "₹18"],
+      ["पुष्कर", "Pushkar", "हर आधे घंटे", "₹8"], ["ब्यावर", "Beawar", "5:45  7:15", "₹30"], ["भीलवाड़ा", "Bhilwara", "6:00", "₹85"]];
+    rows.forEach(([hi, en, times, fare], k) => {
+      const y = h * (0.28 + k * 0.15);
+      ctx.textAlign = "left";
+      ctx.font = `bold ${h * 0.08}px ${DEVANAGARI}`;
+      ctx.fillStyle = "#1f1a17";
+      ctx.fillText(`${hi} (${en})`, w * 0.05, y);
+      ctx.fillStyle = "#b8322a";
+      ctx.font = `bold ${h * 0.075}px ${LATIN_PLAIN}`;
+      ctx.fillText(times, w * 0.52, y);
+      ctx.textAlign = "right";
+      ctx.fillText(fare, w * 0.95, y);
+    });
+    weather(ctx, w, h, rng, 1);
+  } },
+
+  /**
+   * The board on a vacant plot (world/buildings/vacant.ts): white tin, the
+   * first line big in red ("for sale", "under dispute"), the second smaller
+   * in black, painted by a sign-writer in a hurry.
+   */
+  plotBoard: { ppm: 260, weather: 0.8, paint(ctx, w, h, _i, rng, sign) {
+    background(ctx, w, h, "#f1ede2", "#b8322a");
+    const [first, second = ""] = (sign.label ?? "").split("\n");
+    tilted(ctx, w / 2, h * 0.38, rng.range(-0.02, 0.02), () => text(ctx, first, 0, 0, w * 0.86, h * 0.34, "#b8322a", DEVANAGARI));
+    text(ctx, second, w / 2, h * 0.74, w * 0.86, h * 0.2, "#1f1a17", DEVANAGARI);
+    weather(ctx, w, h, rng, 1.2);
+  } },
+
   /** An A4 printout taped to the wall, a rule in bold capitals, taped crooked. */
   notice: { ppm: 500, weather: 0.25, paint(ctx, w, h, _i, rng, sign) {
     ctx.fillStyle = "#f7f4ec";

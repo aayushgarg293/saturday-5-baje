@@ -24,6 +24,7 @@ import { Pipeline } from "./render/post";
 import { createRenderer, fitToWindow } from "./render/renderer";
 import { playEnding } from "./ui/ending";
 import { showPrompt } from "./ui/prompt";
+import { buildAreas } from "./world/areas";
 import { buildBackdrop } from "./world/backdrop";
 import { buildEvening } from "./world/evening";
 import { buildFans } from "./world/fans";
@@ -88,7 +89,12 @@ if (nameplates) scene.add(nameplates);
 const shopFans = buildFans(street.fans); // (the shops' ceiling fans, turning: one mesh)
 const laundry = buildLaundry(street.lines); // (washing on the balconies and roofs, swaying: one mesh, and the roof lines)
 scene.add(shopFans.mesh, laundry.group);
-scene.add(sky.group, street.group, life.group, buildSigns([...street.signs, ...life.signs, ...wires.signs, ...pcoSigns(street.cafeFrame), ...street.townSigns]), wires.group, backdrop.group);
+const signs = buildSigns([...street.signs, ...life.signs, ...wires.signs, ...pcoSigns(street.cafeFrame), ...street.townSigns]);
+scene.add(sky.group, street.group, life.group, signs, wires.group, backdrop.group);
+// only drawing what's near (world/areas.ts): the town's buildings, its signs, its people, sorted once by where they are
+const areas = buildAreas();
+areas.assign([...street.group.children, ...signs.children]);
+for (const name of ["courtPeople", "busStandPeople", "construction"]) areas.assign([scene.getObjectByName(name)!]);
 
 // --- the player ----------------------------------------------------------------
 const input = new Input(canvas);
@@ -270,6 +276,7 @@ function update(dt: number) {
   paniPuri.update(dt); // (at the cart, it has the camera)
   haircut.update(dt); // (in the barber's chair, it has the camera)
   cricket.update(dt); // (at the crease, it has the camera)
+  areas.update(player.pos); // (show the parts of the town you're near)
   life.update(time, dt, player.pos);
   cafeRoom.update(dt);
   shopFans.update(dt);

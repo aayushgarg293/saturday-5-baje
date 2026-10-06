@@ -14,7 +14,7 @@ import { Road } from "./roads";
  *  HOME ──────────── HOME LANE ───────────────┘
  *
  * Built so far: the bazaar (world/layout.ts), the chowk at its north end,
- * and court road, with the court.
+ * court road with the court, and the bus stand at court road's far end.
  *
  * Every row of buildings here is laid out like the bazaar's (layout.ts,
  * `planPlots`), with its own random numbers, so adding to the town never
@@ -144,6 +144,92 @@ export const COURT_ROWS: { road: Road; plan: RowPlan; seed: number }[] = [
         // the court: its compound and building are world/places/court.ts
         { side: "left", s0: COURT.s0, s1: COURT.s1, type: "open" },
       ],
+      // not every plot's built on: one across from the court fenced and for sale; one just past the
+      // court begun and abandoned (in dispute: the case is in that very court); one with the builder's
+      // sand and bricks dumped on it, near the bus stand end
+      vacant: [
+        { side: "right", s: 38, kind: "fenced" },
+        { side: "left", s: 54, kind: "halfBuilt" },
+        { side: "right", s: 65, kind: "bare" },
+      ],
     },
+  },
+];
+
+// --- the bus stand -------------------------------------------------------------------------------
+
+/**
+ * The bus stand: a dusty yard where court road ends, at the town's north-east
+ * corner (world/places/busStand.ts). In court road's terms it runs from where
+ * court road's buildings end (s = 80) `depth` metres further east, `half`
+ * metres either side of court road's centre line (court road runs due east,
+ * so the yard is square to the world).
+ *
+ *    north: a boundary wall; along it the waiting shed, the booking window
+ *   ┌───────────────────────────────────┐
+ *   │  ▭▭▭ shed ▭▭▭    [booking]        │ east:
+ *   │                                   │ the dhaba,
+ *   │    ▬▬ bus ▬▬      ▬▬ bus ▬▬        │ kiosks, shops
+ *   ═ court road                        │
+ *   │                                   │
+ *   └──── shops ════ school road ═══ shops┘
+ *                    (its mouth: closed for now)
+ */
+export const BUS_STAND = {
+  s0: COURT_ROAD.length,
+  depth: 36,
+  half: 18,
+  /** Where school road leaves the south edge (metres along that edge, from its west end). */
+  schoolRoad: { s0: 22, s1: 30 },
+};
+
+/** The world point `offset` metres across the bus stand (north −, south +) at `s` metres into it from its west edge. */
+export function inBusStand(s: number, offset: number): { x: number; z: number } {
+  return COURT_ROAD.pointAt(BUS_STAND.s0 + s, offset);
+}
+
+export const BUS_STAND_EDGES = {
+  /** North to south, buildings on its left (east). */
+  east: new Road({ name: "busstand-east", start: inBusStand(BUS_STAND.depth - EDGE_SETBACK, -BUS_STAND.half), heading: Math.PI, length: BUS_STAND.half * 2 }),
+  /** West to east, buildings on its right (south), school road's mouth between them. */
+  south: new Road({ name: "busstand-south", start: inBusStand(0, BUS_STAND.half - EDGE_SETBACK), heading: Math.PI / 2, length: BUS_STAND.depth }),
+};
+
+const busStandShops = (rng: Rng): PlotType => (rng.next() < 0.85 ? "shop" : "house");
+
+export const BUS_STAND_ROWS: { road: Road; plan: RowPlan; seed: number }[] = [
+  { road: BUS_STAND_EDGES.east, seed: 7401, plan: { length: BUS_STAND.half * 2, sides: ["left"], fixed: [], pick: busStandShops, setback: { min: EDGE_SETBACK, max: EDGE_SETBACK } } },
+  {
+    road: BUS_STAND_EDGES.south, seed: 7402,
+    plan: {
+      length: BUS_STAND.depth, sides: ["right"], pick: busStandShops, setback: { min: EDGE_SETBACK, max: EDGE_SETBACK },
+      // school road's mouth: a short dead end for now (a house across it a few metres in), until school road is built
+      fixed: [{ side: "right", s0: BUS_STAND.schoolRoad.s0, s1: BUS_STAND.schoolRoad.s1, type: "gali" }],
+      // a house going up, facing the yard: the labourers at work (people/construction.ts)
+      vacant: [{ side: "right", s: 18, kind: "construction" }],
+    },
+  },
+];
+
+// --- what's drawn when (world/areas.ts) ---------------------------------------------------------------
+
+/**
+ * The parts of the town shown only while you're near them (world/areas.ts):
+ * a box on the ground (world x/z) round each, and how near you must be to it
+ * (metres) for it to be drawn. Anything outside every box (the bazaar, the
+ * chowk: its tower is seen all the way down the bazaar) is always drawn.
+ */
+export type AreaSpec = { name: string; box: { x0: number; x1: number; z0: number; z1: number }; reach: number };
+
+const courtStart = COURT_ROAD.pointAt(0, 0);
+export const AREAS: AreaSpec[] = [
+  // court road: seen from the chowk, not from the bazaar (the chowk's east edge is in the way). Its box
+  // starts 2 m in, so the chowk's own east buildings, whose fronts are on the edge, aren't in it.
+  { name: "court road", box: { x0: courtStart.x + 2, x1: courtStart.x + COURT_ROAD.length, z0: courtStart.z - 20, z1: courtStart.z + 20 }, reach: 25 },
+  // the bus stand: seen all down court road (it closes the view), and from the chowk
+  {
+    name: "bus stand",
+    box: { x0: courtStart.x + BUS_STAND.s0 + 1, x1: courtStart.x + BUS_STAND.s0 + BUS_STAND.depth + 14, z0: courtStart.z - 30, z1: courtStart.z + 30 },
+    reach: 100,
   },
 ];

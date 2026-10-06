@@ -47,6 +47,10 @@ export const CAMERAS: Record<string, CameraSpot> = {
   courtRoad: onRoad(COURT_ROAD, 2, 0, 0, 0.02),
   /** The court, from across court road: the wall and gate, the neem, the typists. */
   court: onRoad(COURT_ROAD, (COURT.s0 + COURT.s1) / 2 - 4, 2.6, 1.1, 0.12),
+  /** The bus stand, from where court road comes in: the buses, the shed, the shops beyond. */
+  busStand: onRoad(COURT_ROAD, COURT_ROAD.length - 2, 3, 0.25, 0.05),
+  /** The bus stand from its far (south-east) corner, looking back at the shed and the buses. */
+  busStandBack: onRoad(COURT_ROAD, COURT_ROAD.length + 30, 14, 2.4, 0.08),
   /** The opening view: the south end, looking up the street. The cafe sign should be visible. */
   start: along(1.5),
   /** Shops on the left, early in the walk. */

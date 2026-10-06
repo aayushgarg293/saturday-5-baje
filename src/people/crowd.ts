@@ -8,6 +8,8 @@ import { buildChaiCorner } from "./chaiCorner";
 import { buildChaiwala } from "./chaiwala";
 import { type Cricket, buildCricket } from "./cricket";
 import { buildDevotee } from "./devotee";
+import { buildBusStandPeople } from "./busStand";
+import { buildConstruction } from "./construction";
 import { buildCourtPeople } from "./court";
 import { buildPco } from "./pco";
 import { type Saloon, buildSaloon } from "./saloon";
@@ -90,6 +92,10 @@ export function buildCrowd(spots: WorldPeopleSpot[]): Crowd {
   for (const spot of spots.filter((s) => s.kind === "pco")) groups.push(buildPco(spot));
   // the town (world/town.ts): the typists and the stamp vendor outside the court
   groups.push(buildCourtPeople());
+  // …and the conductor and the waiting passengers at the bus stand
+  groups.push(buildBusStandPeople());
+  // …and the labourers at the house going up there
+  for (const spot of spots.filter((s) => s.kind === "construction")) groups.push(buildConstruction(spot));
 
   // shopkeepers, spread out along the street (the rest of the shops' keepers are inside, out of sight)
   const taken: THREE.Vector3[] = [];

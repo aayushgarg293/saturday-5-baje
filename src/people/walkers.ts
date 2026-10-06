@@ -296,37 +296,10 @@ function pose(w: Walker, player: THREE.Vector3, vehicle: THREE.Vector3 | null, t
   w.moving += (Math.min(1, w.speed / 0.4) - w.moving) * Math.min(1, dt * 6);
   const m = w.moving, p = w.phase, TAU = Math.PI * 2;
 
-  // Where each foot is, this moment of the cycle: half the cycle on the ground
-  // sliding back, half lifting and swinging forward.
-  const feet = ([["L", 0.1, 0], ["R", -0.1, 0.5]] as const).map(([side, x, offset]) => {
-    const q = (p + offset) % 1;
-    let z: number, lift = 0;
-    if (q < 0.5) z = STRIDE / 2 - (q / 0.5) * STRIDE;
-    else {
-      const u = (q - 0.5) / 0.5;
-      z = -STRIDE / 2 + (u * u * (3 - 2 * u)) * STRIDE;
-      lift = Math.sin(Math.PI * u) * 0.1 * k;
-    }
-    return { side, x, z: z * m, lift: lift * m, planted: q < 0.5 };
-  });
-  // Hips: the leg on the ground stays nearly straight, so the hips ride up
-  // over it and dip as the feet pass, like an upside-down pendulum (a fixed
-  // height would leave the knees bent all the way).
-  const planted = feet.find((f) => f.planted)!;
-  const LEG = 0.83 * k; // hip to ankle, a touch short of full stretch
-  const overFoot = 0.06 * k + Math.sqrt(LEG * LEG - planted.z * planted.z) + 0.04 * k;
-  const hips = person.bone("hips");
-  hips.position.set(0, THREE.MathUtils.lerp(0.94 * k, overFoot, m), 0);
-  hips.rotation.set(0, 0.08 * m * Math.sin(TAU * p), 0.035 * m * Math.sin(TAU * p));
-  person.bone("spine").rotation.set(0.04 + Math.sin(t * 1.7) * 0.01, 0, 0);
-  person.bone("chest").rotation.set(0.02, -0.12 * m * Math.sin(TAU * p), 0);
+  walkLegs(person, p, m, k, t);
   root.updateMatrixWorld(true);
-
   const world = (x: number, y: number, z: number) => root.localToWorld(v(x, y, z));
   const dirOf = (d: THREE.Vector3) => d.clone().transformDirection(root.matrixWorld);
-
-  // the legs reach their feet
-  for (const f of feet) plant(person, f.side, world(f.x * k, 0.06 * k + f.lift, f.z), dirOf(KNEE));
 
   // arms, by style
   const swing = 0.17 * k * m * Math.cos(TAU * p); // right arm forward when the left foot is
@@ -366,4 +339,48 @@ function pose(w: Walker, player: THREE.Vector3, vehicle: THREE.Vector3 | null, t
   w.blinkIn -= dt;
   if (w.blinkIn < -0.13) w.blinkIn = 2 + Math.random() * 3;
   person.face.set(w.blinkIn < 0 ? "blink" : "neutral");
+}
+
+/**
+ * The legs and hips of a walking person, at `phase` (0–1) of their stride
+ * cycle, `moving` (0 standing still – 1 walking), `k` their height scale.
+ * `crouch` (0–1) bends the knees with the feet planted, for someone setting
+ * a load down. Also used by the labourers (people/construction.ts). The
+ * person's root must be where they are before this is called.
+ */
+export function walkLegs(person: Person, phase: number, moving: number, k: number, t = 0, crouch = 0) {
+  const root = person.root;
+  const m = moving, p = phase, TAU = Math.PI * 2;
+  const STRIDE = 0.62 * k;
+  // Where each foot is, this moment of the cycle: half the cycle on the ground
+  // sliding back, half lifting and swinging forward.
+  const feet = ([["L", 0.1, 0], ["R", -0.1, 0.5]] as const).map(([side, x, offset]) => {
+    const q = (p + offset) % 1;
+    let z: number, lift = 0;
+    if (q < 0.5) z = STRIDE / 2 - (q / 0.5) * STRIDE;
+    else {
+      const u = (q - 0.5) / 0.5;
+      z = -STRIDE / 2 + (u * u * (3 - 2 * u)) * STRIDE;
+      lift = Math.sin(Math.PI * u) * 0.1 * k;
+    }
+    return { side, x, z: z * m, lift: lift * m, planted: q < 0.5 };
+  });
+  // Hips: the leg on the ground stays nearly straight, so the hips ride up
+  // over it and dip as the feet pass, like an upside-down pendulum (a fixed
+  // height would leave the knees bent all the way).
+  const planted = feet.find((f) => f.planted)!;
+  const LEG = 0.83 * k; // hip to ankle, a touch short of full stretch
+  const overFoot = 0.06 * k + Math.sqrt(LEG * LEG - planted.z * planted.z) + 0.04 * k;
+  const hips = person.bone("hips");
+  hips.position.set(0, THREE.MathUtils.lerp(0.94 * k, overFoot, m) - crouch * 0.38 * k, 0);
+  hips.rotation.set(0, 0.08 * m * Math.sin(TAU * p), 0.035 * m * Math.sin(TAU * p));
+  person.bone("spine").rotation.set(0.04 + Math.sin(t * 1.7) * 0.01, 0, 0);
+  person.bone("chest").rotation.set(0.02, -0.12 * m * Math.sin(TAU * p), 0);
+  root.updateMatrixWorld(true);
+
+  const world = (x: number, y: number, z: number) => root.localToWorld(v(x, y, z));
+  const dirOf = (d: THREE.Vector3) => d.clone().transformDirection(root.matrixWorld);
+
+  // the legs reach their feet
+  for (const f of feet) plant(person, f.side, world(f.x * k, 0.06 * k + f.lift, f.z), dirOf(KNEE));
 }

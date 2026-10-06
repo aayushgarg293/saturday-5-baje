@@ -43,6 +43,8 @@ export const BAZAAR_SHOPS = 36;
 export const CHOWK_SHOPS = { from: 36, count: 10 };
 /** Court road's: the eight after the chowk's. */
 export const COURT_SHOPS = { from: 46, count: 8 };
+/** The bus stand's: the eight after court road's. */
+export const BUS_STAND_SHOPS = { from: 54, count: 8 };
 
 export const SHOP_NAMES: ShopName[] = [
   { hi: "शर्मा जनरल स्टोर", en: "Sharma General Store", tag: "Kirana • Cold Drinks • Dry Fruits", trade: "kirana", shelf: "grocery" },
@@ -101,6 +103,15 @@ export const SHOP_NAMES: ShopName[] = [
   { hi: "एस. एल. गुप्ता, नोटरी", en: "S.L. Gupta, Notary", tag: "Notary • Oath Commissioner", trade: "general", shelf: "books" },
   { hi: "श्री गणेश बुक बाइंडर्स", en: "Shri Ganesh Book Binders", tag: "Binding • File Cover • Register", trade: "general", shelf: "stationery" },
   { hi: "न्यू लक्ष्मी भोजनालय", en: "New Laxmi Bhojnalaya", tag: "Thali ₹25 • Dal Baati Churma", trade: "sweets", shelf: "sweets" },
+  // --- the bus stand (world/town.ts) ---
+  { hi: "होटल हाईवे", en: "Hotel Highway", tag: "Dhaba • Parantha • Chai", trade: "sweets", shelf: "sweets" },
+  { hi: "मरुधर ट्रेवल्स", en: "Marudhar Travels", tag: "Ticket • Taxi • Tour Package", trade: "general", shelf: "stationery" },
+  { hi: "बस स्टैंड बुक स्टॉल", en: "Bus Stand Book Stall", tag: "Novel • Magazine • Akhbar", trade: "general", shelf: "books" },
+  { hi: "राजू फल भंडार", en: "Raju Phal Bhandar", tag: "Kela • Santra • Seb", trade: "kirana", shelf: "grocery" },
+  { hi: "श्री राम पान भंडार", en: "Shri Ram Paan Bhandar", tag: "Paan • Cold Drink • Toffee", trade: "kirana", shelf: "paan" },
+  { hi: "न्यू शिव ऑटो गैराज", en: "New Shiv Auto Garage", tag: "Puncture • Welding • Service", trade: "cycle", shelf: "autoParts" },
+  { hi: "यात्री विश्राम गृह", en: "Yatri Vishram Grih", tag: "Room ₹50 • Bathroom Attached", trade: "general", shelf: "gifts" },
+  { hi: "गोयल मिठाई", en: "Goyal Mithai", tag: "Peda • Sohan Halwa • Gajak", trade: "sweets", shelf: "sweets" },
 ];
 
 /** A painted wall ad for a look-alike brand of the period (slogans are invented). */

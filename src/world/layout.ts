@@ -76,8 +76,21 @@ export function yawAlong(s: number, turn = 0): number {
 // --- plots ------------------------------------------------------------------------
 
 export type Side = "left" | "right";
-/** (`open`: a gap left empty, where another road leads off: world/town.ts.) */
-export type PlotType = "shop" | "haveli" | "house" | "cafe" | "gali" | "temple" | "road" | "open";
+/**
+ * (`open`: a gap left empty, where another road leads off: world/town.ts.
+ * `vacant`: a plot nobody has built on yet, or not finished: world/buildings/vacant.ts.)
+ */
+export type PlotType = "shop" | "haveli" | "house" | "cafe" | "gali" | "temple" | "road" | "open" | "vacant";
+
+/**
+ * The kinds of vacant plot:
+ *   fenced        barbed wire on concrete posts round bare ground, weeds, a "for sale" board
+ *   bare          no fence: sand, gravel and a stack of bricks waiting for the builder
+ *   halfBuilt     a plinth, columns with their rods sticking up, walls half up; abandoned
+ *   construction  being built right now: the ground floor's roof just cast, the front wall going up,
+ *                 the labourers at work (people/construction.ts)
+ */
+export type VacantKind = "fenced" | "bare" | "halfBuilt" | "construction";
 
 export type Plot = {
   side: Side;
@@ -87,6 +100,8 @@ export type Plot = {
   type: PlotType;
   /** Distance from the centre line to the plot's front edge. */
   setback: number;
+  /** For a vacant plot: which kind. */
+  vacant?: VacantKind;
 };
 
 /** Plots that must be exactly here; everything else is filled in around them. */
@@ -116,6 +131,12 @@ export type RowPlan = {
   fixed: Omit<Plot, "setback">[];
   pick: (rng: Rng, s: number) => PlotType;
   setback: { min: number; max: number };
+  /**
+   * Plots left vacant: whichever plot covers `s` on that side, once the row
+   * is planned. (Chosen after planning, so the row's other plots stay exactly
+   * as they were.)
+   */
+  vacant?: { side: Side; s: number; kind: VacantKind }[];
 };
 
 /** The bazaar's row plan. */
@@ -149,6 +170,10 @@ export function planPlots(rng: Rng, plan: RowPlan = BAZAAR_ROWS): Plot[] {
         s = next.s1;
       }
     }
+  }
+  for (const v of plan.vacant ?? []) {
+    const plot = plots.find((p) => p.side === v.side && p.s0 <= v.s && v.s < p.s1);
+    if (plot) Object.assign(plot, { type: "vacant", vacant: v.kind });
   }
   return plots;
 }
