@@ -6,7 +6,8 @@ import { BOOTHS, DESK, HALL, YOUR_BOOTH, boothPoint } from "./plan";
 /**
  * Your computer's screen, in booth 2 (look-alike everything):
  *
- *   welcome      the blue XP-like welcome screen it sits at until you come
+ *   welcome      the blue XP-like welcome screen it sits at until you come,
+ *                "Booth 02 • Free" along the bottom
  *   connecting   the dial-up box: "Dialing 172233…", then "Verifying user
  *                name and password…", then "Registering your computer on
  *                the network…" (the modem screeches meanwhile: audio/cafe.ts)
@@ -101,6 +102,9 @@ function welcome(ctx: CanvasRenderingContext2D) {
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.fillText("welcome", W / 2, H / 2);
+  // the cafe software's note along the bottom: this booth is free (so it's clear which one is yours)
+  ctx.font = `bold 20px ${SANS}`;
+  ctx.fillText("CyberTime  •  Booth 02  •  Free", W / 2, H - 25);
 }
 
 /** The desktop, with the dial-up box open in the middle. */

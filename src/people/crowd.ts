@@ -8,6 +8,7 @@ import { buildChaiCorner } from "./chaiCorner";
 import { buildChaiwala } from "./chaiwala";
 import { buildCricket } from "./cricket";
 import { buildDevotee } from "./devotee";
+import { buildPco } from "./pco";
 import { buildSaloon } from "./saloon";
 import { golgappaCrew, iceGolaCrew, jalebiCrew, kachoriCrew } from "./sellers";
 import { buildShopkeeper } from "./shopkeepers";
@@ -75,6 +76,8 @@ export function buildCrowd(spots: WorldPeopleSpot[]): Crowd {
   for (const spot of spots.filter((s) => s.kind === "saloon")) groups.push(buildSaloon(spot));
   // the tailor at his sewing machine
   for (const spot of spots.filter((s) => s.kind === "tailor")) groups.push(buildTailor(spot));
+  // the STD booth under the cafe: a caller in cabin 1, a man waiting, the owner at the counter
+  for (const spot of spots.filter((s) => s.kind === "pco")) groups.push(buildPco(spot));
 
   // shopkeepers, spread out along the street (the rest of the shops' keepers are inside, out of sight)
   const taken: THREE.Vector3[] = [];

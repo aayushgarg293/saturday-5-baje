@@ -3,7 +3,7 @@ import { cue } from "../core/cues";
 import type { Rng } from "../core/rng";
 import { flat } from "../render/toon";
 import { say } from "../ui/caption";
-import { BOOTHS, BOOTH, type Booth, DESK, HALL, OWNER_SEAT, boothPoint } from "../world/cafe/plan";
+import { BOOTHS, BOOTH, type Booth, DESK, HALL, OWNER_SEAT, YOUR_BOOTH, boothPoint } from "../world/cafe/plan";
 import { type ScreenKind, screenTexture } from "../world/cafe/screens";
 import { type Action, type Actor, makeActor, v } from "./actor";
 import { buildPerson } from "./body";
@@ -23,6 +23,13 @@ import { type Role, recipeFor } from "./recipes";
  *                     peering at the screen, hand on his chin
  *   the college guy   booth 7 by the window: typing in bursts, leaning back
  *                     grinning at his chat; his Nokia and bike keys on the desk
+ *   your neighbours   booth 1: a boy with headphones downloading songs,
+ *                     nodding along; booth 3: a man on his Yorkut scrapbook
+ *                     (so booth 2, between them, is plainly the free one)
+ *   the sleeper       booth 12: asleep on his folded arms, his screensaver on
+ *
+ * Try to sit at someone else's booth and they turn round and tell you so; an
+ * empty one, and the owner calls you back to number 2.
  *
  * Their screens are lit (world/cafe/screens.ts). All in the cafe building's
  * frame; poses in each person's own frame, which is their booth's frame
@@ -36,6 +43,10 @@ export type CafePeople = {
   pay(rupees: number): void;
   /** He calls out to you (leaving without paying): a look toward the stairs, and the words. */
   callOut(words: string): void;
+  /** The booth (not yours) whose chair you're standing at, if any. */
+  boothNear(player: THREE.Vector3): number | null;
+  /** You try to sit at booth `n`: whoever's there turns round and says so; if no one is, the owner does. */
+  tryBooth(n: number): void;
 };
 
 /** The sums a bill can come to, as he'd say them. */
@@ -145,6 +156,8 @@ export function buildCafePeople(frame: THREE.Matrix4, rng: Rng): CafePeople {
     typists.push({ actor: a, keys: onDesk(b, DESK.keyboard), mouse: onDesk(b, DESK.mouse), keyIn: 0, mouseIn: 0 });
     return a;
   };
+  /** Who's in which booth, and what they say if you try to take it. */
+  const taken = new Map<number, { actor: Actor; who: string; line: string }>();
   {
     const k = group.localToWorld(new THREE.Vector3(1.58, HALL.floor + 1.02, -9.18)); // the owner's keyboard (furniture.ts, counter)
     typists.push({ actor: owner, keys: k, mouse: k, keyIn: 0, mouseIn: 0 });
@@ -173,8 +186,9 @@ export function buildCafePeople(frame: THREE.Matrix4, rng: Rng): CafePeople {
     const b = booth(n);
     const p = person("youngMan", 0.96);
     onHead(p, headphones());
-    seat(b, p, [play(rng.range(8, 11)), shout, play(rng.range(10, 14))]);
+    const a = seat(b, p, [play(rng.range(8, 11)), shout, play(rng.range(10, 14))]);
     litScreen(group, b, screen);
+    taken.set(n, { actor: a, who: "Gamer", line: "Oye! Game chal raha hai, disturb mat kar!" });
   }
 
   // the uncle, pecking at the keys with one finger
@@ -183,7 +197,7 @@ export function buildCafePeople(frame: THREE.Matrix4, rng: Rng): CafePeople {
     const p = person("uncle", 1);
     onHead(p, spectacles(), 0.125);
     const onDesk = v(0.28, BOOTH.deskTop + 0.04, 0.5);
-    seat(b, p, [
+    const a = seat(b, p, [
       {
         name: "peck", duration: 6,
         pose: (u) => ({
@@ -196,13 +210,14 @@ export function buildCafePeople(frame: THREE.Matrix4, rng: Rng): CafePeople {
       { name: "chin", duration: 3, pose: () => ({ right: v(-0.03, 1.16, 0.16), left: onDesk, look: SCREEN, lean: 0.3 }) },
     ]);
     litScreen(group, b, "mail");
+    taken.set(5, { actor: a, who: "Uncle", line: "Haan? Beta, mujhe abhi mail bhejna hai… doosra dekho." });
   }
 
   // the college guy by the window, chatting
   {
     const b = booth(7);
     const p = person("youngMan", 1);
-    seat(b, p, [
+    const a = seat(b, p, [
       {
         name: "type", duration: 4,
         pose: (u) => ({ right: KEYS.clone().add(v(-0.1, pulse(u, 0.14, 3) * 0.02, 0)), left: KEYS.clone().add(v(0.1, pulse(u + 0.07, 0.16, 3) * 0.02, 0)), look: SCREEN, lean: 0.25 }),
@@ -211,6 +226,7 @@ export function buildCafePeople(frame: THREE.Matrix4, rng: Rng): CafePeople {
       { name: "laugh", duration: 2, pose: (u) => ({ right: MOUSE, left: v(0.13, 0.62, 0.3), look: SCREEN, lean: -0.2 + Math.abs(Math.sin(u * 8)) * 0.05, smile: true, nod: -0.1 }) },
     ], "glance");
     litScreen(group, b, "chat");
+    taken.set(7, { actor: a, who: "College guy", line: "Bhai, chat chal rahi hai… jaa na." });
     // his Nokia and his bike keys on the desk
     const phone = mobile();
     const at = boothPoint(b, 0.4, BOOTH.chairBack + 0.12);
@@ -223,6 +239,58 @@ export function buildCafePeople(frame: THREE.Matrix4, rng: Rng): CafePeople {
     keys.rotation.y = b.turn + 0.6;
     group.add(keys);
   }
+
+  // (the people below came later: they're built after everyone above, so the
+  // random numbers above, and so everyone's looks, don't change)
+
+  // booth 1: a boy with headphones, downloading songs, nodding along to one
+  {
+    const b = booth(1);
+    const p = person("youngMan", 0.92);
+    onHead(p, headphones());
+    const a = seat(b, p, [
+      { name: "click", duration: 4, pose: (u) => ({ right: MOUSE.clone().add(v(pulse(u, 1.3, 10) * 0.02, 0, 0)), left: v(0.13, 0.62, 0.3), look: SCREEN, lean: 0.2, nod: Math.sin(u * 7) * 0.08 }) },
+      { name: "bob", duration: 5, pose: (u) => ({ right: MOUSE, left: v(0.13, 0.62, 0.3), look: SCREEN, lean: -0.1, nod: Math.sin(u * 8) * 0.12, rock: Math.sin(u * 4) * 0.04, smile: true }) },
+      { name: "type", duration: 2.5, pose: (u) => ({ right: KEYS.clone().add(v(-0.1, pulse(u, 0.2, 3) * 0.02, 0)), left: KEYS.clone().add(v(0.1, pulse(u + 0.09, 0.18, 3) * 0.02, 0)), look: SCREEN, lean: 0.25 }) },
+    ]);
+    litScreen(group, b, "songs");
+    taken.set(1, { actor: a, who: "Boy", line: "Bhai, main hoon yahan… do number khaali hai, beech wala." });
+  }
+
+  // booth 3: a man on his Yorkut scrapbook, leaning back, chin on his hand
+  {
+    const b = booth(3);
+    const p = person("man", 1);
+    const a = seat(b, p, [
+      { name: "read", duration: 6, pose: () => ({ right: MOUSE, left: v(0.04, 1.14, 0.2), look: SCREEN, lean: 0.1 }) },
+      { name: "type", duration: 3, pose: (u) => ({ right: KEYS.clone().add(v(-0.1, pulse(u, 0.25, 3) * 0.02, 0)), left: KEYS.clone().add(v(0.1, pulse(u + 0.1, 0.22, 3) * 0.02, 0)), look: SCREEN, lean: 0.3 }) },
+      { name: "scroll", duration: 4, pose: (u) => ({ right: MOUSE.clone().add(v(0, 0, Math.sin(u * 2) * 0.01)), left: v(0.13, 0.62, 0.3), look: SCREEN, lean: -0.05, smile: u > 2 }) },
+    ], "glance");
+    litScreen(group, b, "yorkut");
+    taken.set(3, { actor: a, who: "Man", line: "Occupied hai bhai! Poora ghanta liya hai maine." });
+  }
+
+  // booth 12: fast asleep on his folded arms, his screensaver on
+  {
+    const b = booth(12);
+    const p = person("youngMan", 1);
+    const arms = KEYS.clone().add(v(0, 0.03, -0.04));
+    const a = seat(b, p, [
+      { name: "sleep", duration: 18, pose: (u) => ({ right: arms.clone().add(v(-0.13, 0, 0)), left: arms.clone().add(v(0.13, 0, 0)), look: KEYS, lean: 0.75, nod: 0.55 + Math.sin(u * 1.1) * 0.02, closed: true }) },
+      { name: "stir", duration: 2.5, pose: () => ({ right: arms.clone().add(v(-0.13, 0, 0)), left: arms.clone().add(v(0.13, 0, 0)), look: SCREEN, lean: 0.6, nod: 0.35, closed: true }) },
+    ]);
+    litScreen(group, b, "pipes");
+    taken.set(12, { actor: a, who: "Sleeping guy", line: "Hmm…? Paanch minute… bas paanch minute…" });
+  }
+
+  /** Turning round in the chair to the person behind them (you, at the curtain), one hand off the desk. */
+  const turnRound: Action = {
+    name: "turn", duration: 3,
+    pose: () => ({ right: MOUSE, left: v(0.16, 0.95, 0.15), look: v(0.3, 1.3, -1.6), twist: 0.7, lean: -0.05 }),
+  };
+  // each booth's chair, where you'd stand to sit (in the world)
+  const chairs = BOOTHS.filter((b) => b.n !== YOUR_BOOTH).map((b) => ({ n: b.n, at: group.localToWorld(new THREE.Vector3(b.x, HALL.floor, b.z)) }));
+  let lastTry = -99;
 
   group.traverse((o) => { o.castShadow = false; }); // indoors: no sun reaches them
   const centre = new THREE.Vector3(-1, HALL.floor, -7).applyMatrix4(frame);
@@ -238,6 +306,26 @@ export function buildCafePeople(frame: THREE.Matrix4, rng: Rng): CafePeople {
     callOut(words) {
       owner.perform(callAction);
       say("Owner", words, 3);
+    },
+    boothNear(player) {
+      if (Math.abs(player.y - chairs[0].at.y) > 0.6) return null;
+      const near = chairs.find((c) => Math.hypot(player.x - c.at.x, player.z - c.at.z) < 1.0);
+      return near ? near.n : null;
+    },
+    tryBooth(n) {
+      const now = performance.now() / 1000;
+      if (now - lastTry < 2.5) return; // (once they've said it, give them a moment)
+      lastTry = now;
+      const there = taken.get(n);
+      if (there) {
+        there.actor.perform(turnRound);
+        say(there.who, there.line, 3.5);
+        // …and the sleeper's neighbour's problem is the owner's too
+        if (n === 12) setTimeout(() => say("Owner", "Usko sone do… do number pe baitho!", 3.5), 3600);
+      } else {
+        owner.perform(callAction);
+        say("Owner", "Arre, woh nahi… do number! Beech wala.", 3.5);
+      }
     },
     update(t, dt, player) {
       if (player.distanceTo(centre) > NEAR) return;
@@ -267,7 +355,7 @@ export function buildCafePeople(frame: THREE.Matrix4, rng: Rng): CafePeople {
         if (Math.hypot(local.x - OWNER_SEAT.x, local.z - OWNER_SEAT.z) < 4.5) {
           pointedYou = true;
           owner.perform(pointAction);
-          say("Owner", "Do number khaali hai… wahan baith jao.", 4.5);
+          say("Owner", "Do number khaali hai… beech wala, wahan baith jao.", 4.5);
         }
       }
     },

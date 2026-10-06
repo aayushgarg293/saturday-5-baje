@@ -136,9 +136,10 @@ function booth(p: Parts, b: Booth, i: number, floorY: number, colliders: LocalBo
   at(0, 0.72, -0.22, 0.42, 0.42, 0.04, chair, -0.12);
   for (const [u, v] of [[-0.19, -0.18], [0.19, -0.18], [-0.19, 0.18], [0.19, 0.18]]) at(u, 0.22, v, 0.035, 0.45, 0.035, chair);
 
-  // its number, painted on a small plate at the partition's end, facing the aisle
-  const plate = boothPoint(b, half - 0.02, -BOOTH.opening + 0.01);
-  signs.push({ kind: "boothNumber", x: plate.x, y: floorY + 1.62, z: plate.z, w: 0.16, h: 0.16, ry: b.turn + Math.PI, label: String(b.n) });
+  // its number, painted on a small plate hung from the middle of the curtain rod, over the
+  // opening, facing the aisle (on a partition's end, it looked as if it belonged to the next booth)
+  const plate = boothPoint(b, 0, -BOOTH.opening - 0.012);
+  signs.push({ kind: "boothNumber", x: plate.x, y: floorY + 2.07, z: plate.z, w: 0.2, h: 0.2, ry: b.turn + Math.PI, label: String(b.n) });
 }
 
 /** The owner's counter, facing the top of the stairs: his PC, the modem, a printer, the register. */

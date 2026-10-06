@@ -2,6 +2,7 @@ import { PAL } from "../../render/palette";
 import { PLOT_DEPTH } from "../layout";
 import { type BuildContext, type BuildResult, FACADE, type LocalBox, type LocalFloor, type SignSpot, ledge, roof } from "./common";
 import { furnish } from "../cafe/furniture";
+import { furnishPco } from "../cafe/pco";
 import { STAIR as STAIR_PLAN } from "../cafe/plan";
 import { GROUND_TOP, PLINTH_H, shopfront } from "./shop";
 
@@ -77,6 +78,9 @@ export function buildCafe(c: BuildContext): BuildResult {
   p.slab(-half, half, 0, PLINTH_H, face - 2.6, 0, PAL.plinth); // platform
   p.slab(-half, half, PLINTH_H - 0.06, PLINTH_H, -0.12, 0, PAL.stoneTrim);
   const shopSign = shopfront(c, -half, sx0 - 0.2, face, "stdShop");
+  // inside it: the phone cabins, the counter, the Xerox machine (world/cafe/pco.ts); and its people (people/pco.ts)
+  furnishPco(p);
+  c.people.push({ kind: "pco", x: 0, y: 0, z: 0, turn: 0 });
   // (the shop builds the ground floor back as far as its neighbours; fill in the extra depth behind)
   p.slab(-half, sx0 - 0.2, 0, 3.7, back, -PLOT_DEPTH, c.wall);
   p.slab(sx0 - 0.2, sx0, 0, floorY, back, face, c.wall); // wall between shop and stairs

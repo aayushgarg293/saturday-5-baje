@@ -119,7 +119,7 @@ export type LampSpot = {
  * kind of place it is. people/crowd.ts decides who's there.
  */
 export type PeopleSpot = {
-  kind: "counter" | "platform" | "temple" | "door" | "saloon" | "tailor";
+  kind: "counter" | "platform" | "temple" | "door" | "saloon" | "tailor" | "pco";
   x: number;
   /** The floor they're on. */
   y: number;
@@ -136,7 +136,9 @@ export type SignSpot = {
   kind:
     | "shop" | "stdShop" | "cafe" | "cafeBlade" | "cafeDoor" | "wallAd" | "posters" | "stallSign" | "polePoster"
     // inside the cafe (world/cafe/furniture.ts)
-    | "rateBoard" | "notice" | "gamePoster" | "calendar" | "boothNumber";
+    | "rateBoard" | "notice" | "gamePoster" | "calendar" | "boothNumber"
+    // in the STD booth under it (world/cafe/pco.ts)
+    | "pcoRates";
   /** The word(s) on a stall's board. */
   label?: string;
   /** Which entry of SHOP_NAMES (world/names.ts) a shop board shows. */

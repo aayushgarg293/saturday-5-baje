@@ -30,6 +30,7 @@ import { buildWallArt } from "./world/wallArt";
 import { buildLabels } from "./world/props/labels";
 import { HALL, PAY_SPOT, STAIR, STAIR_TOP, yourSeat } from "./world/cafe/plan";
 import { buildOwnerScreen } from "./world/cafe/ownerScreen";
+import { pcoSigns } from "./world/cafe/pco";
 import { buildRoom } from "./world/cafe/room";
 import { buildYourScreen } from "./world/cafe/yourScreen";
 import { buildLife } from "./world/life";
@@ -84,7 +85,7 @@ if (nameplates) scene.add(nameplates);
 const shopFans = buildFans(street.fans); // (the shops' ceiling fans, turning: one mesh)
 const laundry = buildLaundry(street.lines); // (washing on the balconies and roofs, swaying: one mesh, and the roof lines)
 scene.add(shopFans.mesh, laundry.group);
-scene.add(sky.group, street.group, life.group, buildSigns([...street.signs, ...life.signs, ...wires.signs]), wires.group, backdrop.group);
+scene.add(sky.group, street.group, life.group, buildSigns([...street.signs, ...life.signs, ...wires.signs, ...pcoSigns(street.cafeFrame)]), wires.group, backdrop.group);
 
 // --- the player ----------------------------------------------------------------
 const input = new Input(canvas);
@@ -217,7 +218,12 @@ window.addEventListener("keydown", (e) => {
     if (canGoHome()) goHome();
     else if (canPay()) pay();
     else if (seat.seated) seat.standUp();
-    else seat.sitDown();
+    else if (seat.canSit()) seat.sitDown();
+    else {
+      // someone else's booth (or an empty one that isn't yours): they, or the owner, tell you
+      const other = cafePeople.boothNear(player.pos);
+      if (other !== null) cafePeople.tryBooth(other);
+    }
   }
   if (e.code === "KeyT" && (seat.seated || inCafe())) seat.lookAtClock();
 });
@@ -286,7 +292,9 @@ function prompt(): string | null {
   if (canPay()) return `[E] pay ₹${charge(visitMinutes)}`;
   if (canGoHome()) return "[E] go home";
   if (seat.seated) return `${yourScreen.ready() ? "[Click] use the computer    " : ""}[E] get up    [T] look at the clock`;
-  return seat.canSit() ? "[E] sit down" : null;
+  if (seat.canSit()) return "[E] sit down";
+  const other = cafePeople.boothNear(player.pos);
+  return other !== null ? `Booth ${other}    [E] sit down` : null;
 }
 
 // Frames are drawn through the post-processing pipeline (ink, colour grade, smoothing).

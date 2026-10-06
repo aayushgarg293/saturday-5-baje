@@ -177,6 +177,32 @@ const PAINTERS: Partial<Record<WorldSign["kind"], PainterSpec>> = {
     });
   } },
 
+  /**
+   * The STD booth's rate chart: a local call by the three-minute pulse, STD
+   * and ISD by the minute, and the line everyone waited for: half rate at night.
+   */
+  pcoRates: { ppm: 420, weather: 0.3, paint(ctx, w, h, _i, rng) {
+    background(ctx, w, h, "#fbf6ea", COLOURS.red);
+    ctx.fillStyle = COLOURS.stdYellow;
+    ctx.fillRect(0, 0, w, h * 0.2);
+    text(ctx, "STD • ISD • PCO  रेट", w / 2, h * 0.1, w * 0.85, h * 0.12, COLOURS.red, LATIN);
+    const rows = [["Local", "₹1 / 3 min"], ["STD", "₹2.40 / min"], ["Mobile", "₹1.20 / min"], ["ISD (Gulf)", "₹24 / min"], ["Xerox", "₹1"]];
+    rows.forEach(([item, price], k) => {
+      const y = h * (0.3 + k * 0.105);
+      ctx.textAlign = "left";
+      ctx.font = `bold ${h * 0.07}px ${LATIN_PLAIN}`;
+      ctx.fillStyle = COLOURS.ink;
+      ctx.fillText(item, w * 0.08, y);
+      ctx.textAlign = "right";
+      ctx.fillStyle = COLOURS.red;
+      ctx.fillText(price, w * 0.92, y);
+    });
+    ctx.fillStyle = COLOURS.red;
+    ctx.fillRect(w * 0.06, h * 0.82, w * 0.88, h * 0.13);
+    text(ctx, "रात 9 बजे के बाद आधा रेट", w / 2, h * 0.885, w * 0.8, h * 0.09, COLOURS.white, DEVANAGARI);
+    weather(ctx, w, h, rng, 0.4);
+  } },
+
   /** An A4 printout taped to the wall, a rule in bold capitals, taped crooked. */
   notice: { ppm: 500, weather: 0.25, paint(ctx, w, h, _i, rng, sign) {
     ctx.fillStyle = "#f7f4ec";

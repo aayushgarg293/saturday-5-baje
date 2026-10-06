@@ -86,9 +86,12 @@ export function shopfront(
   const inner = w - pillar * 2;
   p.box(inner, 0.3, 0.3, mid, OPENING_TOP - 0.3, face - 0.2, PAL.shutter);
   const state = r.next();
-  const shutter = state > 0.9 ? "closed" : state > 0.72 ? "half" : "open";
+  const pulled = state > 0.9 ? "closed" : state > 0.72 ? "half" : "open";
+  // (drawn whether it's used or not, so the random numbers after it don't change)
+  const bottom = pulled === "half" ? r.range(1.6, 2.4) : PLINTH_H;
+  // the STD booth under the cafe is always open: the walk to the cafe passes it (world/cafe/pco.ts furnishes it)
+  const shutter = kind === "stdShop" ? "open" : pulled;
   if (shutter !== "open") {
-    const bottom = shutter === "closed" ? PLINTH_H : r.range(1.6, 2.4);
     p.slab(x0 + pillar, x1 - pillar, bottom, OPENING_TOP - 0.45, face - 0.24, face - 0.2, PAL.shutter);
   }
   // the tubelight across the top of the opening, just inside (a closed shop's stays dark)

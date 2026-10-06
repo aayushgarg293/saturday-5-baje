@@ -13,10 +13,13 @@ import { COUNTER, HALL, OWNER_PC_TURN, YOUR_BOOTH } from "./plan";
 
 /** The other customers (people/cafePeople.ts), and how long before 4:30 pm each sat down (minutes). */
 const OTHERS: Record<number, { name: string; since: number }> = {
+  1: { name: "Guest", since: 40 },
+  3: { name: "Guest", since: 15 },
   5: { name: "Guest", since: 25 },
   7: { name: "Guest", since: 70 },
   10: { name: "LAN game", since: 95 },
   11: { name: "LAN game", since: 95 },
+  12: { name: "Guest", since: 130 },
 };
 /** The day's takings before any of this afternoon's customers pay (₹). */
 const TAKINGS_SO_FAR = 685;
