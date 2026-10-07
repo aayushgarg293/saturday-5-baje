@@ -27,6 +27,9 @@ import { playEnding } from "./ui/ending";
 import { buildTownWalkers } from "./people/townWalkers";
 import { buildTownTraffic } from "./world/townTraffic";
 import { buildBusArrival } from "./world/busArrival";
+import { errands } from "./core/errands";
+import { hideChit, toggleChit } from "./ui/chit";
+import { mummyCallsAfterYou } from "./activities/leavingHome";
 import { showPrompt } from "./ui/prompt";
 import { buildAreas } from "./world/areas";
 import { buildBackdrop } from "./world/backdrop";
@@ -204,6 +207,7 @@ const atCounter = () => {
 const canPay = () => loggedOff && !paid && atCounter();
 function pay() {
   paid = true;
+  errands.markDone("cafe"); // (the chit's first line)
   cafePeople.pay(charge(visitMinutes));
 }
 /** Leaving without paying: back to the top of the stairs, and he calls out (not too often). */
@@ -231,6 +235,7 @@ const canGoHome = () => paid && !ended && player.pos.distanceTo(street.homeDoor)
 function goHome() {
   ended = true;
   player.frozen = true;
+  hideChit();
   audio.fadeOut(4);
   playEnding();
   document.exitPointerLock();
@@ -258,6 +263,7 @@ const desktop = new Desktop(audio);
 desktop.yaaho.onTime = (minutes) => gameClock.advanceTo(minutes);
 storySoFar.isDone = (task) => desktop.kit.tasks.isDone(task); // (Priya remembers, when you meet her: people/tuition.ts)
 seat.onLeanIn = () => {
+  hideChit();
   desktop.show();
   document.exitPointerLock();
 };
@@ -292,6 +298,12 @@ canvas.addEventListener("click", () => {
 
 window.addEventListener("keydown", (e) => {
   if (e.code === "KeyM" && !desktop.isOpen) audio.toggleMute();
+  // Tab: Mummy's chit (the browser's own Tab, moving between page elements, isn't wanted in the game)
+  if (e.code === "Tab" && !desktop.isOpen) {
+    e.preventDefault();
+    if (!e.repeat && !ended) toggleChit();
+    return;
+  }
   if (!input.locked || e.repeat) return;
   if (paniPuri.key(e.code)) return; // (at the golgappa cart, the keys are for eating)
   if (haircut.key(e.code)) return; // (in the barber's chair, the keys are for the barber)
@@ -322,6 +334,7 @@ startScreen.addEventListener("click", () => {
 input.onLockChange = (locked) => {
   // (on the desktop the mouse is free on purpose: no start screen then; nor at the end)
   startScreen.hidden = locked || desktop.isOpen || ended;
+  if (locked) mummyCallsAfterYou(); // (the first time only: as you step out of home)
 };
 
 // --- game loop ---------------------------------------------------------------------
