@@ -5,7 +5,8 @@ import { walkLegs } from "./walkers";
 
 /**
  * Walking somewhere along a path: the tuition's kids (people/tuition.ts), the
- * 6:30 bus's passengers (world/busArrival.ts).
+ * 6:30 bus's passengers (world/busArrival.ts), the dance academy's girls
+ * (people/danceAcademy.ts).
  */
 
 const v = (x: number, y: number, z: number) => new THREE.Vector3(x, y, z);
@@ -24,6 +25,8 @@ export type Stroll = {
   phase: number;
   moving: number;
   heading: number;
+  /** Arms swinging at their sides (a bag in the hand), instead of hands up on a school bag's straps. */
+  swing?: boolean;
   cycle?: THREE.Object3D;
   /** The cycle's left grip, in its own frame (the side they walk on: its `ride.grip`, mirrored). */
   grip?: THREE.Vector3;
@@ -68,6 +71,11 @@ export function walk(s: Stroll, t: number, dt: number, player: THREE.Vector3): b
     reach(s.person, "R", s.cycle.localToWorld(s.grip!.clone()), pole(ELBOW.R));
     const swing = 0.15 * k * s.moving * Math.cos(Math.PI * 2 * s.phase);
     reach(s.person, "L", world(0.19 * k, 0.8 * k, 0.03 * k - swing), pole(ELBOW.L));
+  } else if (s.swing) {
+    // arms swinging with the stride (the right forward as the left foot is), as the town's walkers do
+    const swing = 0.17 * k * s.moving * Math.cos(Math.PI * 2 * s.phase);
+    reach(s.person, "R", world(-0.19 * k, 0.8 * k, 0.03 * k + swing), pole(ELBOW.R));
+    reach(s.person, "L", world(0.19 * k, 0.8 * k, 0.03 * k - swing * 0.5), pole(ELBOW.L)); // (the bag's hand swings less)
   } else {
     reach(s.person, "R", world(-0.1 * k, 1.12 * k, 0.12 * k), pole(ELBOW.R));
     reach(s.person, "L", world(0.1 * k, 1.12 * k, 0.12 * k), pole(ELBOW.L));

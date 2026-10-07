@@ -3,6 +3,7 @@ import { type Rng, makeRng, shuffled } from "../core/rng";
 import { toon } from "../render/toon";
 import { CINEMA, FILMS, POLE_POSTERS, type PolePoster, SHOP_NAMES, WALL_ADS } from "./names";
 import type { WorldSign } from "./street";
+import { paintDanceBanner } from "./danceBanner";
 
 /**
  * Everything painted on the street: signboards, wall ads, film posters, and
@@ -63,6 +64,9 @@ const filmOrder = shuffled(FILMS.length, 13);
 const polePosterOrder = shuffled(POLE_POSTERS.length, 14);
 
 const PAINTERS: Partial<Record<WorldSign["kind"], PainterSpec>> = {
+  /** Aditi Dance Academy's flex banner: glossy print, barely weathered (world/danceBanner.ts). */
+  danceBanner: { ppm: 420, weather: 0.12, paint: (ctx, w, h) => paintDanceBanner(ctx, w, h) },
+
   /** The main board across the cafe's front. */
   cafe: { ppm: 220, weather: 0.25, paint(ctx, w, h) {
     background(ctx, w, h, COLOURS.cafeBlue, COLOURS.white);

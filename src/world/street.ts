@@ -25,6 +25,7 @@ import { buildMohallaSquare } from "./places/mohalla";
 import { buildStation } from "./places/station";
 import { buildPark } from "./places/park";
 import { buildMandi } from "./places/mandi";
+import { ACADEMY_HOUSE, buildDanceAcademy } from "./places/danceAcademy";
 import { buildSchool } from "./places/school";
 import { buildTuition } from "./places/tuition";
 import { CORNER_HOUSE_HALF, HOME_LANE, HOME_ROWS, LANE_ROAD, MOVED_HOUSE, SCHOOL_TAIL } from "./homeLane";
@@ -61,6 +62,8 @@ export type WorldSign = {
   nameIndex?: number;
 };
 
+export type HouseFront = { frame: THREE.Matrix4; door: { x: number; y: number; z: number }; w: number; height: number };
+
 export type Street = {
   group: THREE.Group;
   colliders: Box[];
@@ -94,6 +97,12 @@ export type Street = {
   chowk: Chowk;
   /** Just in front of home's door (world/buildings/home.ts): where the walk ends. */
   homeDoor: THREE.Vector3;
+  /**
+   * Every plain house's front, by the house's name ("house@school:right22"): its frame (its matrix: x along
+   * the front, +z out to the street), where its door is in that frame, how wide it is and how high. For
+   * dressing a particular house as something more (world/places/danceAcademy.ts) without rebuilding it.
+   */
+  houseFronts: Map<string, HouseFront>;
   /** Home's door itself, as a frame: its middle at the threshold, +z out toward the street (activities/comingHome.ts). */
   homeDoorFrame: THREE.Matrix4;
 };
@@ -143,6 +152,7 @@ export function buildStreet(): Street {
   const lines: WorldLine[] = [];
   let homeDoor = new THREE.Vector3();
   let homeDoorFrame = new THREE.Matrix4();
+  const houseFronts = new Map<string, HouseFront>();
   const rng = makeRng(SEED);
 
   group.add(buildGround());
@@ -206,6 +216,7 @@ export function buildStreet(): Street {
     for (const { x, y, z, turn, ...rest } of spots) {
       // doors aren't places for people: only home's is kept (the walk ends there)
       if (rest.kind === "door") {
+        houseFronts.set(name, { frame: mesh.matrixWorld.clone(), door: { x, y, z }, w, height: result.height });
         if (type === "home") {
           homeDoor = new THREE.Vector3(x, y, z + 0.8).applyMatrix4(mesh.matrixWorld);
           homeDoorFrame = mesh.matrixWorld.clone().multiply(new THREE.Matrix4().makeTranslation(x, y, z));
@@ -472,6 +483,9 @@ export function buildStreet(): Street {
   const mandi = buildMandi();
   group.add(mandi.group);
   colliders.push(...mandi.colliders);
+  // Aditi Dance Academy: a house of school road's row, its front dressed (the house itself untouched)
+  const academy = buildDanceAcademy(houseFronts.get(ACADEMY_HOUSE)!);
+  group.add(academy.group);
 
   // the home lane (world/homeLane.ts): school road's last few metres to the corner, then the lane west, to
   // behind home, where the south side road's back lane comes into it (the wall at its far end is built above)
@@ -486,9 +500,9 @@ export function buildStreet(): Street {
 
   // south to north, so whoever picks from them can space them out along the walk
   const along = (p: THREE.Vector3) => streetCoords(p.x, p.z).s;
-  lamps.push(...mandi.lamps);
+  lamps.push(...mandi.lamps, ...academy.lamps);
   people.sort((a, b) => along(a.position) - along(b.position));
-  return { group, colliders, floors, cafeFrame, signs, spawn: { ...pointAt(1.5, 0), yaw: yawAlong(1.5) }, people, lamps, plates, labels, murals, fans, lines, homeDoor, homeDoorFrame, townSigns, chowk };
+  return { group, colliders, floors, cafeFrame, signs, spawn: { ...pointAt(1.5, 0), yaw: yawAlong(1.5) }, people, lamps, plates, labels, murals, fans, lines, homeDoor, homeDoorFrame, houseFronts, townSigns, chowk };
 }
 
 /** A plain boundary wall with a coping on top (the ends of the side roads' back lanes). */

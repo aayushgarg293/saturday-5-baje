@@ -148,7 +148,9 @@ export type SignSpot = {
     // the railway (world/places/station.ts)
     | "railBoard"
     // the school (world/places/school.ts)
-    | "schoolBoard";
+    | "schoolBoard"
+    // the dance academy's flex banner (world/places/danceAcademy.ts, painted by world/danceBanner.ts)
+    | "danceBanner";
   /** The word(s) on a stall's board. */
   label?: string;
   /** Which entry of SHOP_NAMES (world/names.ts) a shop board shows. */
