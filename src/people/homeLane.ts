@@ -28,7 +28,7 @@ const AMMA_S = 78, COW_S = 38;
 export function buildHomeLanePeople(): HomeLanePeople {
   const rng = makeRng(7811);
   // the charpai, against her house's front on the lane's south side
-  const at = LANE_ROAD.pointAt(AMMA_S, -(HOME_LANE.half - 0.5));
+  const at = LANE_ROAD.pointAt(AMMA_S, -(HOME_LANE.half - 0.35)); // (close to her house: the lane's traffic passes her feet)
   const group = new THREE.Group();
   group.name = "homeLanePeople";
   group.position.set(at.x, 0, at.z);

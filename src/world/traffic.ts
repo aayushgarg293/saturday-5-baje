@@ -63,7 +63,7 @@ type Mover = {
 /** Offsets across the street of each direction's lane (Indian traffic keeps left). */
 const LANE = { north: -1.0, south: 0.95 };
 /** Speeds, m/s. */
-const CRUISE: Record<VehicleKind, number> = { bicycle: 3, auto: 4.5, scooter: 5.5, motorcycle: 5.5, rickshaw: 2.5 };
+export const CRUISE: Record<VehicleKind, number> = { bicycle: 3, auto: 4.5, scooter: 5.5, motorcycle: 5.5, rickshaw: 2.5 };
 /** Speed through the side roads and their turns. */
 const SLOW = 2.0;
 /** At least this long between one vehicle setting off and the next, seconds. */
@@ -170,8 +170,12 @@ export function buildTraffic(): Traffic {
   return traffic;
 }
 
-/** Make one vehicle, with its rider, waiting at its slot. */
-function makeMover(kind: VehicleKind, slot: number, start: End, wait: number, rng: Rng, group: THREE.Group): Mover {
+/**
+ * A vehicle that moves: its body, its rider(s), its headlight, its wheels as
+ * separate meshes (so they turn). Shared with the town's traffic
+ * (world/townTraffic.ts).
+ */
+export function buildMoverBody(kind: VehicleKind, rng: Rng) {
   const v = buildVehicle(kind, rng, true);
   const g = new THREE.Group();
   g.name = `mover:${kind}`;
@@ -193,12 +197,18 @@ function makeMover(kind: VehicleKind, slot: number, start: End, wait: number, rn
     g.add(mesh);
     return { mesh, radius: w.radius };
   });
+  return { group: g, wheels, riders, length: v.size[0], width: v.size[1] };
+}
+
+/** Make one vehicle, with its rider, waiting at its slot. */
+function makeMover(kind: VehicleKind, slot: number, start: End, wait: number, rng: Rng, group: THREE.Group): Mover {
+  const { group: g, wheels, riders, length, width } = buildMoverBody(kind, rng);
   group.add(g);
 
   const slots = { south: slotPosition("south", slot), north: slotPosition("north", slot) };
   const m: Mover = {
-    kind, group: g, wheels, length: v.size[0], width: v.size[1], cruise: CRUISE[kind],
-    collider: boxAt(0, 0, v.size[0], v.size[1]),
+    kind, group: g, wheels, length, width, cruise: CRUISE[kind],
+    collider: boxAt(0, 0, length, width),
     riders,
     slots, at: start, wait, idle: 0, someoneAhead: false, bellIn: 0, route: null, routeLength: 0, travelled: 0, speed: 0, stoppedFor: 0,
   };
@@ -309,7 +319,11 @@ function sAlong(p: THREE.Vector3, guess: number): number {
 }
 
 /** Drive one frame along the route. Returns true when the vehicle has arrived. */
-function drive(m: Mover, dt: number, people: readonly THREE.Vector3[], honk: (at: THREE.Vector3) => void): boolean {
+/** What `drive` needs of a vehicle (the bazaar's and the town's: world/townTraffic.ts). */
+export type Driven = Pick<Mover, "group" | "wheels" | "collider" | "length" | "width" | "cruise" | "route" | "routeLength" | "travelled" | "speed" | "stoppedFor" | "someoneAhead">;
+
+/** One step along its route; true once it's at the end. Slows near the ends, stops for anyone in its path. */
+export function drive(m: Driven, dt: number, people: readonly THREE.Vector3[], honk: (at: THREE.Vector3) => void, slowNearEnds = 22): boolean {
   const route = m.route!;
   const u = Math.min(1, m.travelled / m.routeLength);
   const pos = route.getPointAt(u);
@@ -317,7 +331,7 @@ function drive(m: Mover, dt: number, people: readonly THREE.Vector3[], honk: (at
 
   // slow near both ends of the route (the side roads and their turns)
   const fromEnds = Math.min(m.travelled, m.routeLength - m.travelled);
-  let target = fromEnds < 22 ? SLOW : m.cruise;
+  let target = fromEnds < slowNearEnds ? SLOW : m.cruise;
   // stop for the player, or anyone walking, in front of us, in our path
   // (0.45 m: a body's radius plus a little; more, and someone standing at
   // the road's edge would hold traffic up forever)
@@ -360,7 +374,7 @@ function drive(m: Mover, dt: number, people: readonly THREE.Vector3[], honk: (at
 }
 
 /** Put the vehicle at `pos`, facing along `dir`, and move its collider with it. */
-function pose(m: Mover, pos: THREE.Vector3, dir: THREE.Vector3) {
+export function pose(m: Pick<Mover, "group" | "collider">, pos: THREE.Vector3, dir: THREE.Vector3) {
   m.group.position.copy(pos);
   // the vehicle's nose is its +x: turn +x onto the direction of travel
   m.group.rotation.y = Math.atan2(-dir.z, dir.x);

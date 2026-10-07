@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { makeRng } from "../core/rng";
+import { townState } from "../core/townState";
 import { say } from "../ui/caption";
 import { BAYS, BENCH, CONDUCTOR, SHED } from "../world/places/busStand";
 import { BUS_STAND, inBusStand } from "../world/town";
@@ -32,8 +33,16 @@ const CALLS = [
   "Jaipur wale aa jao! Seat khaali hai!",
   "Aage badho bhai, peeche bahut jagah hai!",
 ];
+/**
+ * Once the 6:30 from Jaipur is in (world/busArrival.ts), he calls that too: straight away as it parks,
+ * then every other call. Louder (he's shouting across the yard to its bay): heard from further off.
+ */
+const ARRIVED_CALLS = [
+  "Jaipur se aayi! Saadhe chhe wali Jaipur se aa gayi!",
+  "Jaipur ka saamaan, parcel, idhar se lo!",
+];
 /** How near you must be to hear him (metres), and seconds between calls. */
-const EARSHOT = 13, EVERY = 9;
+const EARSHOT = 13, EVERY = 9, ARRIVED_EARSHOT = 24;
 
 export function buildBusStandPeople(): BusStandPeople {
   const rng = makeRng(7421);
@@ -123,7 +132,7 @@ export function buildBusStandPeople(): BusStandPeople {
 
   const _a = new THREE.Vector3(), _b = new THREE.Vector3();
   const conductorWorld = new THREE.Vector3(CONDUCTOR.x, 1.5, CONDUCTOR.z).applyMatrix4(group.matrixWorld);
-  let nextCall = 3, called = 0;
+  let nextCall = 3, called = 0, arrivedCalled = 0, busWasIn = false;
   return {
     group,
     update(t, dt, player) {
@@ -134,10 +143,24 @@ export function buildBusStandPeople(): BusStandPeople {
       paper.position.addVectors(_a, _b).multiplyScalar(0.5);
       paper.rotation.set(reader.now.name === "read" ? -0.4 : -1.5, 0, 0);
       // the conductor's calls, while you're near enough to hear
+      // (the bus just in: his next call is about it, now)
+      if (townState.jaipurBusIn && !busWasIn) {
+        busWasIn = true;
+        nextCall = 0;
+      }
       nextCall -= dt;
-      if (nextCall <= 0 && player.distanceTo(conductorWorld) < EARSHOT) {
-        say("Conductor", CALLS[called++ % CALLS.length], 3);
-        nextCall = EVERY;
+      if (nextCall <= 0) {
+        const near = player.distanceTo(conductorWorld);
+        // (by the Jaipur bus, out of earshot of his ordinary calls: you hear only the shouted Jaipur ones)
+        const jaipurTurn = townState.jaipurBusIn && (arrivedCalled === 0 || called % 2 === 1 || near >= EARSHOT);
+        if (jaipurTurn && near < ARRIVED_EARSHOT) {
+          say("Conductor", ARRIVED_CALLS[arrivedCalled++ % ARRIVED_CALLS.length], 3);
+          called++;
+          nextCall = EVERY;
+        } else if (near < EARSHOT) {
+          say("Conductor", CALLS[called++ % CALLS.length], 3);
+          nextCall = EVERY;
+        }
       }
     },
   };

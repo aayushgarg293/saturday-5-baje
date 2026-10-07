@@ -24,7 +24,7 @@ import { Road } from "./roads";
  */
 
 /** The ground under the whole town (world x/z): the bazaar runs north from the origin, the town spreads east of it. */
-export const TOWN_GROUND = { x0: -130, x1: 210, z0: -340, z1: 45 };
+export const TOWN_GROUND = { x0: -130, x1: 290, z0: -340, z1: 45 };
 
 // --- the chowk ------------------------------------------------------------------------------------
 
@@ -183,6 +183,8 @@ export const BUS_STAND = {
   half: 18,
   /** Where school road leaves the south edge (metres along that edge, from its west end). */
   schoolRoad: { s0: 22, s1: 30 },
+  /** Where the highway (to Jaipur) leaves the east edge (metres along that edge, from its north end): world/busArrival.ts. */
+  highway: { s0: 13, s1: 23 },
 };
 
 /** The world point `offset` metres across the bus stand (north −, south +) at `s` metres into it from its west edge. */
@@ -200,7 +202,14 @@ export const BUS_STAND_EDGES = {
 const busStandShops = (rng: Rng): PlotType => (rng.next() < 0.85 ? "shop" : "house");
 
 export const BUS_STAND_ROWS: { road: Road; plan: RowPlan; seed: number }[] = [
-  { road: BUS_STAND_EDGES.east, seed: 7401, plan: { length: BUS_STAND.half * 2, sides: ["left"], fixed: [], pick: busStandShops, setback: { min: EDGE_SETBACK, max: EDGE_SETBACK } } },
+  {
+    road: BUS_STAND_EDGES.east, seed: 7401,
+    plan: {
+      length: BUS_STAND.half * 2, sides: ["left"], pick: busStandShops, setback: { min: EDGE_SETBACK, max: EDGE_SETBACK },
+      // the highway's mouth: the buses come in from Jaipur, and go, this way (world/busArrival.ts)
+      fixed: [{ side: "left", s0: BUS_STAND.highway.s0, s1: BUS_STAND.highway.s1, type: "open" }],
+    },
+  },
   {
     road: BUS_STAND_EDGES.south, seed: 7402,
     plan: {

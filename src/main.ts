@@ -24,6 +24,9 @@ import { PAL } from "./render/palette";
 import { Pipeline } from "./render/post";
 import { createRenderer, fitToWindow } from "./render/renderer";
 import { playEnding } from "./ui/ending";
+import { buildTownWalkers } from "./people/townWalkers";
+import { buildTownTraffic } from "./world/townTraffic";
+import { buildBusArrival } from "./world/busArrival";
 import { showPrompt } from "./ui/prompt";
 import { buildAreas } from "./world/areas";
 import { buildBackdrop } from "./world/backdrop";
@@ -96,6 +99,20 @@ for (const child of life.group.children) {
 }
 areas.add("bazaar", wires.group); // (the bazaar's poles and wires, one mesh)
 
+// people walking along the town's other roads (people/townWalkers.ts), each road's with its part of the town
+const townWalkers = buildTownWalkers([...street.colliders, ...wires.colliders, ...life.colliders]);
+for (const { area, group } of townWalkers.groups) {
+  scene.add(group);
+  areas.add(area, group);
+}
+// and a few vehicles going round the town (world/townTraffic.ts): drawn wherever they are
+const townTraffic = buildTownTraffic();
+scene.add(townTraffic.group);
+// the highway out to Jaipur, and the 6:30 bus that comes in along it (world/busArrival.ts)
+const busArrival = buildBusArrival();
+scene.add(busArrival.group);
+areas.add("bus stand", busArrival.group);
+
 // What's along the buildings but drawn apart from them: built one batch per part of the town, so each is
 // shown and hidden with its buildings (one batch for the whole town, the washing hung in the air while
 // its building was hidden).
@@ -141,7 +158,7 @@ const laundry = areas.split(street.lines, (line) => line.a).map(([area, lines]) 
 
 // --- the player ----------------------------------------------------------------
 const input = new Input(canvas);
-const player = new Player(camera, input, [...street.colliders, ...wires.colliders, ...life.colliders], street.floors);
+const player = new Player(camera, input, [...street.colliders, ...wires.colliders, ...life.colliders, ...townWalkers.colliders, ...townTraffic.colliders, ...busArrival.colliders], street.floors);
 player.place(street.spawn.x, street.spawn.z, street.spawn.yaw);
 
 // --- your seat, your computer, the time ------------------------------------------------
@@ -322,6 +339,9 @@ function update(dt: number) {
   cricket.update(dt); // (at the crease, it has the camera)
   areas.update(player.pos); // (show the parts of the town you're near)
   life.update(time, dt, player.pos);
+  townWalkers.update(time, dt, player.pos);
+  townTraffic.update(dt, player.pos, townWalkers.positions());
+  busArrival.update(time, dt, player.pos);
   cafeRoom.update(dt);
   for (const f of shopFans) f.update(dt);
   for (const l of laundry) l.update(time);
