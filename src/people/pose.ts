@@ -15,6 +15,12 @@ import type { Person } from "./body";
  *
  * Points are in world coordinates. Call these after moving the person, each
  * frame, in the order: body lean → arms → head.
+ *
+ * Each joint is solved from the joints above it only, never from its own last
+ * pose, and a result that isn't a number is thrown away (the joint goes back
+ * to rest for that frame). Once, a single bad frame left a walker's arms, legs
+ * and head unsolvable for good: only the shirt and the trousers' top, sliding
+ * along, a ghost (the owner saw it). Now a bad frame is gone by the next.
  */
 
 const DOWN = new THREE.Vector3(0, -1, 0); // limbs point along their joint's -y
@@ -27,6 +33,7 @@ const _aim = new THREE.Vector3(), _dir = new THREE.Vector3(), _pole = new THREE.
  * point toward (it's projected onto the plane of the arm).
  */
 export function reach(p: Person, side: "L" | "R", target: THREE.Vector3, pole: THREE.Vector3) {
+  if (!finite(target) || !finite(pole)) return;
   twoBone(p.bone(`shoulder${side}`), p.bone(`elbow${side}`), p.bone(`hand${side}`), target, pole);
 }
 
@@ -39,12 +46,13 @@ const _up = new THREE.Quaternion();
  * would tilt with the shin.
  */
 export function plant(p: Person, side: "L" | "R", target: THREE.Vector3, pole: THREE.Vector3) {
+  if (!finite(target) || !finite(pole)) return;
   const foot = p.bone(`foot${side}`);
   twoBone(p.bone(`hip${side}`), p.bone(`knee${side}`), foot, target, pole);
   p.root.getWorldQuaternion(_up);
   foot.parent!.getWorldQuaternion(_pq);
   foot.quaternion.copy(_pq.invert().multiply(_up));
-  foot.updateWorldMatrix(false, true);
+  settle(foot);
 }
 
 /**
@@ -53,9 +61,12 @@ export function plant(p: Person, side: "L" | "R", target: THREE.Vector3, pole: T
  */
 function twoBone(upperBone: THREE.Bone, lowerBone: THREE.Bone, endBone: THREE.Bone, target: THREE.Vector3, pole: THREE.Vector3) {
   upperBone.parent!.updateWorldMatrix(true, false);
-  upperBone.getWorldPosition(_s);
-  const upper = lowerBone.position.length() * worldScale(upperBone);
-  const lower = endBone.position.length() * worldScale(upperBone);
+  // (where the joint is, and how big the person is, both from the joint above it: never from its own last
+  // pose, so a bad one can't carry over)
+  _s.setFromMatrixPosition(upperBone.parent!.matrixWorld.clone().multiply(_local4.makeTranslation(upperBone.position)));
+  const size = worldScale(upperBone.parent!);
+  const upper = lowerBone.position.length() * size;
+  const lower = endBone.position.length() * size;
 
   // how far away the target is, clamped to what the limb can reach
   _dir.subVectors(target, _s);
@@ -79,8 +90,18 @@ function aimBone(bone: THREE.Bone, from: THREE.Vector3, to: THREE.Vector3) {
   _q.setFromUnitVectors(DOWN, _aim.copy(to).sub(from).normalize()); // wanted world rotation
   bone.parent!.getWorldQuaternion(_pq);
   bone.quaternion.copy(_pq.invert().multiply(_q)); // as a rotation relative to its parent
+  settle(bone);
+}
+
+/** Keep a solved joint only if it's a real rotation; otherwise back to rest (this frame only). */
+function settle(bone: THREE.Bone) {
+  const q = bone.quaternion;
+  if (!Number.isFinite(q.x + q.y + q.z + q.w)) q.identity();
   bone.updateWorldMatrix(false, true);
 }
+
+const finite = (v: THREE.Vector3) => Number.isFinite(v.x + v.y + v.z);
+const _local4 = new THREE.Matrix4();
 
 function worldScale(bone: THREE.Object3D): number {
   return new THREE.Vector3().setFromMatrixScale(bone.matrixWorld).x;
@@ -94,13 +115,20 @@ const _headPos = new THREE.Vector3(), _local = new THREE.Vector3(), _inv = new T
  */
 export function lookAt(p: Person, target: THREE.Vector3, amount: number) {
   const neck = p.bone("neck"), head = p.bone("head");
+  if (!finite(target)) return;
   neck.parent!.updateWorldMatrix(true, false);
-  head.getWorldPosition(_headPos);
+  // (from the neck's base: where it is depends only on the chest, not on the neck's own last turn)
+  _headPos.setFromMatrixPosition(neck.parent!.matrixWorld.clone().multiply(_local4.makeTranslation(neck.position)));
   // the target in the chest's own frame: which way is it, from where the head is?
   _inv.copy(neck.parent!.matrixWorld).invert();
   _local.copy(target).applyMatrix4(_inv).sub(_headPos.applyMatrix4(_inv));
   const yaw = THREE.MathUtils.clamp(Math.atan2(_local.x, _local.z), -1.2, 1.2) * amount;
   const pitch = THREE.MathUtils.clamp(-Math.atan2(_local.y, Math.hypot(_local.x, _local.z)), -0.5, 0.5) * amount;
+  if (!Number.isFinite(yaw + pitch)) {
+    neck.rotation.set(0, 0, 0);
+    head.rotation.set(0, 0, 0);
+    return;
+  }
   neck.rotation.set(pitch * 0.35, yaw * 0.35, 0, "YXZ");
   head.rotation.set(pitch * 0.65, yaw * 0.65, 0, "YXZ");
 }

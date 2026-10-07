@@ -411,8 +411,6 @@ function applyTimeOfDay() {
   (scene.fog as THREE.Fog).color.copy(look.haze);
   pipeline.setGrade(look);
   for (const e of evenings) e.update(gameClock.minutes, look.evening, time);
-  // once the sun is down its shadows can't be seen: stop redrawing them
-  renderer.shadowMap.autoUpdate = lights.shadowsVisible;
 }
 
 /** The hint at the bottom of the screen: what you can do right now. */
@@ -439,9 +437,15 @@ const pipeline = new Pipeline(renderer, scene, camera);
 // A frame is now several renders; count draw calls for the whole frame, not the last one.
 renderer.info.autoReset = false;
 
-function render() {
+// The sun's shadows: redrawn every other frame as you play (still 30 times a second: the sun barely moves,
+// and walking people's shadows stay smooth), and not at all once it's down (they can't be seen).
+renderer.shadowMap.autoUpdate = false;
+let shadowFrame = 0;
+/** Draw a frame (`playing`: from the game's own loop, where the shadows can take turns; a one-off draw, like a dev __shot, always redraws them). */
+function render(playing = false) {
   renderer.info.reset();
   sky.follow(camera); // the sky stays centred on the viewer
+  renderer.shadowMap.needsUpdate = lights.shadowsVisible && (!playing || shadowFrame++ % 2 === 0);
   pipeline.render();
 }
 
@@ -523,14 +527,26 @@ if (import.meta.env.DEV) {
 }
 
 const clock = new THREE.Timer();
+// While the start screen is up (before the first click, or after Esc) the game is paused: the world holds
+// still and is drawn only twice a second (enough to keep the picture right if the window changes size),
+// instead of sixty times. Nobody's playing; the laptop needn't work.
+let pausedFor = 0;
 renderer.setAnimationLoop((time) => {
   clock.update(time);
   // Cap the step: after a pause (switching tabs) the first frame can report a
   // huge gap, and one giant step could carry the player through a wall.
   const dt = Math.min(clock.getDelta(), 0.1);
+  if (!startScreen.hidden) {
+    pausedFor += dt;
+    if (pausedFor < 0.5) return;
+    pausedFor = 0;
+    render();
+    return;
+  }
+  pausedFor = 0.5; // (so the first paused frame is drawn straight away)
   update(dt);
   // (while the desktop covers the view, the 3D room isn't drawn: it can't be seen)
-  if (!desktop.isOpen) render();
+  if (!desktop.isOpen) render(true);
   audio.listen(camera); // after drawing: the camera's matrix is up to date
   // Climbing the cafe's stairs, the street's sounds fade away: from the
   // doorstep (0.45 m up) to the first floor (4.8 m), the only place above it.

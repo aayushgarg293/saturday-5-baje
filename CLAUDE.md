@@ -218,5 +218,6 @@ Keep each entry short.)*
 | A bus turning into its bay drove through a cart | Only its path was checked, but a long vehicle's tail swings wide in a turn. Check the corners and sides of its whole body at every step of the turn. |
 | The tuition kids piled into each other | Everyone going the same way was given the same waypoints. Give each walker their own distance from the road's middle, and stagger when they set off. |
 | A louder sound crackled | Many short clicks starting together (every axle over a joint) added up past full scale. Check the peak and the clipped count in `__audioLab`, not only the average loudness. |
+| "Ghost" walkers: only a shirt and the top of the trousers sliding along, no head, arms or legs (the owner saw it on itch.io) | One bad frame (a number that wasn't a number, NaN) reached a walker's spine or chest; those are set fresh each frame and recovered, but the arms, legs and head were solved from their own last pose and stayed NaN for good. people/pose.ts now solves each joint only from the joints above it, and throws away a result that isn't a number: a bad frame is gone by the next. Check bones for NaN when someone looks half-drawn. |
 | The walk check said the level crossing was unreachable | A train was due: the barriers were down. Run the walk check between trains (`trainsAt` says when). |
 
