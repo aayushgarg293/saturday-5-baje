@@ -17,8 +17,8 @@ import { cartWheels } from "../props/cartWheels";
  *                     off north and south; a signal at each end of as far as
  *                     you can walk along it
  *   the crossing      concrete panels between the rails where the lane
- *                     crosses; the two barriers (raised: no train due), red
- *                     and white; the gateman's hut with its gate number; the
+ *                     crosses; the two barriers' posts, red and white (their
+ *                     booms come down for the trains: world/railway.ts); the gateman's hut with its gate number; the
  *                     yellow warning boards
  *   the station       the platform (a ramp up from the forecourt), its
  *                     yellow edge line, the name board at each end; the
@@ -144,17 +144,12 @@ export function buildStation(): StationPlace {
   p.slab(-BED, BED, 0, 0.32, -STATION.half, STATION.half, 0x9a958a); // the crossing's panels, flush with the rails
   floor(-BED, BED, -STATION.half, STATION.half, 0.32, 0.32);
 
-  // --- the barriers (raised), and the gateman's hut ------------------------------------------------------
+  // --- the barriers' posts, and the gateman's hut ------------------------------------------------------
   // (both on the lane's north side: on the south, the walls come right up to the lane)
   for (const { x, z, dir } of [{ x: at(R.eastWall - 1.2), z: -STATION.half - 0.6, dir: 1 }, { x: at(R.westWall + 1.5), z: -STATION.half - 0.6, dir: 1 }]) {
     // the post, banded red and white
     for (let k = 0; k < 4; k++) p.box(0.28, 0.28, 0.28, x, 0.14 + k * 0.28, z, k % 2 ? 0xf2efe6 : 0xc62f2a);
-    // the boom: up, leaning a little over the lane; striped; its counterweight below the pivot
-    const pivot = new THREE.Vector3(x, 1.15, z), up = new THREE.Vector3(0, Math.sin(1.35), Math.cos(1.35) * dir);
-    for (let k = 0; k < 10; k++) {
-      const a = pivot.clone().addScaledVector(up, k * 0.65), b = pivot.clone().addScaledVector(up, (k + 1) * 0.65);
-      p.strut(a, b, 0.06, k % 2 ? 0xf2efe6 : 0xc62f2a, 6);
-    }
+    // its counterweight below the pivot (the boom itself swings up and down: world/railway.ts)
     p.box(0.22, 0.5, 0.22, x, 0.75, z - 0.3 * dir, 0x3a3f42);
     box(x - 0.2, x + 0.2, z - 0.4, z + 0.4);
   }

@@ -27,6 +27,8 @@ import { playEnding } from "./ui/ending";
 import { buildTownWalkers } from "./people/townWalkers";
 import { buildTownTraffic } from "./world/townTraffic";
 import { buildBusArrival } from "./world/busArrival";
+import { buildRailway } from "./world/railway";
+import { TrainSounds } from "./audio/train";
 import { errands } from "./core/errands";
 import { passersby } from "./core/passersby";
 import { hideChit, toggleChit } from "./ui/chit";
@@ -118,6 +120,10 @@ scene.add(townTraffic.group);
 const busArrival = buildBusArrival();
 scene.add(busArrival.group);
 areas.add("bus stand", busArrival.group);
+// the trains at the station, and the level crossing's barriers (world/railway.ts)
+const railway = buildRailway();
+scene.add(railway.group);
+areas.add("station", railway.group);
 
 // What's along the buildings but drawn apart from them: built one batch per part of the town, so each is
 // shown and hidden with its buildings (one batch for the whole town, the washing hung in the air while
@@ -164,7 +170,7 @@ const laundry = areas.split(street.lines, (line) => line.a).map(([area, lines]) 
 
 // --- the player ----------------------------------------------------------------
 const input = new Input(canvas);
-const player = new Player(camera, input, [...street.colliders, ...wires.colliders, ...life.colliders, ...townWalkers.colliders, ...townTraffic.colliders, ...busArrival.colliders], street.floors);
+const player = new Player(camera, input, [...street.colliders, ...wires.colliders, ...life.colliders, ...townWalkers.colliders, ...townTraffic.colliders, ...busArrival.colliders, ...railway.colliders], street.floors);
 player.place(street.spawn.x, street.spawn.z, street.spawn.yaw);
 
 // --- your seat, your computer, the time ------------------------------------------------
@@ -259,12 +265,14 @@ let bed: Bed | null = null;
 let radio: Radio | null = null;
 let saloonRadio: Radio | null = null; // (the same station, on the saloon's mirror ledge)
 let streetSounds: StreetSounds | null = null;
+let trainSounds: TrainSounds | null = null;
 let cafeSounds: CafeSounds | null = null;
 audio.onStart((ctx) => {
   bed = new Bed(audio, ctx);
   radio = new Radio(audio, ctx, life.radioAt);
   saloonRadio = new Radio(audio, ctx, life.saloon.you.radio);
   streetSounds = new StreetSounds(audio, ctx);
+  trainSounds = new TrainSounds(audio, ctx);
   cafeSounds = new CafeSounds(audio, ctx, street.cafeFrame);
 });
 // --- the computer's desktop ---------------------------------------------------------
@@ -367,6 +375,7 @@ function update(dt: number) {
   townWalkers.update(time, dt, player.pos);
   townTraffic.update(dt, player.pos, [...townWalkers.positions(), ...passersby.all()]);
   busArrival.update(time, dt, player.pos);
+  railway.update(time, dt, player.pos); // (after the player: it may move you off the line)
   errandRun.update(time, dt, player.pos);
   comingHome.update(time, dt, player.pos);
   cafeRoom.update(dt);
@@ -386,6 +395,7 @@ function update(dt: number) {
   radio?.update(dt, player.pos);
   saloonRadio?.update(dt, player.pos);
   streetSounds?.update(dt, player.pos);
+  trainSounds?.update(player.pos, railway.sound());
   cafeSounds?.update(dt, player.pos);
   applyTimeOfDay();
 }

@@ -124,6 +124,10 @@ borrowed on this machine before keeping it.
   The only hand-written shaders are the sky dome and the post passes.
 - Textures, signboards and posters are **drawn in code** (Canvas2D). Sound is
   **synthesized** (Web Audio), including the original film tune on the radio.
+  The one exception, the owner's choice (2026-10-07): the trains' wheels are the
+  owner's own phone recording, `public/sounds/train wheels sound.mp3`, looped
+  (audio/train.ts). Recordings go in `public/sounds/`; only the owner's own, or
+  ones whose licence allows a public game.
 - **Look-alike names only** in anything the player can see or hear: Yorkut, not
   Orkut; Prison Brake, not Prison Break. The name table is in `BRIEF.md`.
 - People are **stylized, simple figures**, readable from a distance and never
