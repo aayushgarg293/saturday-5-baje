@@ -1,0 +1,46 @@
+# Publishes the game to GitHub Pages: every push to main, GitHub builds it
+# (npm run build, as on the owner's Mac) and puts dist/ online at
+# https://aayushgarg293.github.io/saturday-5-baje/ (itch.io gets the same
+# build as a zip, by hand: see the "itch-hosting" notes).
+name: Publish to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: # (and a button to run it by hand, on the repo's Actions tab)
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# one publish at a time; a newer push replaces one still waiting
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
