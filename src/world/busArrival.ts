@@ -2,6 +2,7 @@ import * as THREE from "three";
 import { type Box, boxAt } from "../core/colliders";
 import { makeRng } from "../core/rng";
 import { timeOfDay } from "../core/timeOfDay";
+import { passersby } from "../core/passersby";
 import { townState } from "../core/townState";
 import { buildPerson } from "../people/body";
 import { recipeFor } from "../people/recipes";
@@ -91,9 +92,18 @@ export function buildBusArrival(): BusArrival {
   // its words, painted in its own frame, so they go where it goes
   bus.add(buildSigns(busSigns(new THREE.Matrix4(), 0, "जयपुर")));
   group.add(bus);
+  // In off the highway on its left, drifting over to the yard's north side, then one wide right turn
+  // into the bay: a bus's tail swings out wide in a turn, and turning from further north keeps it clear
+  // of the banana cart by the east shops (BANANA_CART: its back would sweep through the cart otherwise).
+  // The turn's a quarter circle of radius 4 about (bay.x + 4, bay.z + 0.5).
+  const turn = { x: bay.x + 4, z: bay.z + 0.5, r: 4 };
+  const arc = [0, 0.33, 0.66, 1].map((u) => {
+    const a = (u * Math.PI) / 2;
+    return new THREE.Vector3(turn.x - turn.r * Math.sin(a), 0, turn.z + turn.r * Math.cos(a));
+  });
   const path = [
-    new THREE.Vector3(FAR, 0, 1.7), new THREE.Vector3(40, 0, 1.7), new THREE.Vector3(D + 4, 0, 1.9), new THREE.Vector3(14, 0, 2.4),
-    new THREE.Vector3(10, 0, 2.9), new THREE.Vector3(bay.x + 0.6, 0, 0.9), new THREE.Vector3(bay.x, 0, -2), new THREE.Vector3(bay.x, 0, bay.z),
+    new THREE.Vector3(FAR, 0, 1.7), new THREE.Vector3(40, 0, 1.7), new THREE.Vector3(D + 4, 0, 1.3), new THREE.Vector3(bay.x + 8, 0, turn.z + turn.r),
+    ...arc, new THREE.Vector3(bay.x, 0, bay.z),
   ];
   const route = new THREE.CatmullRomCurve3(path, false, "centripetal");
   const collider = boxAt(0, 0, BUS.length, BUS.width, 0);
@@ -139,13 +149,19 @@ export function buildBusArrival(): BusArrival {
       group.add(person.root);
       person.root.position.copy(door);
       person.root.visible = false;
-      const off = new THREE.Vector3(-4 - k * 1.5, 0, 2 + k * 2.2);
+      // (round the front of the buses, between their noses and the shed, then out along court road's edge:
+      // never through a bus)
+      const apron = bay.z - BUS.length / 2 - 1.6 - k * 0.5;
       strolls.push({
-        person, path: [door.clone(), door.clone().add(new THREE.Vector3(-1.2, 0, 1.5)), door.clone().add(off), new THREE.Vector3(-D - 4, 0, 1.6 + k * 0.6), new THREE.Vector3(-D - 30, 0, 1.6 + k * 0.6)],
+        person, path: [door.clone(), new THREE.Vector3(door.x - 0.4, 0, apron), new THREE.Vector3(BAYS[0].x - BUS.width / 2 - 3.5, 0, apron),
+          new THREE.Vector3(-D + 2, 0, 2.6 + k * 0.3), new THREE.Vector3(-D - 30, 0, 2.6 + k * 0.3)],
         speed: rng.range(0.9, 1.15), travelled: 0, phase: rng.next(), moving: 0, heading: Math.PI,
       });
     });
   }
+
+  // (the town's traffic stops for them too)
+  passersby.register(() => strolls.filter((s) => s.person.root.visible).map((s) => s.person.root.getWorldPosition(new THREE.Vector3())));
 
   const _you = new THREE.Vector3();
   return {

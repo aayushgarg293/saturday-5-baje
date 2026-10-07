@@ -1,4 +1,6 @@
 import * as THREE from "three";
+import { boxAt } from "../core/colliders";
+import { passersby } from "../core/passersby";
 import { makeRng } from "../core/rng";
 import { storySoFar } from "../core/storySoFar";
 import { timeOfDay } from "../core/timeOfDay";
@@ -7,11 +9,13 @@ import { say } from "../ui/caption";
 import { Parts } from "../world/kit";
 import { TUITION_CYCLES, TUITION_DOOR, tuitionOrigin } from "../world/places/tuition";
 import { buildVehicle } from "../world/props/vehicles";
+import { type Driven, buildMoverBody, drive, pose } from "../world/traffic";
 import { CRICKET_Z, SCHOOL, schoolZ } from "../world/schoolRoad";
 import { makeActor, v } from "./actor";
 import { buildPerson } from "./body";
 import { recipeFor } from "./recipes";
 import { type Stroll, walk } from "./stroll";
+import { cartWheels } from "../world/props/cartWheels";
 
 /**
  * The evening at Sharma Tutorials (world/places/tuition.ts), across school
@@ -120,18 +124,24 @@ export function buildTuitionPeople(): TuitionPeople {
       r.outfit.top = rng.pick(["shirt", "tshirt"] as const);
       r.outfit.bottom = "trousers";
     }
+    // (the same kid, again, for riding off on the cycle: people/riders.ts)
+    recipes.push(structuredClone(r));
     const p = buildPerson(r);
     group.add(p.root);
     p.root.visible = false;
     return p;
   };
+  const recipes: ReturnType<typeof recipeFor>[] = [];
   const door = here(o.x + TUITION_DOOR.x, o.z + TUITION_DOOR.z);
   const step = here(o.x + 1.0, o.z);
-  // up the road to the bus stand; down it and west into the cricket lane
-  const north = [road(tuitionS - 8, -1.6), road(4, -1.6), road(-10, -1.6)];
-  // (going south they cross to the road's middle first: the kulfi cart stands on its west side)
-  const south = [road(tuitionS + 4, 0.8), road(SCHOOL.lane.s0 - 4, 0.8), road(SCHOOL.lane.s0 + 2, -1.4), here(SCHOOL.x - SCHOOL.setback - 1, CRICKET_Z), here(SCHOOL.x - 40, CRICKET_Z)];
-  type Kid = { stroll: Stroll; delay: number; started: boolean };
+  // Each kid has their own way home, at their own distance from the road's middle (− west, + east), so
+  // nobody walks into anybody: up the road to the bus stand (keeping left, going north: the west side),
+  // or down it (keeping left: the east side, past the kulfi cart on the west) and west into the cricket
+  // lane (`lane`: how far from its middle, + south).
+  const north = (off: number) => [road(tuitionS - 8, off), road(4, off), road(-10, off)];
+  const south = (off: number, lane: number) => [road(tuitionS + 4, off), road(SCHOOL.lane.s0 - 4, off), road(SCHOOL.lane.s0 + 2, -1.2 + lane * 0.3), here(SCHOOL.x - SCHOOL.setback - 1, CRICKET_Z + lane), here(SCHOOL.x - 40, CRICKET_Z + lane)];
+  /** A kid going home: walking (wheeling their cycle, maybe), or, once on it, riding (`riding`). */
+  type Kid = { stroll: Stroll; delay: number; started: boolean; riding?: Rider };
   // the kids' cycles, on their stands at the road's edge (moved here from the tuition's building: they leave)
   const cycles = TUITION_CYCLES.map((c) => {
     const bike = buildVehicle("bicycle", rng);
@@ -142,30 +152,53 @@ export function buildTuitionPeople(): TuitionPeople {
     const g = bike.ride!.grip;
     return { mesh, grip: v(g.x, g.y, -g.z) };
   });
-  const plan: { girl: boolean; cycle?: number; way: "north" | "south"; delay: number }[] = [
-    { girl: false, cycle: 0, way: "north", delay: 0 },
-    { girl: true, way: "south", delay: 2.5 },
-    { girl: true, cycle: 2, way: "south", delay: 3.5 },
-    { girl: false, cycle: 3, way: "north", delay: 6 },
-    { girl: false, way: "south", delay: 7.5 },
-    { girl: false, cycle: 5, way: "north", delay: 9.5 },
+  // (the order of girls and boys, and of the cycles, is as it was: their random looks stay the same)
+  //   two boys get on their cycles and ride off north, one a little behind the other; two girls walk
+  //   home south together, one wheeling her cycle; a boy walks south; the last boy rides off south
+  const plan: { girl: boolean; cycle?: number; ride?: boolean; way: "north" | "south"; off: number; lane?: number; delay: number }[] = [
+    { girl: false, cycle: 0, ride: true, way: "north", off: -1.3, delay: 0 },
+    // (the two girls side by side, her cycle on her right: the outside, away from her friend)
+    { girl: true, way: "south", off: 2.4, lane: 1.5, delay: 4.5 },
+    { girl: true, cycle: 2, way: "south", off: 1.6, lane: 0.8, delay: 5.6 },
+    { girl: false, cycle: 3, ride: true, way: "north", off: -2.1, delay: 1.2 },
+    { girl: false, way: "south", off: 2.0, lane: -1.4, delay: 10 },
+    { girl: false, cycle: 5, ride: true, way: "south", off: 1.2, lane: -0.5, delay: 12.5 },
   ];
-  const kids: Kid[] = plan.map((k) => {
+  /** Kids riding off: on a cycle with spinning wheels and pedals (world/traffic.ts), from their own random numbers. */
+  const rideRng = makeRng(7781);
+  type Rider = ReturnType<typeof buildMoverBody> & Driven & { mounted: boolean };
+  const kids: Kid[] = plan.map((k, i) => {
     const person = teen(k.girl);
     const path = [door.clone(), step.clone()];
+    // (out through the gap between the parked cycles, clear of the row, before turning up or down the road)
+    if (k.cycle === undefined) path.push(v(2.6, 0, 0));
     let cycle: (typeof cycles)[number] | undefined;
     if (k.cycle !== undefined) {
-      // over to their cycle (standing on its left), then off with it
+      // over to their cycle (standing on its left), then off with it, or on it
       const c = TUITION_CYCLES[k.cycle];
       path.push(v(c.x - 0.7, 0, c.z));
       cycle = cycles[k.cycle];
     }
-    path.push(...(k.way === "north" ? north : south).map((p) => p.clone()));
+    const way = (k.way === "north" ? north(k.off) : south(k.off, k.lane ?? 0)).map((p) => p.clone());
+    let riding: Rider | undefined;
+    if (k.ride && cycle) {
+      // they walk only to the cycle; the ride is its own route, from where it stands
+      const body = buildMoverBody("bicycle", rideRng, recipes[i]);
+      body.group.visible = false;
+      group.add(body.group);
+      // (parked nose to the road: rolled straight out onto it first, then up or down it)
+      const at = cycle.mesh.position;
+      const route = new THREE.CatmullRomCurve3([at.clone(), v(at.x + 1.6, 0, at.z), ...way], false, "centripetal");
+      riding = { ...body, mounted: false, cruise: 3 + i * 0.05, route, routeLength: route.getLength(), travelled: 0, speed: 0, stoppedFor: 0, someoneAhead: false, collider: boxAt(0, 0, 1.8, 0.6, 0) };
+    } else path.push(...way);
     return {
-      stroll: { person, path, speed: rng.range(1.0, 1.25), travelled: 0, phase: rng.next(), moving: 0, heading: Math.PI / 2, cycle: cycle?.mesh, grip: cycle?.grip },
-      delay: k.delay, started: false,
+      stroll: { person, path, speed: rng.range(1.0, 1.25), travelled: 0, phase: rng.next(), moving: 0, heading: Math.PI / 2, cycle: riding ? undefined : cycle?.mesh, grip: cycle?.grip },
+      delay: k.delay, started: false, riding,
     };
   });
+  /** Where the kids are now, in world terms (the town's traffic stops for them: core/passersby.ts). */
+  const kidsAt = () => kids.filter((k) => k.started).map((k) => (k.riding?.mounted ? k.riding.group : k.stroll.person.root).getWorldPosition(new THREE.Vector3()));
+  passersby.register(() => (letOutAt !== null && !batchGone ? kidsAt() : []));
   let letOutAt: number | null = null;
   let batchGone = false;
 
@@ -173,7 +206,7 @@ export function buildTuitionPeople(): TuitionPeople {
   const cartAt = road(tuitionS + 8.5, -1.5);
   const cart = new Parts();
   cart.box(0.8, 0.08, 1.4, 0, 0.8, 0, 0x8a6a44);
-  for (const dz of [-0.55, 0.55]) cart.cylinder(0.3, 0.3, 0.05, 0, 0.3, dz, 0x2a2622, { rx: Math.PI / 2, segments: 12 });
+  cartWheels(cart, { x: 0, z: 0, length: 1.4, width: 0.8, underside: 0.76, along: "z", radius: 0.2 });
   cart.add(new THREE.SphereGeometry(0.32, 12, 9).scale(1, 0.95, 1), 0, 1.14, -0.2, 0xc62f2a); // the matka, wrapped in red cloth
   cart.cylinder(0.14, 0.18, 0.12, 0, 1.47, -0.2, 0xb8322a, { segments: 10 });
   cart.cylinder(0.04, 0.05, 0.08, 0.25, 0.88, 0.45, 0xd8b04a, { segments: 8 }); // his brass bell
@@ -253,7 +286,7 @@ export function buildTuitionPeople(): TuitionPeople {
         // (come much later and they've long gone: their cycles with them)
         if (minutes > LATE) {
           batchGone = true;
-          for (const k of kids) if (k.stroll.cycle) k.stroll.cycle.visible = false;
+          for (const c of plan) if (c.cycle !== undefined) cycles[c.cycle].mesh.visible = false;
         }
         letOutAt = t;
       }
@@ -264,7 +297,26 @@ export function buildTuitionPeople(): TuitionPeople {
             k.stroll.person.root.visible = true;
           }
           if (!k.started) continue;
+          const r = k.riding;
+          if (r?.mounted) {
+            // riding: stopping for you and the other kids in the way; gone at the end, once you're not near
+            if (!r.group.visible) continue;
+            const others = kids.filter((o) => o !== k && o.started && !o.riding?.mounted).map((o) => o.stroll.person.root.position);
+            const end = r.route ? drive(r, dt, [you, ...others], () => {}, 4) : true;
+            r.riders.update(dt, r.speed, player);
+            if (end && r.group.position.distanceTo(you) > 30) r.group.visible = false;
+            continue;
+          }
           const end = walk(k.stroll, t, dt, player);
+          if (end && r) {
+            // at their cycle: on it, and off (the parked one goes: they're riding it)
+            r.mounted = true;
+            k.stroll.person.root.visible = false;
+            cycles[plan[kids.indexOf(k)].cycle!].mesh.visible = false;
+            r.group.visible = true;
+            pose(r, r.route!.getPointAt(0), r.route!.getTangentAt(0));
+            continue;
+          }
           // at the end of their way, they're gone once you're not near enough to see them go
           if (end && k.stroll.person.root.position.distanceTo(you) > 30) {
             k.stroll.person.root.visible = false;

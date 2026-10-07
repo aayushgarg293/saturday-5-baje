@@ -5,6 +5,7 @@ import type { WorldLamp } from "../evening";
 import { Parts } from "../kit";
 import { STATION, inStation } from "../station";
 import type { WorldSign } from "../street";
+import { cartWheels } from "../props/cartWheels";
 
 /**
  * The station end of the station lane (world/station.ts):
@@ -100,7 +101,7 @@ export function buildStation(): StationPlace {
     box(mid - len / 4 - 1.9, mid - len / 4 + 1.9, g.front - 0.75, g.front);
     const cart = { x: mid + len / 4 + 2.6, z: g.front - 0.7 };
     p.box(1.8, 0.08, 0.9, cart.x, 0.62, cart.z, 0x8a6a44);
-    for (const dz of [-0.5, 0.5]) p.cylinder(0.3, 0.3, 0.06, cart.x + 0.3, 0.3, cart.z + dz, 0x2a2622, { rx: Math.PI / 2, segments: 12 });
+    cartWheels(p, { x: cart.x, z: cart.z, length: 1.8, width: 0.9, underside: 0.58, radius: 0.2 });
     p.strut({ x: cart.x - 0.9, y: 0.62, z: cart.z }, { x: cart.x - 1.5, y: 0.2, z: cart.z }, 0.03, 0x8a6a44);
     box(cart.x - 1.5, cart.x + 0.95, cart.z - 0.55, cart.z + 0.55);
     box(g.x0, g.x1, g.front, g.back);

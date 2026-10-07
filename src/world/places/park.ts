@@ -5,6 +5,7 @@ import { PAL } from "../../render/palette";
 import type { WorldLamp } from "../evening";
 import { Parts } from "../kit";
 import { SCHOOL, schoolZ } from "../schoolRoad";
+import { cartWheels } from "../props/cartWheels";
 
 /**
  * The park, on school road's west side, where the cricket lane comes out
@@ -160,7 +161,7 @@ export function buildPark(): Park {
   // --- the peanut seller's cart, outside the gate -----------------------------------------------------------
   const c = PEANUTS.cart;
   p.box(0.8, 0.08, 1.5, c.x, 0.82, c.z, 0x8a6a44);
-  for (const dz of [-0.6, 0.6]) p.cylinder(0.32, 0.32, 0.05, c.x, 0.33, c.z + dz, 0x2a2622, { rx: Math.PI / 2, segments: 12 });
+  cartWheels(p, { x: c.x, z: c.z, length: 1.5, width: 0.8, underside: 0.78, along: "z", radius: 0.2 });
   p.cylinder(0.14, 0.16, 0.2, c.x, 0.96, c.z - 0.35, 0x3a3634, { segments: 10 }); // the little coal stove
   p.cylinder(0.3, 0.18, 0.12, c.x, 1.12, c.z - 0.35, 0x2a2622, { segments: 12 }); // the kadhai
   p.cylinder(0.27, 0.27, 0.02, c.x, 1.17, c.z - 0.35, 0x9a8a6a, { segments: 12 }); // its hot sand, peanuts in it

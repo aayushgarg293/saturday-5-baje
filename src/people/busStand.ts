@@ -2,7 +2,7 @@ import * as THREE from "three";
 import { makeRng } from "../core/rng";
 import { townState } from "../core/townState";
 import { say } from "../ui/caption";
-import { BAYS, BENCH, CONDUCTOR, SHED } from "../world/places/busStand";
+import { BANANA_CART, BAYS, BENCH, CONDUCTOR, SHED } from "../world/places/busStand";
 import { BUS_STAND, inBusStand } from "../world/town";
 import { makeActor, seenFrom, track, v } from "./actor";
 import { buildPerson } from "./body";
@@ -41,6 +41,9 @@ const ARRIVED_CALLS = [
   "Jaipur se aayi! Saadhe chhe wali Jaipur se aa gayi!",
   "Jaipur ka saamaan, parcel, idhar se lo!",
 ];
+/** The banana-wala's calls (near his cart), how near you must be, and seconds between. */
+const BANANA_CALLS = ["Kele le lo, kele! Darjan bees rupaye!", "Meethe kele, elaichi wale! Le lo!", "Aao bhai, kele!"];
+const BANANA_EARSHOT = 7, BANANA_EVERY = 13;
 /** How near you must be to hear him (metres), and seconds between calls. */
 const EARSHOT = 13, EVERY = 9, ARRIVED_EARSHOT = 24;
 
@@ -84,6 +87,36 @@ export function buildBusStandPeople(): BusStandPeople {
         { name: "wave", duration: 2.5, pose: (u) => ({ right: v(-0.35, 1.3 + Math.sin(u * 7) * 0.1, 0.2), left: v(0.15, 0.95, 0.05), look: v(-2, 1.5, 4) }) },
         { name: "tickets", duration: 4, pose: (u) => ({ right: v(-0.05 + Math.sin(u * 5) * 0.03, 1.02, 0.28), left: v(0.06, 1.0, 0.28), look: v(0, 0.95, 0.35), nod: 0.25 }) },
         { name: "door", duration: 2.5, pose: () => ({ right: v(-0.2, 0.95, 0.0), left: v(0.2, 0.95, 0.0), look: door }) },
+      ],
+    }));
+  }
+
+  // --- the banana-wala, behind his cart (his own random numbers: the others' stay as they were) ---------
+  // (on the cart's long side away from the yard, facing into it: north)
+  const bananaAt = { x: BANANA_CART.x, z: BANANA_CART.z + BANANA_CART.width / 2 + 0.5, turn: Math.PI };
+  {
+    const own = makeRng(7431);
+    const r = recipeFor("man", own);
+    r.build.scale = 1;
+    r.outfit.top = "vest";
+    r.outfit.topColour = 0xe8e2d2;
+    r.outfit.bottom = "dhoti";
+    r.outfit.bottomColour = 0xe0d8c4;
+    r.outfit.gamchha = true;
+    r.outfit.jacket = undefined;
+    r.outfit.bag = undefined;
+    const p = buildPerson(r);
+    group.add(p.root);
+    // (his own frame: the cart is in front of him, its top at 0.9 m)
+    const onCart = (x: number) => v(x, 0.95, 0.5);
+    actors.push(makeActor({
+      person: p, at: bananaAt, notice: "greet", phase: 1.5,
+      actions: [
+        { name: "wait", duration: 6, pose: () => ({ right: onCart(-0.2), left: onCart(0.25), look: v(0, 1.5, 5) }) },
+        // shooing the flies off the bananas, with a cloth
+        { name: "shoo", duration: 2.5, pose: (u) => ({ right: v(-0.2 + Math.sin(u * 9) * 0.2, 1.05, 0.55), left: onCart(0.25), look: v(0, 0.95, 0.6), nod: 0.2 }) },
+        // turning a bunch over, to show its good side
+        { name: "arrange", duration: 3.5, pose: (u) => ({ right: v(-0.1, 1.0, 0.55 + Math.sin(u * 2) * 0.05), left: v(0.15, 1.0, 0.55), look: v(0, 0.95, 0.55), lean: 0.2, nod: 0.25 }) },
       ],
     }));
   }
@@ -133,6 +166,8 @@ export function buildBusStandPeople(): BusStandPeople {
   const _a = new THREE.Vector3(), _b = new THREE.Vector3();
   const conductorWorld = new THREE.Vector3(CONDUCTOR.x, 1.5, CONDUCTOR.z).applyMatrix4(group.matrixWorld);
   let nextCall = 3, called = 0, arrivedCalled = 0, busWasIn = false;
+  const bananaWorld = new THREE.Vector3(bananaAt.x, 1.5, bananaAt.z).applyMatrix4(group.matrixWorld);
+  let nextBanana = 4, bananaCalled = 0;
   return {
     group,
     update(t, dt, player) {
@@ -143,6 +178,12 @@ export function buildBusStandPeople(): BusStandPeople {
       paper.position.addVectors(_a, _b).multiplyScalar(0.5);
       paper.rotation.set(reader.now.name === "read" ? -0.4 : -1.5, 0, 0);
       // the conductor's calls, while you're near enough to hear
+      // the banana-wala calling, when you're by his cart (not over anyone talking with you)
+      nextBanana -= dt;
+      if (nextBanana <= 0 && !townState.talking && player.distanceTo(bananaWorld) < BANANA_EARSHOT) {
+        say("Banana-wala", BANANA_CALLS[bananaCalled++ % BANANA_CALLS.length], 3);
+        nextBanana = BANANA_EVERY;
+      }
       // (the bus just in: his next call is about it, now)
       if (townState.jaipurBusIn && !busWasIn) {
         busWasIn = true;

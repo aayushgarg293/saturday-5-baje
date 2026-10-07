@@ -6,6 +6,7 @@ import { PAL } from "../render/palette";
 import { toon } from "../render/toon";
 import { Parts } from "./kit";
 import { PLOT_DEPTH, SIDE_ROADS, SIDE_ROAD_SETBACK, pointAt } from "./layout";
+import type { PersonRecipe } from "../people/body";
 import { type Riders, buildRiders } from "../people/riders";
 import { addHeadlight } from "./evening";
 import { marksGeometry, marksMaterial } from "./props/vehicleMarks";
@@ -175,7 +176,8 @@ export function buildTraffic(): Traffic {
  * separate meshes (so they turn). Shared with the town's traffic
  * (world/townTraffic.ts).
  */
-export function buildMoverBody(kind: VehicleKind, rng: Rng) {
+/** A vehicle and whoever rides it (`rider`: someone particular in the saddle: people/riders.ts). */
+export function buildMoverBody(kind: VehicleKind, rng: Rng, rider?: PersonRecipe) {
   const v = buildVehicle(kind, rng, true);
   const g = new THREE.Group();
   g.name = `mover:${kind}`;
@@ -183,7 +185,7 @@ export function buildMoverBody(kind: VehicleKind, rng: Rng) {
   // its number plate and paintwork (world/props/vehicleMarks.ts)
   const marks = marksGeometry(kind, v.marks);
   if (marks) g.add(new THREE.Mesh(marks, marksMaterial()));
-  const riders = buildRiders(kind, v.ride!, rng);
+  const riders = buildRiders(kind, v.ride!, rng, rider);
   g.add(riders.group);
   // its headlight (lit in the evening: world/evening.ts)
   addHeadlight(g, v.size[0] / 2, kind === "auto" ? 0.85 : 0.95, kind === "bicycle" ? 0.35 : 0.6);

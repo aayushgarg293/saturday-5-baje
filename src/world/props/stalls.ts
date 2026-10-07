@@ -3,6 +3,7 @@ import type { Rng } from "../../core/rng";
 import { PAL } from "../../render/palette";
 import type { LampSpot, SignSpot } from "../buildings/common";
 import { Parts } from "../kit";
+import { cartWheels } from "./cartWheels";
 
 /**
  * The street's food stalls, the heart of the walk.
@@ -48,21 +49,12 @@ function legs(p: Parts, x0: number, x1: number, z0: number, z1: number, top: num
   }
 }
 
-/** A wooden handcart: deck on two big wheels at one end and legs at the other, with a handle. */
+/** A wooden handcart (a thela): deck on four wheels, with a handle. */
 function handcart(p: Parts, length: number, width: number, deckY: number) {
   p.box(length, 0.08, width, 0, deckY, 0, PAL.woodLight);
   p.box(length, 0.18, 0.04, 0, deckY + 0.1, width / 2, PAL.woodLight); // side rails
   p.box(length, 0.18, 0.04, 0, deckY + 0.1, -width / 2, PAL.woodLight);
-  for (const z of [width / 2 + 0.06, -width / 2 - 0.06]) {
-    const wheel = new THREE.TorusGeometry(0.32, 0.03, 6, 18);
-    p.add(wheel, length / 2 - 0.35, 0.32, z, PAL.tyre);
-    p.box(0.03, 0.6, 0.03, length / 2 - 0.35, 0.32, z, PAL.tyre); // spokes, crossed
-    p.box(0.6, 0.03, 0.03, length / 2 - 0.35, 0.32, z, PAL.tyre);
-  }
-  p.box(0.06, 0.1, width, length / 2 - 0.35, 0.32, 0, PAL.metal); // axle
-  for (const z of [width / 2 - 0.05, -width / 2 + 0.05]) {
-    p.box(0.06, deckY, 0.06, -length / 2 + 0.1, deckY / 2, z, PAL.woodLight); // legs
-  }
+  cartWheels(p, { x: 0, z: 0, length, width, underside: deckY - 0.04, radius: 0.24 });
   p.strut({ x: -length / 2, y: deckY, z: width / 2 - 0.05 }, { x: -length / 2 - 0.5, y: deckY + 0.1, z: width / 2 - 0.05 }, 0.025, PAL.woodLight);
   p.strut({ x: -length / 2, y: deckY, z: -width / 2 + 0.05 }, { x: -length / 2 - 0.5, y: deckY + 0.1, z: -width / 2 + 0.05 }, 0.025, PAL.woodLight);
 }

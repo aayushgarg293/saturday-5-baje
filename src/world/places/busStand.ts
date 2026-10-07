@@ -6,6 +6,7 @@ import { Parts } from "../kit";
 import { BUS, buildBus, busSigns } from "../props/bus";
 import type { WorldSign } from "../street";
 import { BUS_STAND, inBusStand } from "../town";
+import { cartWheels } from "../props/cartWheels";
 
 /**
  * The bus stand's yard (its shops are rows like the bazaar's: world/town.ts,
@@ -39,6 +40,9 @@ export const BENCH = { z: -H + 1.3, seat: 0.45 };
 export const BAYS = [{ x: -9, z: -4.5 }, { x: -1, z: -4.5 }, { x: 7, z: -4.5 }];
 /** Where the conductor stands: by the first bus's door (on its left: the west), and which way he faces. */
 export const CONDUCTOR = { x: BAYS[0].x - BUS.width / 2 - 0.7, z: BAYS[0].z - BUS.length / 2 + 1.6, turn: -Math.PI / 2 };
+
+/** The banana cart, by the east shops (the banana-wala stands behind it, east: people/busStand.ts). */
+export const BANANA_CART = { x: D - 5.5, z: 6, length: 1.8, width: 1.0 };
 
 const CONCRETE = 0x9a9286, WALL = 0xd8cdb4, TIN = 0x8a8f92, STEEL = 0x4a5458, CHROME_DARK = 0x6a6e70;
 
@@ -110,9 +114,9 @@ export function buildBusStand(): BusStand {
   box(chai.x, chai.x + 1.4, chai.z - 0.3, chai.z + 0.3);
 
   // --- the banana cart, by the east shops ------------------------------------------------------------
-  const cart = { x: D - 5.5, z: 6 };
+  const cart = BANANA_CART;
   p.box(1.8, 0.1, 1.0, cart.x, 0.85, cart.z, 0x7a5a34);
-  for (const side of [-1, 1]) p.cylinder(0.32, 0.32, 0.06, cart.x - 0.3, 0.32, cart.z + side * 0.55, 0x2a2622, { rx: Math.PI / 2, segments: 12 });
+  cartWheels(p, { x: cart.x, z: cart.z, length: 1.8, width: 1.0, underside: 0.8, radius: 0.22 });
   for (let k = 0; k < 7; k++) {
     // bunches of bananas: curved yellow fingers, roughly (short capsules, tilted)
     const bunch = new THREE.CapsuleGeometry(0.04, 0.16, 3, 6).rotateZ(0.9 + (k % 3) * 0.2);

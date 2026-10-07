@@ -28,6 +28,7 @@ import { buildTownWalkers } from "./people/townWalkers";
 import { buildTownTraffic } from "./world/townTraffic";
 import { buildBusArrival } from "./world/busArrival";
 import { errands } from "./core/errands";
+import { passersby } from "./core/passersby";
 import { hideChit, toggleChit } from "./ui/chit";
 import { mummyCallsAfterYou } from "./activities/leavingHome";
 import { buildErrands } from "./activities/errands";
@@ -364,7 +365,7 @@ function update(dt: number) {
   areas.update(player.pos); // (show the parts of the town you're near)
   life.update(time, dt, player.pos);
   townWalkers.update(time, dt, player.pos);
-  townTraffic.update(dt, player.pos, townWalkers.positions());
+  townTraffic.update(dt, player.pos, [...townWalkers.positions(), ...passersby.all()]);
   busArrival.update(time, dt, player.pos);
   errandRun.update(time, dt, player.pos);
   comingHome.update(time, dt, player.pos);

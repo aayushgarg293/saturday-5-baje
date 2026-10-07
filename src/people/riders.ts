@@ -45,7 +45,11 @@ type Seat = {
   blinkIn: number;
 };
 
-export function buildRiders(kind: VehicleKind, ride: Ride, rng: Rng): Riders {
+/**
+ * `rider`: someone particular in the saddle (a tuition kid riding home: people/tuition.ts) instead of
+ * the usual one; they keep their bag, and the cycle carries no milk cans.
+ */
+export function buildRiders(kind: VehicleKind, ride: Ride, rng: Rng, rider?: PersonRecipe): Riders {
   const group = new THREE.Group();
   group.name = "riders";
   const seats: Seat[] = [];
@@ -53,7 +57,7 @@ export function buildRiders(kind: VehicleKind, ride: Ride, rng: Rng): Riders {
     // seated, a kurta's stiff tails would hang through the seat (see chaiCorner.ts)
     if (!standing && (recipe.outfit.top === "kurta" || recipe.outfit.top === "kameez")) recipe.outfit.top = "halfShirt";
     recipe.outfit.jacket = undefined;
-    recipe.outfit.bag = undefined;
+    if (recipe !== rider) recipe.outfit.bag = undefined;
     const person = buildPerson(recipe);
     person.root.position.set(r.seat.x, standing ? r.seat.y : 0, 0);
     person.root.rotation.y = FACE_FORWARD;
@@ -61,13 +65,13 @@ export function buildRiders(kind: VehicleKind, ride: Ride, rng: Rng): Riders {
     seats.push({ person, ride: r, standing, look: v(8, 1.4, 0), blinkIn: rng.range(1, 4) });
   };
 
-  const driver = recipeFor(kind === "bicycle" ? "halwai" : kind === "motorcycle" ? "youngMan" : "man", rng);
+  const driver = rider ?? recipeFor(kind === "bicycle" ? "halwai" : kind === "motorcycle" ? "youngMan" : "man", rng);
   driver.build.scale = 1; // the reaches are measured for this height
   if (kind === "auto") {
     // the auto-wallah's khaki
     driver.outfit = { top: "halfShirt", topColour: 0xbca77e, bottom: "trousers", bottomColour: 0xa89370, feet: "chappals" };
   }
-  if (kind === "bicycle") {
+  if (kind === "bicycle" && !rider) {
     // the doodhwala: white shirt, dhoti, a white safa
     driver.outfit = { top: "halfShirt", topColour: 0xefeade, bottom: "dhoti", bottomColour: PAL.dhotiWhite, safa: [0xf0f0e6, 0xd6283a], feet: "chappals" };
   }
@@ -86,7 +90,7 @@ export function buildRiders(kind: VehicleKind, ride: Ride, rng: Rng): Riders {
     child.outfit.feet = "chappals";
     add(child, { seat: { x: 0.3, y: 0.315 }, grip: { x: 0.56, y: 1.05, z: 0.07 }, foot: { x: 0.3, y: 0.34, z: 0.06 }, lean: 0.05 }, true);
   }
-  if (kind === "bicycle") group.add(milkCans());
+  if (kind === "bicycle" && !rider) group.add(milkCans());
 
   let crank = rng.next() * Math.PI * 2;
   let t = 0;
