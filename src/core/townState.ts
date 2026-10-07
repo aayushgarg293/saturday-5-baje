@@ -7,4 +7,6 @@
 export const townState = {
   /** The 6:30 from Jaipur is in, parked in its bay. */
   jaipurBusIn: false,
+  /** You're in the middle of an errand's few words with someone (activities/errands.ts): the conductor holds his shouting. */
+  talking: false,
 };

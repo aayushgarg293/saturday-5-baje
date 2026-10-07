@@ -228,7 +228,7 @@ export function buildStreet(): Street {
   // Each shop gets a name from world/names.ts, in a fixed shuffled order. The
   // name decides both its signboard and the goods it lays out.
   const murals: WorldMural[] = [];
-  buildRow(BAZAAR, planPlots(rng), rng, shuffled(BAZAAR_SHOPS, 11));
+  buildRow(BAZAAR, planPlots(rng), rng, chemistNearHome(shuffled(BAZAAR_SHOPS, 11)));
 
   /**
    * The buildings along both sides of `road`, one per plot (from `plots`),
@@ -628,6 +628,20 @@ function laneSurface(road: Road, half: number, s0: number, s1: number, drains = 
  * way, changing how one building type uses randomness doesn't reshuffle every
  * building after it.
  */
+/**
+ * Mummy's chit sends you to Jain Medical, "ghar se nikalte hi daayein haath pe" (core/errands.ts), but
+ * the shuffle put it in a shop whose shutter is down. It swaps places with Krishna Photo Studio, open and
+ * a few doors further on the same side: both sell "general" goods, so only those two shops change
+ * (what's on their shelves and their boards), nothing else in the bazaar.
+ */
+const JAIN_MEDICAL = 7, PHOTO_STUDIO = 5;
+function chemistNearHome(order: number[]): number[] {
+  const out = [...order];
+  const a = out.indexOf(JAIN_MEDICAL), b = out.indexOf(PHOTO_STUDIO);
+  [out[a], out[b]] = [out[b], out[a]];
+  return out;
+}
+
 function forkRng(rng: Rng): Rng {
   return makeRng(Math.floor(rng.next() * 2 ** 31));
 }

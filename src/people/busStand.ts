@@ -149,6 +149,8 @@ export function buildBusStandPeople(): BusStandPeople {
         nextCall = 0;
       }
       nextCall -= dt;
+      // (not while he's talking with you about the bus or the parcel: activities/errands.ts)
+      if (townState.talking) nextCall = Math.max(nextCall, 4);
       if (nextCall <= 0) {
         const near = player.distanceTo(conductorWorld);
         // (by the Jaipur bus, out of earshot of his ordinary calls: you hear only the shouted Jaipur ones)

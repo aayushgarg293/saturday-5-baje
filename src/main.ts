@@ -30,6 +30,7 @@ import { buildBusArrival } from "./world/busArrival";
 import { errands } from "./core/errands";
 import { hideChit, toggleChit } from "./ui/chit";
 import { mummyCallsAfterYou } from "./activities/leavingHome";
+import { buildErrands } from "./activities/errands";
 import { showPrompt } from "./ui/prompt";
 import { buildAreas } from "./world/areas";
 import { buildBackdrop } from "./world/backdrop";
@@ -173,6 +174,10 @@ const paniPuri = new PaniPuri(camera, player, input, life.golgappa, scene);
 const haircut = new Haircut(camera, player, input, life.saloon.you);
 // batting with the kids in the gali (activities/cricket.ts)
 const cricket = new CricketGame(camera, player, input, life.cricket, scene);
+// Mummy's errands: the dry cleaner, the chemist, the typist, the conductor (activities/errands.ts)
+const errandRun = buildErrands(street, player.pos);
+scene.add(errandRun.group);
+areas.add("bazaar", errandRun.group);
 seat.onSit = () => {
   // the first time you sit down, the computer dials up (and every time, it's connected after; not after logging off)
   if (loggedOff) return;
@@ -313,6 +318,7 @@ window.addEventListener("keydown", (e) => {
     if (paniPuri.canStart()) paniPuri.start();
     else if (haircut.canStart()) haircut.start();
     else if (cricket.canStart()) cricket.start();
+    else if (errandRun.canStart()) errandRun.start();
     else if (canGoHome()) goHome();
     else if (canPay()) pay();
     else if (seat.seated) seat.standUp();
@@ -355,6 +361,7 @@ function update(dt: number) {
   townWalkers.update(time, dt, player.pos);
   townTraffic.update(dt, player.pos, townWalkers.positions());
   busArrival.update(time, dt, player.pos);
+  errandRun.update(time, dt, player.pos);
   cafeRoom.update(dt);
   for (const f of shopFans) f.update(dt);
   for (const l of laundry) l.update(time);
@@ -399,6 +406,7 @@ function prompt(): string | null {
   if (haircut.active || haircut.canStart()) return haircut.prompt();
   if (cricket.active || cricket.canStart()) return cricket.prompt();
   if (paniPuri.canStart()) return "[E] pani puri khao (₹10 mein 6)";
+  if (errandRun.canStart()) return errandRun.prompt();
   if (!input.locked && seat.seated) return "[Click] to look around again";
   if (seat.seated && loggedOff) return paid ? "[E] get up" : `[E] get up    (₹${charge(visitMinutes)} to pay at the counter)`;
   if (canPay()) return `[E] pay ₹${charge(visitMinutes)}`;
