@@ -93,6 +93,8 @@ export type Street = {
   chowk: Chowk;
   /** Just in front of home's door (world/buildings/home.ts): where the walk ends. */
   homeDoor: THREE.Vector3;
+  /** Home's door itself, as a frame: its middle at the threshold, +z out toward the street (activities/comingHome.ts). */
+  homeDoorFrame: THREE.Matrix4;
 };
 
 /** A `PeopleSpot` placed in the world: its position, and which way it faces (rotation about the vertical). */
@@ -139,6 +141,7 @@ export function buildStreet(): Street {
   const fans: WorldFan[] = [];
   const lines: WorldLine[] = [];
   let homeDoor = new THREE.Vector3();
+  let homeDoorFrame = new THREE.Matrix4();
   const rng = makeRng(SEED);
 
   group.add(buildGround());
@@ -202,7 +205,10 @@ export function buildStreet(): Street {
     for (const { x, y, z, turn, ...rest } of spots) {
       // doors aren't places for people: only home's is kept (the walk ends there)
       if (rest.kind === "door") {
-        if (type === "home") homeDoor = new THREE.Vector3(x, y, z + 0.8).applyMatrix4(mesh.matrixWorld);
+        if (type === "home") {
+          homeDoor = new THREE.Vector3(x, y, z + 0.8).applyMatrix4(mesh.matrixWorld);
+          homeDoorFrame = mesh.matrixWorld.clone().multiply(new THREE.Matrix4().makeTranslation(x, y, z));
+        }
         continue;
       }
       people.push({ ...rest, position: new THREE.Vector3(x, y, z).applyMatrix4(mesh.matrixWorld), rotationY: rot + turn });
@@ -475,7 +481,7 @@ export function buildStreet(): Street {
   // south to north, so whoever picks from them can space them out along the walk
   const along = (p: THREE.Vector3) => streetCoords(p.x, p.z).s;
   people.sort((a, b) => along(a.position) - along(b.position));
-  return { group, colliders, floors, cafeFrame, signs, spawn: { ...pointAt(1.5, 0), yaw: yawAlong(1.5) }, people, lamps, plates, labels, murals, fans, lines, homeDoor, townSigns, chowk };
+  return { group, colliders, floors, cafeFrame, signs, spawn: { ...pointAt(1.5, 0), yaw: yawAlong(1.5) }, people, lamps, plates, labels, murals, fans, lines, homeDoor, homeDoorFrame, townSigns, chowk };
 }
 
 /** A plain boundary wall with a coping on top (the ends of the side roads' back lanes). */

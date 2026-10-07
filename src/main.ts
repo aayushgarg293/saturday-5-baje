@@ -31,6 +31,7 @@ import { errands } from "./core/errands";
 import { hideChit, toggleChit } from "./ui/chit";
 import { mummyCallsAfterYou } from "./activities/leavingHome";
 import { buildErrands } from "./activities/errands";
+import { broughtHome, buildComingHome } from "./activities/comingHome";
 import { showPrompt } from "./ui/prompt";
 import { buildAreas } from "./world/areas";
 import { buildBackdrop } from "./world/backdrop";
@@ -232,18 +233,22 @@ function stopAtTheStairs() {
 }
 
 // --- home: the end ------------------------------------------------------------------------
-// Once you've paid, home's door (the house behind where you started) is the
-// end: [E] there fades the screen and the sound, and the title card comes up.
+// Once you've been to the cafe, or done any of Mummy's errands, home's door is open as you come up to
+// it, and she's in it (activities/comingHome.ts). E: a few words with her, then you go in: the screen
+// and the sound fade, and the title card comes up, with what you brought home.
 let ended = false;
-const HOME_REACH = 2.2;
-const canGoHome = () => paid && !ended && player.pos.distanceTo(street.homeDoor) < HOME_REACH;
+const comingHome = buildComingHome(street.homeDoorFrame, player.pos);
+scene.add(comingHome.group); // (not in an area: it shows and hides itself, and it's only a door and her)
+const canGoHome = () => !ended && !player.frozen && comingHome.canGoIn();
 function goHome() {
-  ended = true;
-  player.frozen = true;
-  hideChit();
-  audio.fadeOut(4);
-  playEnding();
-  document.exitPointerLock();
+  player.frozen = true; // (standing at the door while you two talk)
+  comingHome.goIn(() => {
+    ended = true;
+    hideChit();
+    audio.fadeOut(4);
+    playEnding(broughtHome());
+    document.exitPointerLock();
+  });
 }
 
 // --- sound ----------------------------------------------------------------------
@@ -362,6 +367,7 @@ function update(dt: number) {
   townTraffic.update(dt, player.pos, townWalkers.positions());
   busArrival.update(time, dt, player.pos);
   errandRun.update(time, dt, player.pos);
+  comingHome.update(time, dt, player.pos);
   cafeRoom.update(dt);
   for (const f of shopFans) f.update(dt);
   for (const l of laundry) l.update(time);
@@ -410,7 +416,7 @@ function prompt(): string | null {
   if (!input.locked && seat.seated) return "[Click] to look around again";
   if (seat.seated && loggedOff) return paid ? "[E] get up" : `[E] get up    (₹${charge(visitMinutes)} to pay at the counter)`;
   if (canPay()) return `[E] pay ₹${charge(visitMinutes)}`;
-  if (canGoHome()) return "[E] go home";
+  if (canGoHome()) return comingHome.prompt();
   if (seat.seated) return `${yourScreen.ready() ? "[Click] use the computer    " : ""}[E] get up    [T] look at the clock`;
   if (seat.canSit()) return "[E] sit down";
   const other = cafePeople.boothNear(player.pos);
