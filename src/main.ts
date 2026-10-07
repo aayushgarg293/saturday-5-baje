@@ -448,6 +448,23 @@ function render() {
 // Dev-only tools. `import.meta.env.DEV` is true under `npm run dev` and false in
 // the production build, where this whole block (and the dev files) is left out.
 let afterFrame: (dt: number) => void = () => {};
+// (the built game: the speed overlay only, and only when asked for, with `?stats` on the address)
+// (the built game: the speed overlay, and the speed notes kept for Claude, only when asked for, with `?stats`
+// on the address: dev/speedLog.ts)
+if (!import.meta.env.DEV && new URLSearchParams(location.search).has("stats")) {
+  const { createStats } = await import("./dev/stats");
+  const { createSpeedLog } = await import("./dev/speedLog");
+  const stats = createStats(renderer, player);
+  const notes = createSpeedLog(
+    renderer,
+    () => ({ place: player.pos.y > 4 ? "the cafe, upstairs" : areas.nameAt(player.pos.x, player.pos.z), x: player.pos.x, z: player.pos.z }),
+    () => gameClock.minutes,
+  );
+  afterFrame = (dt) => {
+    stats.update(dt);
+    notes.update(dt);
+  };
+}
 if (import.meta.env.DEV) {
   const { createStats } = await import("./dev/stats");
   const { installDevTools } = await import("./dev/shot");
@@ -484,6 +501,25 @@ if (import.meta.env.DEV) {
       lights.followPlayer(player.pos);
     },
   });
+}
+
+// Get the graphics card ready for the whole town now, behind the start screen: the first time a part of it
+// comes into view, its materials have to be prepared for the card ("compiled") and its shapes sent to it,
+// a tenth of a second's stutter (the owner's speed check found one at the chowk, one at court road). So:
+// one full frame of everything, every pass (shadows, ink, grade) as the game draws them, nothing left out
+// for being off to the side; then back to drawing only what's near and in view.
+{
+  areas.showAll();
+  const culled: THREE.Object3D[] = [];
+  scene.traverse((o) => {
+    if (o.frustumCulled) {
+      o.frustumCulled = false;
+      culled.push(o);
+    }
+  });
+  render();
+  for (const o of culled) o.frustumCulled = true;
+  areas.update(player.pos);
 }
 
 const clock = new THREE.Timer();

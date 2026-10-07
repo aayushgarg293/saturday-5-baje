@@ -2,9 +2,13 @@ import type * as THREE from "three";
 import type { Player } from "../core/player";
 
 /**
- * Dev-only overlay in the top-left corner.
+ * The overlay in the top-left corner: under `npm run dev` always, and in the
+ * built game when its address ends in `?stats` (to measure the real thing:
+ * main.ts). Players never see it.
  *
- * Line 1: frames per second, milliseconds per frame, draw calls, triangles.
+ * Line 1: frames per second, milliseconds per frame (and the worst single
+ * frame in the last half second: a stutter shows there), draw calls,
+ * triangles.
  * Draw calls (how many separate things the GPU is asked to draw each frame)
  * are usually what slows a scene like this down, so watch that number as the
  * street fills up.
@@ -24,6 +28,7 @@ export function createStats(renderer: THREE.WebGLRenderer, player: Player) {
   // Average over half a second, so the numbers are readable instead of flickering.
   let frames = 0;
   let elapsed = 0;
+  let worst = 0;
   let fpsText = "";
 
   return {
@@ -34,14 +39,16 @@ export function createStats(renderer: THREE.WebGLRenderer, player: Player) {
     update(dt: number) {
       frames++;
       elapsed += dt;
+      worst = Math.max(worst, dt);
       if (elapsed >= 0.5) {
         const info = renderer.info.render;
         const fps = frames / elapsed;
         fpsText =
-          `${fps.toFixed(0)} fps  ${((elapsed / frames) * 1000).toFixed(1)} ms  ` +
+          `${fps.toFixed(0)} fps  ${((elapsed / frames) * 1000).toFixed(1)} ms (worst ${(worst * 1000).toFixed(0)})  ` +
           `${info.calls} draws  ${(info.triangles / 1000).toFixed(1)}k tris`;
         frames = 0;
         elapsed = 0;
+        worst = 0;
       }
       let text = fpsText;
       if (showPosition) {

@@ -30,7 +30,8 @@ import { CRUISE, buildMoverBody, drive, pose } from "./traffic";
  * the same way, so nobody meets head on. They stop for you, for people
  * walking, and for each other (world/traffic.ts, `drive`); one held up by
  * another for long (it can happen where two loops cross) edges on past it.
- * You can't walk through them. Their own random numbers.
+ * You can't walk through them. Drawn only within SEEN metres of you. Their
+ * own random numbers.
  */
 
 export type TownTraffic = {
@@ -45,8 +46,8 @@ export type TownTraffic = {
 const KEEP = { lane: 0.65, road: 1.1 };
 /** The roundabout round the clock tower's island: its radius. */
 const ROUND = 8;
-/** Riders further than this from you aren't posed. */
-const RIDERS_NEAR = 45;
+/** Riders further than this from you aren't posed; vehicles further than SEEN aren't drawn (out in the haze). */
+const RIDERS_NEAR = 45, SEEN = 120;
 /** Held up by another vehicle this long (seconds), a vehicle edges on past it for a moment. */
 const DEADLOCK = 6, EDGE_PAST = 2.5;
 
@@ -172,8 +173,9 @@ export function buildTownTraffic(): TownTraffic {
           }
           car.edging = Math.max(0, car.edging - dt);
         }
-        const moving = car.pause <= 0;
-        if (moving || car.group.position.distanceTo(player) < RIDERS_NEAR) car.riders.update(dt, car.speed, player);
+        const moving = car.pause <= 0, far = car.group.position.distanceTo(player);
+        car.group.visible = far < SEEN;
+        if (moving || far < RIDERS_NEAR) car.riders.update(dt, car.speed, player);
       }
     },
   };

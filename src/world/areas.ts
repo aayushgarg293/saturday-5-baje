@@ -64,6 +64,10 @@ export type Areas = {
   add(area: number | string, ...objects: THREE.Object3D[]): void;
   /** Every frame: show the areas you're near, hide the rest. */
   update(player: THREE.Vector3): void;
+  /** Show every part of the town (until the next `update`): to get the graphics card ready for all of it at once (main.ts). */
+  showAll(): void;
+  /** The name of the part of the town a point is in ("bazaar", "station"…), or "elsewhere" (the speed notes: dev/speedLog.ts). */
+  nameAt(x: number, z: number): string;
 };
 
 /** How far either side of the bazaar's middle its own buildings reach (their rows' backs, 13.2 m, and a little). */
@@ -86,6 +90,13 @@ export function buildAreas(): Areas {
     return areas.findIndex((a) => inside(a.box, x, z));
   };
   return {
+    nameAt: (x, z) => areas[indexAt(x, z)]?.name ?? "elsewhere",
+    showAll() {
+      for (const a of areas) {
+        a.shown = true;
+        for (const o of a.objects) o.visible = true;
+      }
+    },
     split(items, where) {
       const batches = new Map<number, (typeof items)[number][]>();
       for (const item of items) {

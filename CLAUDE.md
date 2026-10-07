@@ -21,7 +21,19 @@ lamps coming on (world/evening.ts), evening life and sounds, home and the
 ending card (*Saturday, 5 Baje*). This version is complete: one visit.
 The owner prefers a spare soundscape: add sounds only when asked.
 
-Latest (2026-09-30, Claude's background tab, 1521×784): ~4 ms per frame,
+Version 1 (one visit to the cafe) is on itch.io. Version 2 is built (phase 10
+in TASKS.md): the town around the bazaar (the chowk, court road, the bus
+stand, the old mohalla, the station, school road with the school, tuition,
+park and sabzi mandi, the home lane), life on its roads, the 6:30 bus, the
+trains, and Mummy's chit of errands with her at the door when you come home.
+Waiting on the owner's speed check before its upload.
+
+Version 2 (2026-10-07, Claude's tab, 2205×1131 at ratio 1.5): **~560–720 draw
+calls, 0.5–1.2 M triangles** at the busiest views (the bazaar's start, the mandi,
+the park as the tuition lets out); ~110–360 at the station and bus stand. That
+tab's timings were unreliable that day (an empty scene alone took 8 ms).
+
+Earlier (2026-09-30, Claude's background tab, 1521×784): ~4 ms per frame,
 ~380 draw calls on the street (the people and the cafe added since the
 baseline below); dusk costs the same or less (no shadow pass once the sun
 is down). Measure on the owner's machine before release.
@@ -65,6 +77,7 @@ npm install      # once, after cloning
 npm run dev      # dev server with dev tools: http://127.0.0.1:5180
 npm run build    # type-check, then production build into dist/
 npm run preview  # serve the production build: http://127.0.0.1:5181
+                 # (add ?stats to the address for the speed overlay: the owner's speed check)
 ```
 
 Dev tools (dev server only), from the browser console:
@@ -200,3 +213,10 @@ Keep each entry short.)*
 | Seated people looked sunk into their chairs and benches | Sitting put the hip joint a fixed 10 cm above the seat, but the pelvis reaches 13 cm below it, and loose trousers, a dhoti or a skirt more. Each body now knows how far its underside reaches (`seatDrop`, people/body.ts) and sits that high. Also seat people at the FRONT of a high seat (a chabutra, a charpai): further back, their legs go down through it. |
 | Women in a ghagra showed bare legs when they sat or walked | The skirt is a stiff cone from the hips; the legs swing out of it, and they were skin-coloured ("hidden anyway"). Legs under a ghagra are dressed in its cloth, loose (people/clothes.ts). |
 | Washing hung in the air, then the building appeared as you came closer | Parts of the town are drawn only within reach (world/areas.ts), but the washing, fans, nameplates, labels, wall art and evening lights were each one batch for the whole town, always drawn. They're built one batch per area now (main.ts), each from the WHOLE list keeping only its own (their random choices and turn-taking run over everything, so nothing changes), and the reaches are 70–100 m, out in the haze. Anything added along buildings but drawn apart from them must go into its area too. |
+| A door scene showed open before it should have | It was put in an area (world/areas.ts), and the area shows everything in it whenever you're near, overriding the scene's own hiding. Something that shows and hides itself stays out of the areas (activities/comingHome.ts). |
+| A departing train vanished in plain sight | Each train had exactly its 15-minute turn; the passenger pulls out late in its turn, and was dropped when the next began. The timetable keeps the previous train while it's still running (`trainsAt`). |
+| A bus turning into its bay drove through a cart | Only its path was checked, but a long vehicle's tail swings wide in a turn. Check the corners and sides of its whole body at every step of the turn. |
+| The tuition kids piled into each other | Everyone going the same way was given the same waypoints. Give each walker their own distance from the road's middle, and stagger when they set off. |
+| A louder sound crackled | Many short clicks starting together (every axle over a joint) added up past full scale. Check the peak and the clipped count in `__audioLab`, not only the average loudness. |
+| The walk check said the level crossing was unreachable | A train was due: the barriers were down. Run the walk check between trains (`trainsAt` says when). |
+

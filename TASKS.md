@@ -295,6 +295,43 @@ for real. The owner chose the tasks (a song, a photo), woven into the chats.
       door bulb and lit windows) and the ending (`ui/ending.ts`): "[E] go
       home" after paying, the fade, the title card *Saturday, 5 Baje*
 
+## 10. The town, and Mummy's errands (version 2)
+- [x] Roads as objects; the chowk with its clock tower at the bazaar's north end
+- [x] Court road: the district court, typists and the stamp vendor
+- [x] The bus stand: yard, shed, booking office, two Roadways buses, the
+      conductor; empty plots and a house going up
+- [x] The old mohalla through the left gali: lanes round a square, the peepal
+      and its chabutra, the handpump, the shrine
+- [x] The way to the station: the lane, the level crossing, Daulatbagh station
+- [x] School road: the government school, Sharma Tutorials (six o'clock, Priya
+      and Neha at the kulfi cart), the park ringed by houses
+- [x] The home lane behind home, joining the south side road's back lane
+- [x] Parts of the town drawn only near (`world/areas.ts`), their washing,
+      fans and lights with them
+- [x] June 2007: the pink sunset with the sun on the sky, the blue hour, night
+- [x] Life on the town's roads: walkers (`people/townWalkers.ts`), a scooter,
+      a motorcycle and an auto going round (`world/townTraffic.ts`)
+- [x] The 6:30 from Jaipur: the highway out of the bus stand, the bus coming
+      in to its bay, passengers getting down, the conductor calling it
+- [x] Mummy's lines as you leave, and her chit (Tab), each line ticked
+- [x] The errands: the dry cleaner, the chemist, the typist, the parcel off
+      the bus, the sabziwali's tomatoes (`activities/errands.ts`)
+- [x] Coming home: Mummy at the door, a few words built from what you did,
+      what came home on the ending card (`activities/comingHome.ts`)
+- [x] The owner's fixes: the bus's turn past the banana cart (and a
+      banana-wala), its passengers round the buses, the tuition kids each
+      with their own way home (two riding), every cart on four wheels
+- [x] Trains every 15 game minutes, the passenger stopping and the express
+      passing, the barriers, the bell, the horn, the engine, and the wheels
+      (the owner's own recording: `public/sounds/`)
+- [x] The sabzi mandi in the park's north half: thelas and ground sellers,
+      scales, weights and polythene bags, shoppers haggling
+- [ ] Speed check on the owner's Mac (the built game with `?stats`)
+- [ ] Build, zip, the owner uploads to itch.io
+
+**Done when:** the owner has walked the whole loop at normal speed on their
+Mac at a steady frame rate, and version 2 is on itch.io.
+
 ## Open questions (from `BRIEF.md`)
 - The story on the computer: the friend's post, who he chats with
 - Which key looks up at the wall clock
