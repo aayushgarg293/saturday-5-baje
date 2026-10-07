@@ -642,15 +642,15 @@ function laneSurface(road: Road, half: number, s0: number, s1: number, drains = 
  * building after it.
  */
 /**
- * Mummy's chit sends you to Jain Medical, "ghar se nikalte hi daayein haath pe" (core/errands.ts), but
+ * Mummy's chit sends you to Reliable Medical, "ghar se nikalte hi daayein haath pe" (core/errands.ts), but
  * the shuffle put it in a shop whose shutter is down. It swaps places with Krishna Photo Studio, open and
  * a few doors further on the same side: both sell "general" goods, so only those two shops change
  * (what's on their shelves and their boards), nothing else in the bazaar.
  */
-const JAIN_MEDICAL = 7, PHOTO_STUDIO = 5;
+const RELIABLE_MEDICAL = 7, PHOTO_STUDIO = 5;
 function chemistNearHome(order: number[]): number[] {
   const out = [...order];
-  const a = out.indexOf(JAIN_MEDICAL), b = out.indexOf(PHOTO_STUDIO);
+  const a = out.indexOf(RELIABLE_MEDICAL), b = out.indexOf(PHOTO_STUDIO);
   [out[a], out[b]] = [out[b], out[a]];
   return out;
 }

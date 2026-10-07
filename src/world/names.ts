@@ -58,7 +58,7 @@ export const SHOP_NAMES: ShopName[] = [
   { hi: "रॉयल टेलर्स", en: "Royal Tailors", tag: "Gents & Ladies • Suit Specialist", trade: "cloth", shelf: "cloth", work: "tailor" },
   { hi: "कृष्णा फोटो स्टूडियो", en: "Krishna Photo Studio", tag: "Passport Photo • Colour Lab", trade: "general", shelf: "photo" },
   { hi: "लक्ष्मी चूड़ी भंडार", en: "Laxmi Choodi Bhandar", tag: "Bangles • Bindi • Cosmetics", trade: "general", shelf: "bangles" },
-  { hi: "जैन मेडिकल स्टोर", en: "Jain Medical Store", tag: "Chemist & Druggist", trade: "general", shelf: "chemist" },
+  { hi: "रिलायबल मेडिकल स्टोर", en: "Reliable Medical Store", tag: "Chemist & Druggist", trade: "general", shelf: "chemist" },
   { hi: "अग्रवाल क्लॉथ हाउस", en: "Agarwal Cloth House", tag: "Suit • Saree • Cut Piece", trade: "cloth", shelf: "cloth" },
   { hi: "महावीर इलेक्ट्रिकल्स", en: "Mahaveer Electricals", tag: "Fan • Cooler • Wiring", trade: "electrical", shelf: "electrical" },
   { hi: "श्री बालाजी बर्तन भंडार", en: "Shri Balaji Bartan Bhandar", tag: "Steel • Brass • Pressure Cooker", trade: "general", shelf: "utensils" },

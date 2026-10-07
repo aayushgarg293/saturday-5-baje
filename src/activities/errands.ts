@@ -23,7 +23,7 @@ import { BUS_STAND, COURT, COURT_ROAD, inBusStand } from "../world/town";
  *
  *   the dry cleaner   Modern Dry Cleaners, the bazaar's right side past the
  *                     temple: Papa's ironed clothes
- *   the chemist       Jain Medical, just right of home: Dettal and Krocin
+ *   the chemist       Reliable Medical, just right of home: Dettal and Krocin
  *   the typist        outside the court, the free one at the third table:
  *                     Papa's stamp paper, typed (two minutes, he says)
  *   the conductor     at the bus stand: Mama's parcel, off the 6:30 from
@@ -85,7 +85,7 @@ export function buildErrands(street: Street, playerPos: THREE.Vector3): Errands 
     return { keeper, front };
   }
   const dryCleaner = keeperAt("Modern Dry Cleaners");
-  const chemist = keeperAt("Jain Medical Store");
+  const chemist = keeperAt("Reliable Medical Store");
 
   // the typist at the third table (the second has a client), and the conductor: in their places' frames
   const courtMid = COURT_ROAD.pointAt((COURT.s0 + COURT.s1) / 2, 0);
