@@ -140,7 +140,9 @@ export function walkCheck(colliders: readonly Box[]): WalkReport {
     homeLaneMiddle: near(LANE_ROAD.pointAt(LANE_ROAD.length / 2, 0)),
     homeLaneMouth: near(MOUTH_POINT),
     schoolPlayground: near(SCHOOL_ROAD.pointAt((SCHOOL.school.s0 + SCHOOL.school.s1) / 2 + 4, -SCHOOL.setback - 6)),
-    parkFountain: near(SCHOOL_ROAD.pointAt((SCHOOL.park.s0 + SCHOOL.park.s1) / 2 - 4, SCHOOL.setback + 12)),
+    // (beside the fountain, in the park's half; and the mandi's aisle, in the other: world/places/park.ts, mandi.ts)
+    parkFountain: near(SCHOOL_ROAD.pointAt((SCHOOL.park.s0 + SCHOOL.park.s1) / 2 + 9.5, SCHOOL.setback + 11.5)),
+    mandiAisle: near(SCHOOL_ROAD.pointAt((SCHOOL.park.s0 + SCHOOL.park.s1) / 2 - 10.4, SCHOOL.setback + 14)),
     cricketLane: near(CRICKET_LANE.pointAt(CRICKET_LANE.length / 2, 0)),
     stationLane: near(inStation(45, 0)),
     levelCrossing: near(inStation(STATION.railway.track, 0)),

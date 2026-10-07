@@ -7,6 +7,8 @@ import { buildShopkeeper } from "../people/shopkeepers";
 import { say } from "../ui/caption";
 import { SHOP_NAMES } from "../world/names";
 import { CONDUCTOR } from "../world/places/busStand";
+import { SABZIWALI, SELLERS } from "../world/places/mandi";
+import { parkOrigin } from "../world/places/park";
 import { TYPIST_TABLES } from "../world/places/court";
 import type { Street } from "../world/street";
 import { BUS_STAND, COURT, COURT_ROAD, inBusStand } from "../world/town";
@@ -27,6 +29,9 @@ import { BUS_STAND, COURT, COURT_ROAD, inBusStand } from "../world/town";
  *   the conductor     at the bus stand: Mama's parcel, off the 6:30 from
  *                     Jaipur (only once it's in: townState.jaipurBusIn;
  *                     before that, he tells you when it comes)
+ *   the sabziwali     in the mandi in the park (world/places/mandi.ts):
+ *                     half a kilo of tomatoes, and the dhaniya-mirchi you
+ *                     ask for free, as everyone does
  *
  * The dry cleaner and the chemist get a keeper on a stool out front (most
  * shops' keepers are inside, out of sight): built here, from their own
@@ -89,6 +94,10 @@ export function buildErrands(street: Street, playerPos: THREE.Vector3): Errands 
   const yard = inBusStand(BUS_STAND.depth / 2, 0);
   const atConductor = new THREE.Vector3(yard.x + CONDUCTOR.x - 0.9, 0, yard.z + CONDUCTOR.z);
 
+  // the sabziwali, on her crate behind her cloth: you stand at its front edge (her frame faces the aisle)
+  const sw = SELLERS[SABZIWALI], po = parkOrigin();
+  const atSabziwali = new THREE.Vector3(po.x + sw.x + Math.sin(sw.turn) * 2.0, 0, po.z + sw.z + Math.cos(sw.turn) * 2.0);
+
   const STOPS: Stop[] = [
     {
       errand: "kapde", at: dryCleaner.front, reach: 2.2, ready: () => true,
@@ -135,6 +144,16 @@ export function buildErrands(street: Street, playerPos: THREE.Vector3): Errands 
             ? { who: "Conductor", line: "Saadhe chhe baje aati hai. Abhi bahut time hai, ghoom ke aao.", seconds: 4 }
             : { who: "Conductor", line: "Saadhe chhe wali? Aati hi hogi. Yahin ruko, teesre number pe lagegi.", seconds: 4 },
         ],
+    },
+    {
+      errand: "sabzi", at: atSabziwali, reach: 1.8, ready: () => true,
+      prompt: () => "[E] aadha kilo tamatar",
+      lines: () => [
+        you("Aunty, aadha kilo tamatar dena."),
+        { who: "Sabziwali", line: "Le lo beta, ekdum laal hai… das rupaye.", seconds: 3.5 },
+        you("Aur thoda dhaniya-mirchi… free mein?"),
+        { who: "Sabziwali", line: "Haaye, aaj kal ke bachche! …chal, le ja. Mummy ko namaste bolna.", seconds: 4 },
+      ],
     },
   ];
 

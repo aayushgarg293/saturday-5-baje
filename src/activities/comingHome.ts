@@ -16,7 +16,7 @@ import { Parts } from "../world/kit";
  * the two of you have a few words, built from what you did (core/errands.ts):
  *
  *   late          after 7:30: "Kitni der kar di!"
- *   everything    all four errands: "Shabaash! Sab le aaya?"
+ *   everything    all five errands: "Shabaash! Sab le aaya?"
  *   not quite     a light tease for what's missing (two at most)
  *   always        "Chal andar aa, khana lag gaya hai."
  *
@@ -51,14 +51,16 @@ const BROUGHT: Partial<Record<(typeof CHIT)[number]["errand"], string>> = {
   dawai: "Dettal-Krocin",
   stampPaper: "stamp paper",
   parcel: "Mama ka parcel",
+  sabzi: "tamatar",
 };
 
 /** Her tease for each thing not brought. */
-const TEASE: Record<"kapde" | "dawai" | "stampPaper" | "parcel", string> = {
+const TEASE: Record<"kapde" | "dawai" | "stampPaper" | "parcel" | "sabzi", string> = {
   kapde: "Papa ke kapde? Kal Papa office kya pehen ke jaayenge?",
   dawai: "Dettal-Krocin bhi bhool gaya? Ab sar mera dukh raha hai.",
   stampPaper: "Aur stamp paper? Papa ko Monday ko court mein dena hai…",
   parcel: "Parcel? Cafe mein hi reh gaya dimaag…",
+  sabzi: "Tamatar? Ab aaj bina tamatar ki sabzi banegi.",
 };
 
 export function broughtHome(): string[] {
@@ -107,12 +109,12 @@ export function buildComingHome(doorFrame: THREE.Matrix4, playerPos: THREE.Vecto
   function words(): Line[] {
     const lines: Line[] = [];
     const late = timeOfDay.minutes >= LATE;
-    const missing = (["kapde", "dawai", "stampPaper", "parcel"] as const).filter((e) => !errands.isDone(e));
+    const missing = (["kapde", "dawai", "stampPaper", "parcel", "sabzi"] as const).filter((e) => !errands.isDone(e));
     const her = (line: string, seconds = 3.5): Line => ({ who: "Mummy", line, seconds });
     const you = (line: string, seconds = 3): Line => ({ who: "You", line, seconds });
     if (late) lines.push(her("Kitni der kar di! Saadhe saat baj gaye, pata hai?", 4), you("Sorry Mummy… time ka pata hi nahi chala."));
-    if (missing.length === 0) lines.push(her("Shabaash! Sab le aaya?"), you("Haan Mummy, sab. Kapde, dawai, stamp paper, parcel."), her("Mera beta! Papa ko bataungi."));
-    else if (missing.length === 4) lines.push(her("Ek bhi kaam nahi kiya? Haan, cafe yaad tha bas…", 4));
+    if (missing.length === 0) lines.push(her("Shabaash! Sab le aaya?"), you("Haan Mummy, sab. Kapde, dawai, stamp paper, parcel, tamatar."), her("Mera beta! Papa ko bataungi."));
+    else if (missing.length === 5) lines.push(her("Ek bhi kaam nahi kiya? Haan, cafe yaad tha bas…", 4));
     else {
       // a tease for each thing missing, two at most (the parcel's says "cafe": only if you went)
       for (const e of missing.slice(0, 2)) lines.push(her(e === "parcel" && !errands.isDone("cafe") ? "Parcel? Mama phone karenge, kya bolungi?" : TEASE[e]));

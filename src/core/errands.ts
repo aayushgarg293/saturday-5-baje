@@ -5,7 +5,7 @@
  * the owner: main.ts); and at the door, she reads it.
  */
 
-export type Errand = "cafe" | "kapde" | "dawai" | "stampPaper" | "parcel";
+export type Errand = "cafe" | "kapde" | "dawai" | "stampPaper" | "parcel" | "sabzi";
 
 /** Her lines on the chit, in her order. */
 export const CHIT: { errand: Errand; line: string; where: string }[] = [
@@ -14,6 +14,7 @@ export const CHIT: { errand: Errand; line: string; where: string }[] = [
   { errand: "dawai", line: "Dettal aur Krocin", where: "Jain Medical, ghar se nikalte hi daayein haath pe" },
   { errand: "stampPaper", line: "Papa ka stamp paper", where: "court ke bahar typist se type karwana" },
   { errand: "parcel", line: "Mama ka parcel", where: "bus stand, 6:30 wali Jaipur bus, conductor se" },
+  { errand: "sabzi", line: "Sabzi: aadha kilo tamatar, dhaniya-mirchi", where: "park wali mandi, School Road" },
 ];
 
 const done = new Set<Errand>();

@@ -13,6 +13,7 @@ import { buildConstruction } from "./construction";
 import { buildMohallaPeople } from "./mohalla";
 import { buildStationPeople } from "./station";
 import { buildSchoolRoadPeople } from "./schoolRoad";
+import { buildMandiPeople } from "./mandi";
 import { buildTuitionPeople } from "./tuition";
 import { buildHomeLanePeople } from "./homeLane";
 import { buildCourtPeople } from "./court";
@@ -107,6 +108,8 @@ export function buildCrowd(spots: WorldPeopleSpot[]): Crowd {
   groups.push(buildStationPeople());
   // …and on school road: the school's chowkidar, the park's old men, kids and peanut seller
   groups.push(buildSchoolRoadPeople());
+  // …and the sabzi mandi in the park's other half: its sellers, its shoppers
+  groups.push(buildMandiPeople());
   // …and the tuition letting out at six, the kulfi-wala, Priya and Neha
   groups.push(buildTuitionPeople());
   // …and on the home lane, the amma on her charpai and a cow (both to walk round)

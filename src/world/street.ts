@@ -24,6 +24,7 @@ import { buildCourt } from "./places/court";
 import { buildMohallaSquare } from "./places/mohalla";
 import { buildStation } from "./places/station";
 import { buildPark } from "./places/park";
+import { buildMandi } from "./places/mandi";
 import { buildSchool } from "./places/school";
 import { buildTuition } from "./places/tuition";
 import { CORNER_HOUSE_HALF, HOME_LANE, HOME_ROWS, LANE_ROAD, MOVED_HOUSE, SCHOOL_TAIL } from "./homeLane";
@@ -466,6 +467,11 @@ export function buildStreet(): Street {
     lamps.push(...it.lamps);
   }
   townSigns.push(...school.signs, ...tuition.signs);
+  // the sabzi mandi, in the park's north half (its bulbs join the lamps last of all, below: the evening's
+  // lights take their random turns in order, and the ones after it are left as they were)
+  const mandi = buildMandi();
+  group.add(mandi.group);
+  colliders.push(...mandi.colliders);
 
   // the home lane (world/homeLane.ts): school road's last few metres to the corner, then the lane west, to
   // behind home, where the south side road's back lane comes into it (the wall at its far end is built above)
@@ -480,6 +486,7 @@ export function buildStreet(): Street {
 
   // south to north, so whoever picks from them can space them out along the walk
   const along = (p: THREE.Vector3) => streetCoords(p.x, p.z).s;
+  lamps.push(...mandi.lamps);
   people.sort((a, b) => along(a.position) - along(b.position));
   return { group, colliders, floors, cafeFrame, signs, spawn: { ...pointAt(1.5, 0), yaw: yawAlong(1.5) }, people, lamps, plates, labels, murals, fans, lines, homeDoor, homeDoorFrame, townSigns, chowk };
 }

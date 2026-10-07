@@ -9,7 +9,10 @@ import { cartWheels } from "../props/cartWheels";
 
 /**
  * The park, on school road's west side, where the cricket lane comes out
- * (world/schoolRoad.ts): the town's one patch of green.
+ * (world/schoolRoad.ts): the town's one patch of green, its south half. The
+ * north half, along the cricket lane, is the evening sabzi mandi
+ * (world/places/mandi.ts): a low railing between them, the mandi open to
+ * the road and the lane.
  *
  *   the railing     a low wall with iron railings on top, all round; the
  *                   main gate on school road, a small one on the lane
@@ -32,8 +35,12 @@ const DEPTH = SCHOOL.park.depth, HALF = (SCHOOL.park.s1 - SCHOOL.park.s0) / 2;
 const IRON = 0x2a2e30, PLASTER = 0xd8cdb4, BRICK_PATH = 0xb07a5a, GRASS = 0x7f9a4e;
 /** The play corner's moving things (people/schoolRoad.ts): the free swing's top bar, the see-saw's pivot. */
 export const PLAY = { swing: { x: -24.2, z: 13, top: 2.4 }, seesaw: { x: -27, z: 6, y: 0.45 } };
-/** The benches (where you sit: their middle, which way they face). */
-export const BENCHES = [{ x: -9, z: 9.6, turn: Math.PI }, { x: -23, z: -9.6, turn: 0 }, { x: -9, z: -9.6, turn: 0 }];
+/** The benches (where you sit: their middle, which way they face); the first is the old men's. */
+export const BENCHES = [{ x: -9, z: 9.6, turn: Math.PI }, { x: -13, z: 15.6, turn: Math.PI }, { x: -20, z: 15.6, turn: Math.PI }];
+/** The line between the park (south, +z) and the mandi (north): the railing along it, and the gap in it. */
+export const PARK_MANDI = { z: -2.2, gap: { x0: -4.6, x1: -2.6 } };
+/** The dry fountain, in the middle of the park's half. */
+const FOUNTAIN = { x: -15.3, z: 9.5 };
 /** The peanut seller's cart (outside the gate, at the road's edge), and where he stands, behind it. */
 export const PEANUTS = { cart: { x: 1.7, z: 4.2 }, seller: { x: 2.55, z: 4.2, turn: -Math.PI / 2 } };
 
@@ -76,7 +83,8 @@ export function buildPark(): Park {
     box(x - 0.25, x + 0.25, z - 0.25, z + 0.25);
   };
   const GATE = 2, LANE_GATE = { x0: -6, x1: -3.6 };
-  railing(-0.15, -HALF, -0.15, -GATE);
+  // (the mandi's front, north of the gate, is open to the road: just a pillar at its corner)
+  pillar(-0.15, -HALF);
   railing(-0.15, GATE, -0.15, HALF);
   railing(-DEPTH, -HALF, LANE_GATE.x0, -HALF);
   railing(LANE_GATE.x1, -HALF, -0.15, -HALF);
@@ -84,20 +92,29 @@ export function buildPark(): Park {
   railing(-DEPTH, HALF, -0.15, HALF);
   for (const z of [-GATE, GATE]) pillar(-0.15, z);
   for (const x of [LANE_GATE.x0, LANE_GATE.x1]) pillar(x, -HALF);
+  // between the park and the mandi: a railing, with a gap to walk through near the front
+  const M = PARK_MANDI;
+  railing(-DEPTH, M.z, M.gap.x0, M.z);
+  railing(M.gap.x1, M.z, -0.4, M.z);
 
   // --- the grass, the paths, the fountain ---------------------------------------------------------------
-  p.slab(-DEPTH + 0.15, -0.3, 0, 0.025, -HALF + 0.15, HALF - 0.15, GRASS);
-  // a few bare patches, worn by feet and cricket
-  for (let k = 0; k < 7; k++) p.add(new THREE.CircleGeometry(rng.range(0.8, 1.6), 9).rotateX(-Math.PI / 2), rng.range(-28, -4), 0.028, rng.range(-15, 15), 0xb59a74);
+  p.slab(-DEPTH + 0.15, -0.3, 0, 0.025, M.z + 0.15, HALF - 0.15, GRASS);
+  // a few bare patches, worn by feet and cricket (each drawn, in turn, as before: those that fell in what's
+  // now the mandi aren't laid, so the ones after them stay where they were)
+  for (let k = 0; k < 7; k++) {
+    const r = rng.range(0.8, 1.6), x = rng.range(-28, -4), z = rng.range(-15, 15);
+    if (z - r > M.z + 0.2) p.add(new THREE.CircleGeometry(r, 9).rotateX(-Math.PI / 2), x, 0.028, z, 0xb59a74);
+  }
   const path = (x0: number, x1: number, z0: number, z1: number) => p.slab(x0, x1, 0.03, 0.04, z0, z1, BRICK_PATH);
-  const ring = { x0: -DEPTH + 2.5, x1: -2.5, z0: -HALF + 2.5, z1: HALF - 2.5 }, pw = 1.6;
+  const ring = { x0: -DEPTH + 2.5, x1: -2.5, z0: M.z + 2.5, z1: HALF - 2.5 }, pw = 1.6;
   path(ring.x0, ring.x1, ring.z0, ring.z0 + pw);
   path(ring.x0, ring.x1, ring.z1 - pw, ring.z1);
   path(ring.x0, ring.x0 + pw, ring.z0, ring.z1);
   path(ring.x1 - pw, ring.x1, ring.z0, ring.z1);
-  path(-14, -0.3, -0.8, 0.8); // in from the gate to the fountain
-  path(LANE_GATE.x0, LANE_GATE.x1, -HALF + 0.15, ring.z0); // in from the lane's gate
-  const f = { x: -16, z: 0 };
+  path(ring.x1 - 0.1, -0.3, ring.z0, ring.z0 + pw); // in from the gate to the path round
+  path(FOUNTAIN.x + 1.9, ring.x1, FOUNTAIN.z - 2.5, FOUNTAIN.z - 0.9); // and across to the fountain
+  path(LANE_GATE.x0, LANE_GATE.x1, -HALF + 0.15, -HALF + 2.2); // in from the lane's gate (into the mandi)
+  const f = FOUNTAIN;
   p.cylinder(2.3, 2.4, 0.55, f.x, 0.275, f.z, PLASTER, { segments: 20 });
   p.cylinder(2.05, 2.05, 0.02, f.x, 0.5, f.z, 0x9a9082, { segments: 20 }); // dry, dusty, a few leaves
   p.cylinder(0.3, 0.4, 1.4, f.x, 0.95, f.z, PLASTER, { segments: 10 });
