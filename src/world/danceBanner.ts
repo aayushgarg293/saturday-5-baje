@@ -9,6 +9,10 @@
  *
  * Painted onto a canvas by world/signs.ts (kind "danceBanner"). No random
  * numbers: it's a printed thing, the same every time.
+ *
+ * And its blade board (`paintDanceBlade`, kind "danceBlade"): the tall board
+ * sticking out from the wall, the same on both faces, read from down the
+ * road either way, in the banner's colours.
  */
 
 const HINDI = '"Kohinoor Devanagari", "Devanagari Sangam MN", "Noto Sans Devanagari", sans-serif';
@@ -130,6 +134,29 @@ export function paintDanceBanner(ctx: Ctx, w: number, h: number) {
   dust.addColorStop(1, "rgba(150, 120, 90, 0.2)");
   ctx.fillStyle = dust;
   ctx.fillRect(0, h * 0.75, w, h * 0.25);
+}
+
+/** The blade board: the name stacked down it, the twirling girl, "1st FLOOR" at the foot. */
+export function paintDanceBlade(ctx: Ctx, w: number, h: number) {
+  const sky = ctx.createLinearGradient(0, 0, 0, h);
+  sky.addColorStop(0, "#c2136b");
+  sky.addColorStop(0.62, "#6a1a8a");
+  sky.addColorStop(1, "#4a1070");
+  ctx.fillStyle = sky;
+  ctx.fillRect(0, 0, w, h);
+  ctx.strokeStyle = "#ffd94a";
+  ctx.lineWidth = w * 0.035;
+  ctx.strokeRect(w * 0.045, w * 0.045, w * 0.91, h - w * 0.09);
+  for (const [x, y, s] of [[0.16, 0.06, 0.7], [0.86, 0.3, 0.6], [0.14, 0.47, 0.5], [0.88, 0.62, 0.45]]) sparkle(ctx, x * w, y * h, w * 0.1 * s);
+  fit(ctx, "अदिति", w * 0.5, h * 0.105, w * 0.74, h * 0.13, { fill: "#ffe14a", stroke: "#7a0d3a", family: HINDI, weight: "bold" });
+  fit(ctx, "DANCE", w * 0.5, h * 0.235, w * 0.78, h * 0.1, { fill: "#ffffff", stroke: "#5a1a8a", family: CHUNKY });
+  fit(ctx, "ACADEMY", w * 0.5, h * 0.335, w * 0.78, h * 0.085, { fill: "#ffffff", stroke: "#5a1a8a", family: CHUNKY });
+  twirlingGirl(ctx, w * 0.5, h * 0.72, h * 0.3);
+  // the foot: a yellow panel, as on the cafe's
+  ctx.fillStyle = "#ffe14a";
+  ctx.fillRect(w * 0.08, h * 0.775, w * 0.84, h * 0.18);
+  fit(ctx, "डांस क्लास", w * 0.5, h * 0.825, w * 0.74, h * 0.075, { fill: "#4a1070", family: HINDI, weight: "bold" });
+  fit(ctx, "1st FLOOR ↑", w * 0.5, h * 0.908, w * 0.74, h * 0.055, { fill: "#c0131a", family: CHUNKY });
 }
 
 // --- the pieces ---------------------------------------------------------------------------------------------

@@ -19,6 +19,9 @@ import type { HouseFront, WorldSign } from "../street";
  *                  with a pink curtain half drawn and the tube light on
  *   the banner     the big flex banner across the first floor's front, tied
  *                  at its corners, a bulb over it (world/danceBanner.ts)
+ *   the blade      a tall board sticking out from the wall at the window's
+ *                  end, painted on both faces: what you read from down the
+ *                  road, either way (as the cyber cafe's)
  *
  * Its words are painted here, apart from the town's other signs (theirs take
  * random turns in order: these mustn't shift them). No random numbers.
@@ -108,12 +111,22 @@ export function buildDanceAcademy(house: HouseFront): DanceAcademy {
   p.box(0.04, 0.04, 0.5, bx, by + bh / 2 + 0.3, face + 0.25, 0x3a3634);
   p.cylinder(0.05, 0.05, 0.1, bx, by + bh / 2 + 0.22, face + 0.48, 0xf2ead6, { segments: 8 });
 
+  // --- the blade board: out from the wall on two brackets, at the window's end (clear of the banner) --------
+  const blade = { x: -half + 0.2, y0: y0 - 0.45, y1: y0 + 1.5, z0: face + 0.12, z1: face + 1.17, thick: 0.1 };
+  p.slab(blade.x - blade.thick / 2, blade.x + blade.thick / 2, blade.y0, blade.y1, blade.z0, blade.z1, 0x4a1070);
+  for (const y of [blade.y0 + 0.2, blade.y1 - 0.2]) p.box(0.05, 0.05, blade.z1 - face + 0.05, blade.x, y, (face + blade.z1) / 2, PAL.metal);
+
   group.add(p.build("danceAcademy"));
 
   // --- its words: the board over the gate, the banner ---------------------------------------------------
   const signs: WorldSign[] = [
     { kind: "schoolBoard", position: toWorld(door.x, board.y, face + 0.036), rotationY: faces, w: board.w, h: board.h, label: "अदिति डांस एकेडमी\nपहली मंज़िल ↑  •  ADITI DANCE ACADEMY" },
     { kind: "danceBanner", position: toWorld(bx, by, face + 0.042), rotationY: faces, w: bw - 0.02, h: bh - 0.02 },
+    // (the blade: one painting, on both its faces: `backOffset` puts the second on the far side, turned round)
+    {
+      kind: "danceBlade", position: toWorld(blade.x + blade.thick / 2, (blade.y0 + blade.y1) / 2, (blade.z0 + blade.z1) / 2), rotationY: faces + Math.PI / 2,
+      w: blade.z1 - blade.z0 - 0.04, h: blade.y1 - blade.y0 - 0.04, backOffset: blade.thick + 0.01,
+    },
   ];
   const painted = buildSigns(signs);
   // (painted in world terms; this group is at the house: put them back where they are)
