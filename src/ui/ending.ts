@@ -16,6 +16,9 @@ const CREDITS = [
 /** Seconds: the fade to black; then each part of the card coming up. */
 const FADE = 3.5;
 
+/** If they liked it: a small yellow sign, the same as on the front page (its look: index.html, `.chai`). */
+const CHAI = "https://www.buymeacoffee.com/aayushgarg";
+
 /** `brought`: what came home with you, a few words each ("Papa ke kapde", "Mama ka parcel"). */
 export function playEnding(brought: string[] = []) {
   const style = document.createElement("style");
@@ -24,7 +27,7 @@ export function playEnding(brought: string[] = []) {
 
   const veil = document.createElement("div");
   veil.className = "ending";
-  veil.innerHTML = `<h1></h1><p class="line"></p><p class="brought"></p><div class="credits"></div><p class="again">click to walk it again</p>`;
+  veil.innerHTML = `<h1></h1><p class="line"></p><p class="brought"></p><div class="credits"></div><p class="again">click to walk it again</p><a class="chai" href="${CHAI}" target="_blank" rel="noopener">&#9749; achha laga? ek cutting chai pila do</a>`;
   veil.querySelector("h1")!.textContent = TITLE;
   veil.querySelector(".line")!.textContent = LINE;
   // (nothing brought: no line at all)
@@ -45,6 +48,9 @@ export function playEnding(brought: string[] = []) {
   show(".brought", FADE + 4.3);
   show(".credits", FADE + 5.5);
   show(".again", FADE + 8);
+  show(".chai", FADE + 9);
+  // (the chai link opens its own tab; it mustn't count as the click that starts the walk again)
+  veil.querySelector(".chai")!.addEventListener("click", (e) => e.stopPropagation());
   setTimeout(() => veil.addEventListener("click", () => location.reload()), (FADE + 8) * 1000);
 }
 
@@ -59,5 +65,6 @@ const CSS = /* css */ `
 .ending .line { font-size: clamp(16px, 2.2vw, 22px); color: #d9c8a8; }
 .ending .brought { font: italic clamp(13px, 1.6vw, 16px) Georgia, serif; color: #a8977a; min-height: 1em; }
 .ending .credits { margin-top: 40px; font: 13px/2 "Helvetica Neue", Arial, sans-serif; color: #8f8578; }
+.ending .chai { margin-top: 14px; transition: opacity 2.5s, transform 0.15s; }
 .ending .again { margin-top: 30px; font: 12px "Helvetica Neue", Arial, sans-serif; color: #6f675d; }
 `;

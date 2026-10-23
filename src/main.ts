@@ -24,6 +24,7 @@ import { PAL } from "./render/palette";
 import { Pipeline } from "./render/post";
 import { createRenderer, fitToWindow } from "./render/renderer";
 import { playEnding } from "./ui/ending";
+import { frontIsUp, frontReady, openFront } from "./ui/front";
 import { buildTownWalkers } from "./people/townWalkers";
 import { buildTownTraffic } from "./world/townTraffic";
 import { buildBusArrival } from "./world/busArrival";
@@ -346,15 +347,20 @@ window.addEventListener("keydown", (e) => {
   if (e.code === "KeyT" && (seat.seated || inCafe())) seat.lookAtClock();
 });
 
-// Click to capture the mouse (and start the sound); the start screen shows whenever it's released.
-startScreen.addEventListener("click", () => {
+// Click to capture the mouse (and start the sound). The first time, that's on the front page (ui/front.ts,
+// wired up below once the town is built); after that, the small start screen shows whenever it's released.
+function startWalking() {
   audio.start();
   input.lock();
-});
+}
+startScreen.addEventListener("click", startWalking);
 input.onLockChange = (locked) => {
-  // (on the desktop the mouse is free on purpose: no start screen then; nor at the end)
-  startScreen.hidden = locked || desktop.isOpen || ended;
-  if (locked) mummyCallsAfterYou(); // (the first time only: as you step out of home)
+  if (locked) {
+    openFront(); // (the first time only: the shutter rolls up)
+    mummyCallsAfterYou(); // (the first time only: as you step out of home)
+  }
+  // (on the desktop the mouse is free on purpose: no start screen then; nor at the end, nor under the front page)
+  startScreen.hidden = locked || desktop.isOpen || ended || frontIsUp();
 };
 
 // --- game loop ---------------------------------------------------------------------
@@ -525,9 +531,11 @@ if (import.meta.env.DEV) {
   for (const o of culled) o.frustumCulled = true;
   areas.update(player.pos);
 }
+// All built and ready to draw: the front page's shutter goes half up, and a click on it starts the walk.
+frontReady(startWalking);
 
 const clock = new THREE.Timer();
-// While the start screen is up (before the first click, or after Esc) the game is paused: the world holds
+// While the front page or the start screen is up (before the first click, or after Esc) the game is paused: the world holds
 // still and is drawn only twice a second (enough to keep the picture right if the window changes size),
 // instead of sixty times. Nobody's playing; the laptop needn't work.
 let pausedFor = 0;
@@ -536,7 +544,7 @@ renderer.setAnimationLoop((time) => {
   // Cap the step: after a pause (switching tabs) the first frame can report a
   // huge gap, and one giant step could carry the player through a wall.
   const dt = Math.min(clock.getDelta(), 0.1);
-  if (!startScreen.hidden) {
+  if (!startScreen.hidden || frontIsUp()) {
     pausedFor += dt;
     if (pausedFor < 0.5) return;
     pausedFor = 0;

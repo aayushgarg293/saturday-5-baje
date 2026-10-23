@@ -4,6 +4,11 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Saturday, 5 Baje</title>
+    <meta name="description" content="A Saturday evening walk to a small-town cyber cafe in 2000s Rajasthan." />
+    <!-- (the picture and words shown when the link is shared, on WhatsApp and the like) -->
+    <meta property="og:title" content="Saturday, 5 Baje" />
+    <meta property="og:description" content="A Saturday evening walk to a small-town cyber cafe in 2000s Rajasthan." />
+    <meta property="og:image" content="https://aayushgarg293.github.io/saturday-5-baje/front/bazaar.jpg" />
     <style>
       html, body { margin: 0; height: 100%; overflow: hidden; background: #e9dcc3; }
       canvas { display: block; }
@@ -19,34 +24,135 @@
       #start[hidden] { display: none; }
       #start .title { margin: 0 0 18px; font: italic 20px Georgia, serif; opacity: 0.9; }
 
-      /* On a phone or tablet (no mouse, no keyboard) the game can't be played: say so instead */
-      #phone { display: none; }
+      /* ---- The front page: a shop's shutter, the game's name painted on it (src/ui/front.ts) ----
+         Closed while the game loads; half up once the town is built, the bazaar at sunset under it;
+         a click rolls it all the way up, into the game. */
+      #front { position: fixed; inset: 0; z-index: 40; overflow: hidden; cursor: pointer; user-select: none;
+        background: #2a2320; transition: opacity 0.6s 1.1s; }
+      #front.open { opacity: 0; pointer-events: none; }
+
+      /* the bazaar, seen under the shutter once it's up (a picture from the game: public/front/bazaar.jpg) */
+      #front .street { position: absolute; left: 0; right: 0; top: 40vh; bottom: 0;
+        background: url("front/bazaar.jpg") center 58% / cover; opacity: 0; transition: opacity 1.2s 0.4s; }
+      #front.ready .street { opacity: 1; }
+      #front.open .street { opacity: 0; transition: opacity 0.6s; } /* (the live town is behind it) */
+
+      /* the shutter: painted steel, its ridges a repeating band of light and shade */
+      #front .shutter { position: absolute; left: 0; right: 0; top: 0; height: 100vh; background: #7d8a85;
+        border-left: 14px solid #3d4341; border-right: 14px solid #3d4341;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.55); transition: transform 1.4s cubic-bezier(0.3, 1.25, 0.5, 1); }
+      #front.ready .shutter { transform: translateY(-58vh); }
+      #front.open .shutter { transform: translateY(-104vh); transition: transform 1.5s cubic-bezier(0.5, 0, 0.8, 0.6); }
+      /* (over the paint, so the words look painted on the ridges; and dust, darker towards the ground) */
+      #front .shutter::after { content: ""; position: absolute; inset: 0; pointer-events: none;
+        background:
+          repeating-linear-gradient(to bottom, rgba(255, 255, 255, 0.22) 0, rgba(255, 255, 255, 0.04) 3px,
+            rgba(0, 0, 0, 0.06) 9px, rgba(0, 0, 0, 0.32) 12px, rgba(0, 0, 0, 0.45) 13px),
+          radial-gradient(ellipse at 18% 92%, rgba(90, 60, 30, 0.35), transparent 40%),
+          radial-gradient(ellipse at 85% 80%, rgba(90, 60, 30, 0.25), transparent 35%),
+          linear-gradient(to bottom, rgba(0, 0, 0, 0.18), transparent 30%, transparent 75%, rgba(70, 50, 30, 0.3)); }
+
+      /* the words, painted by hand: in the shutter's bottom part, the part still seen when it's half up */
+      #front .paint { position: absolute; left: 0; right: 0; bottom: 5vh; height: 35vh; display: flex;
+        flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+      #front .paint .hi { margin: 0; font: 700 clamp(40px, 10vh, 104px)/1.1 "Kohinoor Devanagari", "Devanagari Sangam MN",
+        "Noto Sans Devanagari", "Mangal", sans-serif; color: #b3261c; text-shadow: 3px 3px 0 #f0c234; transform: rotate(-1.2deg); }
+      #front .paint .en { margin: 0.6vh 0 0; font: clamp(22px, 5vh, 52px)/1 Impact, "Haettenschweiler", "Arial Narrow Bold",
+        sans-serif; letter-spacing: 0.06em; color: #1c3d70; transform: rotate(0.6deg); }
+      #front .paint .sub { margin: 1.4vh 0 0; font: italic clamp(13px, 2vh, 19px) Georgia, serif; color: #242424; opacity: 0.8; }
+      /* small stencilled notices higher up, seen only while it's shut */
+      #front .notice { position: absolute; margin: 0; font: 700 clamp(14px, 2.4vh, 22px) "Kohinoor Devanagari",
+        "Devanagari Sangam MN", "Noto Sans Devanagari", sans-serif; color: rgba(255, 255, 255, 0.55); }
+      #front .notice.a { top: 12vh; left: 7vw; transform: rotate(-2deg); }
+      #front .notice.b { top: 18vh; right: 8vw; color: rgba(150, 30, 20, 0.7); transform: rotate(1.5deg); }
+
+      /* the bottom bar, its two handles and two padlocks */
+      #front .bar { position: absolute; left: 0; right: 0; bottom: 0; height: 3.4vh; min-height: 22px;
+        background: linear-gradient(#5b6360, #2c302e); z-index: 1; }
+      #front .lock { position: absolute; bottom: 0.4vh; width: 26px; height: 22px; border-radius: 4px;
+        background: linear-gradient(#d8b04a, #8f6b1f); box-shadow: 0 2px 3px rgba(0, 0, 0, 0.5); }
+      #front .lock::before { content: ""; position: absolute; left: 6px; top: -11px; width: 10px; height: 12px;
+        border: 3px solid #9aa3a0; border-bottom: none; border-radius: 8px 8px 0 0; }
+      #front .lock.l { left: 22vw; } #front .lock.r { right: 22vw; }
+
+      /* the words at the foot of the screen: waiting, then "click" */
+      #front .foot { position: absolute; left: 0; right: 0; bottom: 0; padding: 0 24px 7vh; text-align: center;
+        color: #fff8ec; font: 15px/1.6 system-ui, sans-serif; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8); z-index: 2; }
+      #front .foot p { margin: 0; }
+      #front .wait { position: absolute; left: 0; right: 0; bottom: 6vh; font: italic 17px Georgia, serif; opacity: 0.85; }
+      #front .wait::after { content: "…"; display: inline-block; width: 1.2em; text-align: left;
+        animation: dots 1.4s steps(4) infinite; overflow: hidden; vertical-align: bottom; }
+      @keyframes dots { from { width: 0; } to { width: 1.2em; } }
+      #front .go, #front .phone { display: none; }
+      #front.ready .wait { display: none; }
+      #front.ready .go { display: block; }
+      #front.ready .foot { background: linear-gradient(transparent, rgba(20, 12, 8, 0.7)); padding-top: 14vh; }
+      #front .go .click { font: italic clamp(22px, 3.4vh, 32px) Georgia, serif; margin-bottom: 8px; }
+      #front .go .keys { opacity: 0.85; font-size: 14px; }
+
+      /* the chai: a small painted tin sign in the corner (a link: opens its own tab, doesn't start the game) */
+      #front .chai, .ending .chai { display: inline-block; padding: 8px 14px; border-radius: 6px; background: #ffdd00;
+        color: #1a1a1a; font: 700 15px "Noteworthy", "Bradley Hand", "Segoe Print", "Comic Sans MS", cursive;
+        text-decoration: none; box-shadow: 2px 3px 0 rgba(0, 0, 0, 0.45); transform: rotate(-2deg); transition: transform 0.15s; }
+      #front .chai:hover, .ending .chai:hover { transform: rotate(0deg) scale(1.05); }
+      #front .chai { position: absolute; right: 18px; bottom: 18px; z-index: 3; }
+
+      /* On a phone or tablet (no mouse, no keyboard) the game can't be played: say so instead of "click" */
       @media (hover: none) and (pointer: coarse) {
         #start { display: none; }
-        #phone {
-          position: fixed; inset: 0; display: grid; place-items: center; padding: 24px;
-          background: rgba(40, 28, 20, 0.8); color: #fff8ec; text-align: center;
-          font: 17px/1.6 system-ui, sans-serif;
-        }
-        #phone h1 { margin: 0 0 12px; font: italic 26px Georgia, serif; }
+        #front { cursor: default; }
+        #front.ready .go, #front .wait { display: none; }
+        #front .phone { display: block; }
+        /* (the shutter stays down: no game to go into here; the words sized to the phone's width) */
+        #front.ready .shutter { transform: none; }
+        #front .street { display: none; }
+        #front .paint { bottom: 36vh; }
+        #front .paint .hi { font-size: 12vw; }
+        #front .paint .en { font-size: 7vw; }
+        #front .paint .sub { font-size: 3.4vw; }
+        #front.ready .foot { background: none; padding-top: 0; }
+        #front > .chai { display: none; } /* (the one under the notice instead) */
+        #front .phone .chai { position: static; margin-top: 14px; }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        #front .shutter, #front .street { transition-duration: 0.01s; }
       }
     </style>
   </head>
   <body>
     <canvas id="view"></canvas>
-    <div id="start">
+    <div id="front">
+      <div class="street"></div>
+      <div class="shutter">
+        <p class="notice a">यहाँ पोस्टर लगाना मना है</p>
+        <p class="notice b">रविवार बंद</p>
+        <div class="paint">
+          <p class="hi">शनिवार, 5 बजे</p>
+          <p class="en">SATURDAY, 5 BAJE</p>
+          <p class="sub">a walk to the cyber cafe &middot; Rajasthan, June 2007</p>
+        </div>
+        <div class="bar"><span class="lock l"></span><span class="lock r"></span></div>
+      </div>
+      <div class="foot">
+        <p class="wait">Ruko, dukaan khul rahi hai</p>
+        <div class="go">
+          <p class="click">Click karo, chalo bazaar</p>
+          <p class="keys">W A S D to move &middot; mouse to look &middot; Shift to walk faster &middot; Tab for Mummy's chit &middot; M to mute</p>
+        </div>
+        <div class="phone">
+          <p class="click">This game needs a computer: a keyboard and a mouse (or trackpad).</p>
+          <p>Open this link on a laptop or desktop, in Chrome or Safari.</p>
+          <a class="chai" href="https://www.buymeacoffee.com/aayushgarg" target="_blank" rel="noopener">&#9749; Buy me a cutting chai</a>
+        </div>
+      </div>
+      <a class="chai" href="https://www.buymeacoffee.com/aayushgarg" target="_blank" rel="noopener">&#9749; Buy me a cutting chai</a>
+    </div>
+    <div id="start" hidden>
       <div>
         <p class="title">Saturday, 5 Baje</p>
         <h1>Click to walk</h1>
         <p>W A S D to move &middot; mouse to look &middot; Shift to walk faster</p>
         <p>Tab for Mummy's chit &middot; Esc to release the mouse &middot; M to mute the sound</p>
-      </div>
-    </div>
-    <div id="phone">
-      <div>
-        <h1>Saturday, 5 Baje</h1>
-        <p>This game needs a computer: a keyboard and a mouse (or trackpad).</p>
-        <p>Open this link on a laptop or desktop, in Chrome or Safari.</p>
       </div>
     </div>
     <script type="module" src="/src/main.ts"></script>
