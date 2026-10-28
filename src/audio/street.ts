@@ -3,6 +3,7 @@ import { type Cue, onCue } from "../core/cues";
 import { SLOTS } from "../world/layout";
 import { placeOnStreet } from "../world/props/batch";
 import type { AudioEngine } from "./engine";
+import { playRecording } from "./recordings";
 import { type Ctx, envelope, filter, gain, noiseSource, rand, stopAt } from "./synth";
 
 /**
@@ -12,10 +13,13 @@ import { type Ctx, envelope, filter, gain, noiseSource, rand, stopAt } from "./s
  *   bat on ball        the knock of the hit in the gali; the ball's bounces
  *   chai glasses       clinking as the chaiwala pours along the row
  *   the cycle bell     the doodhwala's "trring-trring" at anyone in his way
+ *   the kids' bells    a real bell's ring (audio/recordings.ts), as the
+ *                      tuition kids ride off
+ *   pressure cookers   a real whistle, from inside a house, at dinner time
  *   oil sizzling       steadily, at the kachori and jalebi kadhais
  *
  * The one-off sounds come as cues (core/cues.ts) from the people and the
- * traffic. All are built from fixed-pitch partials (no sliding pitch: the
+ * traffic. All but the two recordings are built from fixed-pitch partials (no sliding pitch: the
  * owner didn't like the "pew" of a falling tone).
  */
 
@@ -59,6 +63,13 @@ export class StreetSounds {
       case "ballBounce": return ballBounce(this.ctx, out(1.5, 0.1), t);
       case "glassClink": return glassClink(this.ctx, out(1.2, 0.1), t);
       case "cycleBell": return cycleBell(this.ctx, out(2, 0.15), t);
+      case "kidsBell": return void playRecording(this.ctx, "cycleBell", out(2, 0.15), t, 0.25);
+      case "cooker": {
+        // (from inside, through a window: muffled, and carrying down the lane)
+        const muffle = filter(this.ctx, "lowpass", 3200);
+        muffle.connect(out(4, 0.3));
+        return void playRecording(this.ctx, "cooker", muffle, t, 0.3);
+      }
       // (a small sound: heard in the saloon and just outside it, not across the street)
       case "snip": return snip(this.ctx, this.engine.place("street", where.x, where.y, where.z, 0.8, 0.05, 6), t);
     }

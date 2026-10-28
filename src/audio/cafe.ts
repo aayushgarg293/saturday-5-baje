@@ -2,6 +2,7 @@ import * as THREE from "three";
 import { type Cue, onCue } from "../core/cues";
 import { FANS, HALL } from "../world/cafe/plan";
 import type { AudioEngine } from "./engine";
+import { playRecording } from "./recordings";
 import { type Ctx, filter, gain, noiseSource, rand } from "./synth";
 
 /**
@@ -12,9 +13,9 @@ import { type Ctx, filter, gain, noiseSource, rand } from "./synth";
  *                      tick an old fan makes once a turn, its motor's hum
  *   keys and mice      clicks from whoever's typing (cues from
  *                      people/cafePeople.ts), at their own pace
- *   the modem          your computer dialling up when you sit down: the
- *                      dial tone, the number, the answering whistle, the
- *                      screech and the long hiss (about 12 s)
+ *   the modem          your computer dialling up when you sit down: a real
+ *                      dial-up modem's recording (audio/recordings.ts),
+ *                      about 21 s; the made-up one below if it can't be had
  *
  * Everything carries only a few metres (a hard edge: `reach`), so you hear
  * the fan above you and the booth beside you, not the whole room at once.
@@ -37,7 +38,14 @@ export class CafeSounds {
   update(_dt: number, _player: THREE.Vector3) {}
 
   private play(name: Cue, where: THREE.Vector3) {
-    if (name === "modem") return modem(this.ctx, this.engine.place("inside", where.x, where.y, where.z, 1.5, 0, 12), this.ctx.currentTime + 0.05);
+    if (name === "modem") {
+      const out = this.engine.place("inside", where.x, where.y, where.z, 1.5, 0, 12);
+      // (through a little speaker, as the made-up one: no bass, no top; and quieter, it's a loud recording)
+      const speaker = filter(this.ctx, "highpass", 250);
+      speaker.connect(filter(this.ctx, "lowpass", 5000)).connect(out);
+      if (!playRecording(this.ctx, "modem", speaker, this.ctx.currentTime + 0.05, 0.2)) modem(this.ctx, out, this.ctx.currentTime + 0.05);
+      return;
+    }
     if (name !== "keyClick" && name !== "mouseClick") return;
     const t = this.ctx.currentTime + 0.005;
     const out = this.engine.place("inside", where.x, where.y, where.z, 1, 0, 8);
@@ -107,7 +115,7 @@ function tickBuffer(ctx: Ctx, seconds: number): AudioBuffer {
 }
 
 /**
- * A dial-up modem connecting, about twelve seconds, through its own little
+ * (Only if the recording can't be had: audio/recordings.ts.) A dial-up modem connecting, about twelve seconds, through its own little
  * speaker (no bass, no top):
  *
  *   0.0  the dial tone                  1.1  the number: 1 7 2 2 3 3

@@ -36,8 +36,12 @@ export type YourScreen = {
   logOff(): void;
 };
 
-/** When each connecting stage begins, seconds after sitting down (the modem's sound is timed to match: audio/cafe.ts). */
-const STAGES: [number, ScreenStage][] = [[0, "dialing"], [4, "verifying"], [8, "registering"], [12, "desktop"]];
+/**
+ * When each connecting stage begins, seconds after sitting down, timed to the modem's recording (audio/cafe.ts):
+ * dialing through the dial tone, the number and the ringing; verifying as the two modems first screech at each
+ * other (10 s); registering through the long hiss; the desktop as it falls quiet (21 s).
+ */
+const STAGES: [number, ScreenStage][] = [[0, "dialing"], [10, "verifying"], [15, "registering"], [21, "desktop"]];
 
 export function buildYourScreen(frame: THREE.Matrix4): YourScreen {
   const canvas = document.createElement("canvas");

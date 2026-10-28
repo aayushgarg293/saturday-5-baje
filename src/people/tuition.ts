@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { boxAt } from "../core/colliders";
+import { cue } from "../core/cues";
 import { passersby } from "../core/passersby";
 import { makeRng } from "../core/rng";
 import { storySoFar } from "../core/storySoFar";
@@ -167,6 +168,21 @@ export function buildTuitionPeople(): TuitionPeople {
   /** Kids riding off: on a cycle with spinning wheels and pedals (world/traffic.ts), from their own random numbers. */
   const rideRng = makeRng(7781);
   type Rider = ReturnType<typeof buildMoverBody> & Driven & { mounted: boolean };
+  /**
+   * Their bells (a real ring: audio/street.ts): each rings once as they push off, at a moment of their own
+   * (so not all together), and again at anyone in their way, now and then. Never two within 3 s of each other.
+   */
+  const bells = new Map<Rider, { next: number; rung: boolean }>();
+  let lastRing = -99;
+  function ringBell(r: Rider, t: number, dt: number) {
+    const bell = bells.get(r)!;
+    bell.next -= dt;
+    if (bell.next > 0 || (bell.rung && !r.someoneAhead) || t - lastRing < 3) return;
+    cue("kidsBell", r.group.getWorldPosition(new THREE.Vector3()).setY(1.0));
+    bell.rung = true;
+    bell.next = 8 + Math.random() * 6;
+    lastRing = t;
+  }
   const kids: Kid[] = plan.map((k, i) => {
     const person = teen(k.girl);
     const path = [door.clone(), step.clone()];
@@ -304,6 +320,7 @@ export function buildTuitionPeople(): TuitionPeople {
             const others = kids.filter((o) => o !== k && o.started && !o.riding?.mounted).map((o) => o.stroll.person.root.position);
             const end = r.route ? drive(r, dt, [you, ...others], () => {}, 4) : true;
             r.riders.update(dt, r.speed, player);
+            if (!end) ringBell(r, t, dt);
             if (end && r.group.position.distanceTo(you) > 30) r.group.visible = false;
             continue;
           }
@@ -311,6 +328,7 @@ export function buildTuitionPeople(): TuitionPeople {
           if (end && r) {
             // at their cycle: on it, and off (the parked one goes: they're riding it)
             r.mounted = true;
+            bells.set(r, { next: 0.6 + Math.random() * 2.5, rung: false });
             k.stroll.person.root.visible = false;
             cycles[plan[kids.indexOf(k)].cycle!].mesh.visible = false;
             r.group.visible = true;

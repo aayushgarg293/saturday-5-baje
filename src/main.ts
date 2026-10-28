@@ -30,6 +30,8 @@ import { buildTownTraffic } from "./world/townTraffic";
 import { buildBusArrival } from "./world/busArrival";
 import { buildRailway } from "./world/railway";
 import { TrainSounds } from "./audio/train";
+import { playRecordingSoon, prepareRecordings } from "./audio/recordings";
+import { buildDinnerTime } from "./world/dinnerTime";
 import { errands } from "./core/errands";
 import { passersby } from "./core/passersby";
 import { hideChit, toggleChit } from "./ui/chit";
@@ -185,6 +187,8 @@ const haircut = new Haircut(camera, player, input, life.saloon.you);
 const cricket = new CricketGame(camera, player, input, life.cricket, scene);
 // Mummy's errands: the dry cleaner, the chemist, the typist, the conductor (activities/errands.ts)
 const errandRun = buildErrands(street, player.pos);
+// After 6:40, now and then a pressure cooker whistles in a house near you (world/dinnerTime.ts)
+const dinnerTime = buildDinnerTime(street.houseFronts);
 scene.add(errandRun.group);
 areas.add("bazaar", errandRun.group);
 seat.onSit = () => {
@@ -269,6 +273,7 @@ let streetSounds: StreetSounds | null = null;
 let trainSounds: TrainSounds | null = null;
 let cafeSounds: CafeSounds | null = null;
 audio.onStart((ctx) => {
+  prepareRecordings(ctx); // (the few real recordings: audio/recordings.ts)
   bed = new Bed(audio, ctx);
   radio = new Radio(audio, ctx, life.radioAt);
   saloonRadio = new Radio(audio, ctx, life.saloon.you.radio);
@@ -356,7 +361,9 @@ function startWalking() {
 startScreen.addEventListener("click", startWalking);
 input.onLockChange = (locked) => {
   if (locked) {
-    openFront(); // (the first time only: the shutter rolls up)
+    // the first time only: the shutter rolls up, and you hear it go
+    if (frontIsUp() && audio.ctx) playRecordingSoon(audio.ctx, "shutter", audio.bus("street"), 0.45);
+    openFront();
     mummyCallsAfterYou(); // (the first time only: as you step out of home)
   }
   // (on the desktop the mouse is free on purpose: no start screen then; nor at the end, nor under the front page)
@@ -383,6 +390,7 @@ function update(dt: number) {
   busArrival.update(time, dt, player.pos);
   railway.update(time, dt, player.pos); // (after the player: it may move you off the line)
   errandRun.update(time, dt, player.pos);
+  dinnerTime.update(dt, player.pos);
   comingHome.update(time, dt, player.pos);
   cafeRoom.update(dt);
   for (const f of shopFans) f.update(dt);

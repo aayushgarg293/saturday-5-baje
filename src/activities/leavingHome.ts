@@ -20,7 +20,7 @@ let called = false;
 export function mummyCallsAfterYou() {
   if (called) return;
   called = true;
-  let at = 2; // (once the front page's shutter has rolled up out of the way: ui/front.ts)
+  let at = 2.6; // (once the front page's shutter has rolled up out of the way: ui/front.ts)
   for (const { line, seconds } of LINES) {
     window.setTimeout(() => say("Mummy", line, seconds), at * 1000);
     at += seconds + 0.3;

@@ -36,5 +36,5 @@ export function openFront() {
   if (opened || !front) return;
   opened = true;
   front.classList.add("open");
-  window.setTimeout(() => front.remove(), 1800);
+  window.setTimeout(() => front.remove(), 2500);
 }

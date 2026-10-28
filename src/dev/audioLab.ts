@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { AudioEngine } from "../audio/engine";
+import { prepareRecordings } from "../audio/recordings";
 import { pointAt, yawAlong } from "../world/layout";
 
 /**
@@ -45,6 +46,7 @@ export async function audioLab(opts: {
   const ctx = new OfflineAudioContext(2, rate * seconds, rate);
   const engine = new AudioEngine();
   engine.start(ctx);
+  await prepareRecordings(ctx); // (the real recordings, unpacked before anything plays: audio/recordings.ts)
 
   // stand at the spot, looking up the street
   const at = pointAt(opts.s ?? 56, opts.offset ?? 0);

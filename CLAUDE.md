@@ -140,7 +140,10 @@ borrowed on this machine before keeping it.
   The one exception, the owner's choice (2026-10-07): the trains' wheels are the
   owner's own phone recording, `public/sounds/train wheels sound.mp3`, looped
   (audio/train.ts). Recordings go in `public/sounds/`; only the owner's own, or
-  ones whose licence allows a public game.
+  ones whose licence allows a public game. Four more, picked by the owner by ear
+  (2026-10-28), all CC0 from Freesound, trimmed: the shutter, the modem, the
+  tuition kids' cycle bell, a pressure cooker (audio/recordings.ts lists them).
+  The owner rejected the other candidates; the synthesized sounds stay.
 - **Look-alike names only** in anything the player can see or hear: Yorkut, not
   Orkut; Prison Brake, not Prison Break. The name table is in `BRIEF.md`.
 - People are **stylized, simple figures**, readable from a distance and never
