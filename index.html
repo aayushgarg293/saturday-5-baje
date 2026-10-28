@@ -27,6 +27,13 @@
         }
         fit();
         addEventListener("resize", fit);
+        // Playing from outside India (the clock's time zone says so; nothing is sent anywhere)? Then the chai
+        // sign is Buy Me a Coffee's own button, which people know; in India it's UPI (Razorpay), with Buy Me a
+        // Coffee as a small link under it; and the other way round. (?abroad in the address: see it from outside.)
+        try {
+          var zone = Intl.DateTimeFormat().resolvedOptions().timeZone || "";
+          root.classList.toggle("abroad", /[?&]abroad\b/.test(location.search) || !/^Asia\/(Kolkata|Calcutta)$/.test(zone));
+        } catch (e) {}
       })();
     </script>
     <style>
@@ -147,11 +154,25 @@
       #front .go .keys { opacity: 0.85; font-size: 14px; }
       #front .go .over { display: inline-block; margin-top: 10px; color: #fff8ec; font-size: 13px; opacity: 0.8; }
 
-      /* the chai: a small painted tin sign in the corner (a link: opens its own tab, doesn't start the game) */
-      #front .chai, .ending .chai { display: inline-block; padding: 8px 14px; border-radius: 6px; background: #ffdd00;
+      /* the chai. In India: a small painted tin sign in the corner, UPI (Razorpay), and under it a small link
+         to Buy Me a Coffee. From elsewhere (html.abroad, above): Buy Me a Coffee's own yellow button, the one
+         people know, and under it a small link to UPI (an Indian abroad may still pay that way). Links: they
+         open their own tab, and don't start the game. */
+      .chai { display: inline-flex; flex-direction: column; align-items: center; gap: 7px; }
+      .chai .upi { padding: 8px 14px; border-radius: 6px; background: #ffdd00;
         color: #1a1a1a; font: 700 15px "Noteworthy", "Bradley Hand", "Segoe Print", "Comic Sans MS", cursive;
         text-decoration: none; box-shadow: 2px 3px 0 rgba(0, 0, 0, 0.45); transform: rotate(-2deg); transition: transform 0.15s; }
-      #front .chai:hover, .ending .chai:hover { transform: rotate(0deg) scale(1.05); }
+      .chai .upi:hover { transform: rotate(0deg) scale(1.05); }
+      .chai .card, html.abroad .chai .upi { color: #fff8ec; font: 12px "Helvetica Neue", Arial, sans-serif;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8); opacity: 0.85; }
+      .chai .card img, .chai .upi .small { display: none; }
+      .chai .card img { width: 217px; height: 60px; }
+      html.abroad .chai .upi { order: 1; padding: 0; background: none; box-shadow: none; transform: none; text-decoration: underline; }
+      html.abroad .chai .upi .sign, html.abroad .chai .card span { display: none; }
+      html.abroad .chai .upi .small { display: inline; }
+      html.abroad .chai .card { opacity: 1; transition: transform 0.15s; }
+      html.abroad .chai .card:hover { transform: scale(1.05); }
+      html.abroad .chai .card img { display: block; }
       #front .chai { position: absolute; right: 18px; bottom: 18px; z-index: 3; }
 
       /* On a touch screen: the same, with a tap; the chai sign up top, clear of the words */
@@ -185,7 +206,10 @@
           <p class="sound for-touch">&#128266; sound on karo (iPhone: silent switch bhi)</p>
         </div>
       </div>
-      <a class="chai" href="https://www.buymeacoffee.com/aayushgarg" target="_blank" rel="noopener">&#9749; Buy me a cutting chai</a>
+      <div class="chai">
+        <a class="upi" href="https://rzp.io/rzp/aayushgarg2903" target="_blank" rel="noopener"><span class="sign">&#9749; Buy me a cutting chai</span><span class="small">India se ho? UPI se chai pilao</span></a>
+        <a class="card" href="https://www.buymeacoffee.com/aayushgarg" target="_blank" rel="noopener"><span>abroad? Buy Me a Coffee</span><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me a Coffee" loading="lazy" /></a>
+      </div>
     </div>
     <div id="start" hidden>
       <div>

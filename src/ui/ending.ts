@@ -16,8 +16,11 @@ const CREDITS = [
 /** Seconds: the fade to black; then each part of the card coming up. */
 const FADE = 3.5;
 
-/** If they liked it: a small yellow sign, the same as on the front page (its look: index.html, `.chai`). */
-const CHAI = "https://www.buymeacoffee.com/aayushgarg";
+/**
+ * If they liked it: a small yellow sign, the same as on the front page (its look, and which of the two is
+ * the sign: index.html, `.chai`): UPI (Razorpay) in India, Buy Me a Coffee's own button from elsewhere.
+ */
+const CHAI = { upi: "https://rzp.io/rzp/aayushgarg2903", card: "https://www.buymeacoffee.com/aayushgarg" };
 
 /**
  * Passing it on: the phone's own share sheet (WhatsApp, LinkedIn…), or on a computer that has none, the link
@@ -46,7 +49,7 @@ export function playEnding(brought: string[] = []) {
 
   const veil = document.createElement("div");
   veil.className = "ending";
-  veil.innerHTML = `<h1></h1><p class="line"></p><p class="brought"></p><div class="credits"></div><p class="again">click to walk it again</p><div class="asks"><button class="share">&#128228; apne batch walon ko bhejo</button><a class="chai" href="${CHAI}" target="_blank" rel="noopener">&#9749; achha laga? ek cutting chai pila do</a></div>`;
+  veil.innerHTML = `<h1></h1><p class="line"></p><p class="brought"></p><div class="credits"></div><p class="again">click to walk it again</p><div class="asks"><button class="share">&#128228; apne batch walon ko bhejo</button><div class="chai"><a class="upi" href="${CHAI.upi}" target="_blank" rel="noopener"><span class="sign">&#9749; achha laga? ek cutting chai pila do</span><span class="small">India se ho? UPI se chai pilao</span></a><a class="card" href="${CHAI.card}" target="_blank" rel="noopener"><span>abroad? Buy Me a Coffee</span><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me a Coffee" loading="lazy" /></a></div></div>`;
   veil.querySelector("h1")!.textContent = TITLE;
   veil.querySelector(".line")!.textContent = LINE;
   // (nothing brought: no line at all)
