@@ -1,3 +1,4 @@
+import { touchFirst, viewport } from "../core/device";
 import type { AudioEngine } from "../audio/engine";
 import { YOUR_BOOTH } from "../world/cafe/plan";
 import { ICONS, messageBox, openFolder, openMyComputer, openMyDocuments, openRecycleBin } from "./apps/basic";
@@ -78,6 +79,15 @@ export class Desktop {
     this.overlay.addEventListener("click", (e) => {
       if (this.isOpen && (e.target === this.overlay || e.target === bezel)) this.onLeave(true);
     });
+    // On a phone there's no Esc: a button to lean back out, and a word that this part is best on a computer
+    if (touchFirst) {
+      const back = div("xp-back");
+      back.textContent = "← wapas";
+      back.addEventListener("click", () => this.isOpen && this.onLeave(true));
+      const note = div("xp-note");
+      note.textContent = "Ye computer wala hissa laptop pe sabse achha chalta hai 🙂";
+      this.overlay.append(back, note);
+    }
 
     this.windows = new WindowManager(this.screen, () => this.scale, this.sounds);
     this.windows.onChange = () => this.drawTasks();
@@ -206,8 +216,9 @@ export class Desktop {
 
   /** Scale the 800×600 screen to fit the window, inside its bezel. */
   private fit() {
-    // as big as fits, leaving just room for the bezel (2 × 1.2vh) and a sliver round it
-    this.scale = Math.min((window.innerWidth * 0.95) / SCREEN.w, (window.innerHeight * 0.95) / SCREEN.h);
+    // as big as fits, leaving just room for the bezel (2 × 1.2cqh) and a sliver round it
+    const { width, height } = viewport(); // (the window, the right way round on a phone: core/device.ts)
+    this.scale = Math.min((width * 0.95) / SCREEN.w, (height * 0.95) / SCREEN.h);
     this.glass.style.width = `${SCREEN.w * this.scale}px`;
     this.glass.style.height = `${SCREEN.h * this.scale}px`;
     this.screen.style.transform = `scale(${this.scale})`;

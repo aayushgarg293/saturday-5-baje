@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { onCue } from "../core/cues";
 import type { Input } from "../core/input";
 import type { Player } from "../core/player";
 import type { Cricket, Shot } from "../people/cricket";
@@ -39,6 +40,9 @@ const MOUSE = 0.0022;
 /** Your swing, seconds; your bat in hand (scaled up a little from the kids' bat). */
 const SWING = 0.28;
 
+/** How close (m) to one of the kids, or the middle of the gali, you must be to ask to play. */
+const ASK_WITHIN = 3;
+
 export class CricketGame {
   stage: Stage = "off";
   private balls = 0;
@@ -63,6 +67,10 @@ export class CricketGame {
     this.bat.visible = false;
     scene.add(this.bat);
     gali.you.onShot = (shot) => this.shot(shot);
+    // the bat meeting the ball, felt: a short buzz in your hand (phones that allow it: Android; not iPhones)
+    onCue((name) => {
+      if (name === "batHit" && this.stage === "batting") navigator.vibrate?.(60);
+    });
   }
 
   get active(): boolean {
@@ -70,8 +78,9 @@ export class CricketGame {
   }
 
   canStart(): boolean {
-    const p = this.player.pos, m = this.gali.you.middle;
-    return !this.active && !this.player.frozen && this.gali.you.here() && p.y < 0.5 && Math.hypot(p.x - m.x, p.z - m.z) < 3;
+    // (close to any of the kids, or the middle: coming in from the street, the bowler's the first you reach)
+    const p = this.player.pos;
+    return !this.active && !this.player.frozen && this.gali.you.here() && p.y < 0.5 && this.gali.you.askFrom.some((a) => Math.hypot(p.x - a.x, p.z - a.z) < ASK_WITHIN);
   }
 
   prompt(): string | null {

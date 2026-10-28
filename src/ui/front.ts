@@ -31,6 +31,25 @@ export function frontReady(onClick: () => void) {
   front.classList.add("ready");
 }
 
+/**
+ * A walk saved from before (core/save.ts): the shutter says you'll pick up where you were, with a small
+ * "start over" under it (`startOver`).
+ */
+export function frontResuming(startOver: () => void) {
+  if (!front) return;
+  const click = front.querySelector(".go .click");
+  if (click) click.innerHTML = `<span class="for-mouse">Click karo</span><span class="for-touch">Tap karo</span>, wahin se chalo`;
+  const over = document.createElement("a");
+  over.className = "over";
+  over.href = "#";
+  over.textContent = "ya naye sire se shuru karo";
+  over.addEventListener("click", (e) => {
+    e.preventDefault();
+    startOver();
+  });
+  front.querySelector(".go")?.append(over);
+}
+
 /** Roll it all the way up and away (once the mouse is caught and the game is running). */
 export function openFront() {
   if (opened || !front) return;

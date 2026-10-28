@@ -16,6 +16,11 @@ const CHIT_SECONDS = 9;
 
 let called = false;
 
+/** She's already called after you (a game picked up where it was: core/save.ts): not again. */
+export function mummyHasCalled() {
+  called = true;
+}
+
 /** Once, the first time you start walking. */
 export function mummyCallsAfterYou() {
   if (called) return;

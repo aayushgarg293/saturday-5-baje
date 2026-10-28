@@ -1,4 +1,6 @@
 import * as THREE from "three";
+import { viewport } from "../core/device";
+import { quality } from "../core/quality";
 import { PAL } from "./palette";
 
 /**
@@ -12,7 +14,7 @@ import { PAL } from "./palette";
  * common balance between sharpness and speed; the stats overlay tells us if
  * we can afford more.
  */
-const MAX_PIXEL_RATIO = 1.5;
+const MAX_PIXEL_RATIO = quality.pixelRatio;
 
 export function createRenderer(canvas: HTMLCanvasElement): THREE.WebGLRenderer {
   const renderer = new THREE.WebGLRenderer({
@@ -36,8 +38,10 @@ export function createRenderer(canvas: HTMLCanvasElement): THREE.WebGLRenderer {
 /** Keep the renderer and camera matched to the window size. */
 export function fitToWindow(renderer: THREE.WebGLRenderer, camera: THREE.PerspectiveCamera) {
   const resize = () => {
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    camera.aspect = window.innerWidth / window.innerHeight;
+    // (on a phone held upright, the page is turned and the game drawn sideways: core/device.ts)
+    const { width, height } = viewport();
+    renderer.setSize(width, height);
+    camera.aspect = width / height;
     camera.updateProjectionMatrix();
   };
   resize();

@@ -1,3 +1,4 @@
+import { toPage } from "../core/device";
 import type { DesktopSounds } from "./sounds";
 
 /**
@@ -109,14 +110,15 @@ export class WindowManager {
       this.close(win);
       o.onClose?.();
     });
-    // dragging by the title bar (the screen is scaled: divide the mouse's movement by the scale)
+    // dragging by the title bar (the screen is scaled: divide the mouse's movement by the scale; and on a
+    // phone held upright the page is turned, so a finger's movement is turned back first: core/device.ts)
     title.addEventListener("pointerdown", (e) => {
       if ((e.target as HTMLElement).classList.contains("b")) return;
-      const startX = e.clientX, startY = e.clientY, left = el.offsetLeft, top = el.offsetTop;
+      const start = toPage(e.clientX, e.clientY), left = el.offsetLeft, top = el.offsetTop;
       const move = (m: PointerEvent) => {
-        const k = this.scale();
-        el.style.left = `${Math.round(left + (m.clientX - startX) / k)}px`;
-        el.style.top = `${Math.max(0, Math.round(top + (m.clientY - startY) / k))}px`;
+        const k = this.scale(), at = toPage(m.clientX, m.clientY);
+        el.style.left = `${Math.round(left + (at.x - start.x) / k)}px`;
+        el.style.top = `${Math.max(0, Math.round(top + (at.y - start.y) / k))}px`;
       };
       const up = () => {
         window.removeEventListener("pointermove", move);

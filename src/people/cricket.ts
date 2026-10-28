@@ -174,8 +174,8 @@ export type Cricket = {
   update(t: number, dt: number, player: THREE.Vector3): void;
   /** You, batting (activities/cricket.ts). */
   you: {
-    /** The middle of the gali, where you ask to play (world). */
-    middle: THREE.Vector3;
+    /** Where you can ask to play: the middle of the gali, and by each of the kids (world). */
+    askFrom: THREE.Vector3[];
     /** Your eyes at the crease, and the bowler's hand you watch (world). */
     eye: THREE.Vector3;
     bowler: THREE.Vector3;
@@ -291,7 +291,7 @@ export function buildCricket(where: Placement, rng: Rng): Cricket {
   };
 
   const you: Cricket["you"] = {
-    middle: group.localToWorld(v(0, 0, -2)),
+    askFrom: [v(0, 0, -2), ...[BATTER, BOWLER, FIELD_A, FIELD_B].map((s) => v(s.x, 0, s.z))].map((p) => group.localToWorld(p)),
     eye: group.localToWorld(v(BATTER.x - 0.1, 1.42, BATTER.z + 0.15)),
     bowler: group.localToWorld(v(0, 0.85, 1.0)),
     here: () => group.visible,

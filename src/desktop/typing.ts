@@ -1,3 +1,5 @@
+import { touchFirst } from "../core/device";
+
 /**
  * Your side of a chat: pick a reply, then type it out.
  *
@@ -7,10 +9,21 @@
  * back out, for second thoughts). Once it's all typed,
  * Enter (or the Send button) sends it. You can pick a different reply
  * before sending; the box starts again.
+ *
+ * On a phone there are no keys to press: a reply types itself once picked,
+ * and a box types itself when tapped.
  */
 
 /** Letters typed per key you press. */
 const PER_KEY = 2;
+/** On a phone, the text types itself: PER_KEY letters this often, ms. */
+const SELF_TYPING_MS = 60;
+
+/** Call `step` every SELF_TYPING_MS until it says it's done (true). Returns a way to stop it sooner. */
+function typeItself(step: () => boolean): () => void {
+  const timer = setInterval(() => step() && clearInterval(timer), SELF_TYPING_MS);
+  return () => clearInterval(timer);
+}
 
 export class ReplyBox {
   /** The bottom of a chat window: the replies, the text box, Send. */
@@ -24,6 +37,7 @@ export class ReplyBox {
   private replies: string[] = [];
   private chosen = -1;
   private typed = 0;
+  private stopTyping = () => {};
 
   constructor() {
     this.el = document.createElement("div");
@@ -45,6 +59,7 @@ export class ReplyBox {
 
   /** Your turn: offer these replies. */
   offer(replies: string[]) {
+    this.stopTyping();
     this.replies = replies;
     this.chosen = -1;
     this.typed = 0;
@@ -86,11 +101,19 @@ export class ReplyBox {
     this.chosen = k;
     this.typed = 0;
     this.draw();
+    if (!touchFirst) return;
+    this.stopTyping();
+    this.stopTyping = typeItself(() => {
+      this.typed = Math.min(this.replies[k].length, this.typed + PER_KEY);
+      this.draw();
+      return this.typed >= this.replies[k].length;
+    });
   }
 
   private send() {
     if (this.chosen < 0 || this.typed < this.replies[this.chosen].length) return;
     const k = this.chosen, text = this.replies[k];
+    this.stopTyping();
     this.replies = [];
     this.chosen = -1;
     this.typed = 0;
@@ -112,10 +135,10 @@ export class ReplyBox {
     const done = this.chosen >= 0 && this.typed >= full.length;
     this.textEl.textContent = full.slice(0, this.typed);
     this.textEl.classList.toggle("hint", this.chosen < 0);
-    if (this.chosen < 0) this.textEl.textContent = this.waiting ? "pick a reply (1, 2, 3)…" : "";
+    if (this.chosen < 0) this.textEl.textContent = this.waiting ? (touchFirst ? "pick a reply…" : "pick a reply (1, 2, 3)…") : "";
     else if (!done) this.textEl.append(caret());
     this.sendEl.classList.toggle("ready", done);
-    this.el.title = done ? "Enter to send" : "";
+    this.el.title = done && !touchFirst ? "Enter to send" : "";
   }
 }
 
@@ -129,18 +152,37 @@ function caret(): HTMLSpanElement {
  * A single text box that types a set text as you press keys (any keys),
  * like the reply box but with no choice: a search box, a user name. Enter,
  * once it's all typed, calls `onEnter`. `secret` shows dots (a password).
+ * On a phone, a tap on it types it out.
  */
 export class TypeField {
   readonly el: HTMLSpanElement;
   onEnter: () => void = () => {};
+  /** Called once it's all typed by itself (on a phone). */
+  onTyped: () => void = () => {};
   /** Is this the field being typed in (it shows the blinking caret)? */
   active = true;
   private typed = 0;
+  private typing = false;
 
   constructor(private text: string, private secret = false) {
     this.el = document.createElement("span");
     this.el.className = "xp-field typing";
+    if (touchFirst) this.el.addEventListener("click", () => this.typeOut());
     this.draw();
+  }
+
+  /** Type the rest out by itself (a phone: no keys). */
+  typeOut() {
+    if (this.complete || this.typing) return;
+    this.typing = true;
+    typeItself(() => {
+      this.typed = Math.min(this.text.length, this.typed + PER_KEY);
+      this.draw();
+      if (!this.complete) return false;
+      this.typing = false;
+      this.onTyped();
+      return true;
+    });
   }
 
   get complete(): boolean {
@@ -182,6 +224,13 @@ export class Fields {
 
   constructor(readonly fields: TypeField[]) {
     fields.forEach((f, k) => f.el.addEventListener("click", () => this.focus(k)));
+    // (on a phone, one tap types the lot: each field, once typed, starts the next)
+    fields.forEach((f, k) => (f.onTyped = () => {
+      const next = fields.findIndex((g, i) => i > k && !g.complete);
+      if (next < 0) return;
+      this.focus(next);
+      fields[next].typeOut();
+    }));
     this.focus(0);
   }
 

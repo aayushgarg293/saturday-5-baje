@@ -4,6 +4,8 @@
  * cafe owner's words.
  */
 
+import { touchFirst } from "../core/device";
+
 let box: HTMLDivElement | null = null;
 let hideAt = 0;
 
@@ -13,7 +15,8 @@ function element(): HTMLDivElement {
   Object.assign(box.style, {
     position: "fixed",
     left: "50%",
-    bottom: "9%",
+    // (on a phone, higher: clear of the prompt's buttons, which are bigger there)
+    bottom: touchFirst ? "calc(20% + 44px)" : "9%",
     transform: "translateX(-50%)",
     maxWidth: "70%",
     padding: "8px 16px",

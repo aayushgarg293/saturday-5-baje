@@ -24,7 +24,10 @@ import { PAL } from "./render/palette";
 import { Pipeline } from "./render/post";
 import { createRenderer, fitToWindow } from "./render/renderer";
 import { playEnding } from "./ui/ending";
-import { frontIsUp, frontReady, openFront } from "./ui/front";
+import { frontIsUp, frontReady, frontResuming, openFront } from "./ui/front";
+import { buildTouchControls } from "./ui/touchControls";
+import { touchFirst } from "./core/device";
+import { quality } from "./core/quality";
 import { buildTownWalkers } from "./people/townWalkers";
 import { buildTownTraffic } from "./world/townTraffic";
 import { buildBusArrival } from "./world/busArrival";
@@ -32,13 +35,15 @@ import { buildRailway } from "./world/railway";
 import { TrainSounds } from "./audio/train";
 import { playRecordingSoon, prepareRecordings } from "./audio/recordings";
 import { buildDinnerTime } from "./world/dinnerTime";
-import { errands } from "./core/errands";
+import { CHIT, type Errand, errands } from "./core/errands";
 import { passersby } from "./core/passersby";
 import { hideChit, toggleChit } from "./ui/chit";
-import { mummyCallsAfterYou } from "./activities/leavingHome";
+import { mummyCallsAfterYou, mummyHasCalled } from "./activities/leavingHome";
+import { type Saved, clearSave, readSave, writeSave } from "./core/save";
+import { townState } from "./core/townState";
 import { buildErrands } from "./activities/errands";
 import { broughtHome, buildComingHome } from "./activities/comingHome";
-import { showPrompt } from "./ui/prompt";
+import { onPromptTap, showPrompt } from "./ui/prompt";
 import { buildAreas } from "./world/areas";
 import { buildBackdrop } from "./world/backdrop";
 import { buildEvening } from "./world/evening";
@@ -73,9 +78,9 @@ const startScreen = document.querySelector<HTMLDivElement>("#start")!;
 // --- the 3D world ------------------------------------------------------------
 const renderer = createRenderer(canvas);
 const scene = new THREE.Scene();
-// Distance haze: things fade into the warm dusty air from 45 m to 240 m away.
-// Its colour matches the sky's horizon, so the far end of the street melts into it.
-scene.fog = new THREE.Fog(PAL.haze, 45, 240);
+// Distance haze: things fade into the warm dusty air from 45 m to 240 m away (a little nearer on a phone:
+// core/quality.ts). Its colour matches the sky's horizon, so the far end of the street melts into it.
+scene.fog = new THREE.Fog(PAL.haze, quality.haze.near, quality.haze.far);
 
 // 65° field of view: wide enough to feel present, without fish-eye stretching.
 // Draws up to 1200 m away, so the far hills (700 m) aren't cut off.
@@ -258,8 +263,9 @@ function goHome() {
     ended = true;
     hideChit();
     audio.fadeOut(4);
+    clearSave(); // (the walk's done: next time, a new Saturday)
     playEnding(broughtHome());
-    document.exitPointerLock();
+    input.unlock();
   });
 }
 
@@ -290,7 +296,7 @@ storySoFar.isDone = (task) => desktop.kit.tasks.isDone(task); // (Priya remember
 seat.onLeanIn = () => {
   hideChit();
   desktop.show();
-  document.exitPointerLock();
+  input.unlock();
 };
 desktop.onLeave = (byClick) => {
   desktop.hide();
@@ -311,10 +317,19 @@ desktop.onLogOff = () => {
   yourScreen.logOff();
   input.lock(); // (may be refused, after the wait: then a click on the view does it)
 };
-document.addEventListener("mousedown", () => {
+/** A click in the game (a quick tap on a phone): eat, swing, or lean in to the computer. */
+function clickInGame() {
   if (input.locked && paniPuri.active) paniPuri.click();
   if (input.locked && cricket.active) cricket.click();
   if (input.locked && seat.seated && yourScreen.ready()) seat.leanIn();
+}
+if (!touchFirst) document.addEventListener("mousedown", clickInGame);
+// On a phone: the thumbs' controls (ui/touchControls.ts), and the prompt's buttons stand for keys (ui/prompt.ts)
+const touchControls = buildTouchControls(input, clickInGame);
+const KEY_CODES: Record<string, string> = { E: "KeyE", Q: "KeyQ", T: "KeyT", Space: "Space", Tab: "Tab", M: "KeyM" };
+onPromptTap((key) => {
+  if (key === "Click") return input.locked ? clickInGame() : input.lock();
+  input.press(KEY_CODES[key] ?? (/^\d$/.test(key) ? `Digit${key}` : key));
 });
 // Back in the booth with the mouse free (after Esc on the desktop): a click on the view captures it again
 canvas.addEventListener("click", () => {
@@ -368,7 +383,58 @@ input.onLockChange = (locked) => {
   }
   // (on the desktop the mouse is free on purpose: no start screen then; nor at the end, nor under the front page)
   startScreen.hidden = locked || desktop.isOpen || ended || frontIsUp();
+  // (paused, the game's frames stop: the touch controls and the prompt's buttons go now, not next frame)
+  touchControls.setVisible(locked && !desktop.isOpen && !ended);
+  if (!locked) showPrompt(null);
 };
+
+// --- saving where you are (core/save.ts) -------------------------------------------------
+// Every few seconds while you're walking about (not in the middle of something: sitting, eating, talking),
+// and the moment the page goes into the background (a call on a phone), where you are goes into the browser.
+// A reload picks up from there. A cafe visit is kept once it's over (logged off); one still going isn't:
+// you'd come back where you were before you sat down, and sit again.
+const canSave = () => input.locked && !ended && !player.frozen && !seat.seated && !desktop.isOpen && !townState.talking;
+function snapshot(): Saved {
+  return {
+    minutes: gameClock.minutes,
+    at: { x: player.pos.x, y: player.pos.y, z: player.pos.z, yaw: player.yaw, pitch: player.pitch },
+    errands: CHIT.map((c) => c.errand).filter((e) => errands.isDone(e)),
+    cafe: loggedOff ? { visitMinutes, paid, tasks: desktop.kit.tasks.list() } : null,
+  };
+}
+let sinceSaved = 0;
+function autoSave(dt: number) {
+  sinceSaved += dt;
+  if (sinceSaved < 5 || !canSave()) return;
+  sinceSaved = 0;
+  writeSave(snapshot());
+}
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden && canSave()) writeSave(snapshot());
+});
+/** Back to where a save left off (before the first frame, behind the front page). */
+function restore(s: Saved) {
+  gameClock.minutes = s.minutes;
+  gameClock.advanceTo(s.minutes);
+  player.place(s.at.x, s.at.z, s.at.yaw, s.at.pitch, s.at.y);
+  for (const e of s.errands) errands.markDone(e as Errand);
+  if (s.cafe) {
+    connected = loggedOff = true;
+    visitMinutes = s.cafe.visitMinutes;
+    paid = s.cafe.paid;
+    yourScreen.logOff();
+    for (const t of s.cafe.tasks) desktop.kit.tasks.complete(t);
+  }
+  mummyHasCalled(); // (she called after you the first time)
+}
+const saved = readSave();
+if (saved) {
+  restore(saved);
+  frontResuming(() => {
+    clearSave();
+    location.reload();
+  });
+}
 
 // --- game loop ---------------------------------------------------------------------
 /** Advance the game by `dt` seconds. */
@@ -391,6 +457,7 @@ function update(dt: number) {
   railway.update(time, dt, player.pos); // (after the player: it may move you off the line)
   errandRun.update(time, dt, player.pos);
   dinnerTime.update(dt, player.pos);
+  autoSave(dt);
   comingHome.update(time, dt, player.pos);
   cafeRoom.update(dt);
   for (const f of shopFans) f.update(dt);
@@ -403,6 +470,7 @@ function update(dt: number) {
   if (connected && !loggedOff) desktop.setUsed(gameClock.minutes - sessionStart);
   ownerScreen.update(gameClock.minutes, { connected, loggedOff, paid, used: loggedOff ? visitMinutes : connected ? gameClock.minutes - sessionStart : 0 });
   showPrompt(prompt());
+  touchControls.setVisible(input.locked && !desktop.isOpen && !ended);
   cafePeople.update(time, dt, player.pos);
   lights.followPlayer(player.pos);
   bed?.update(dt, player.pos);

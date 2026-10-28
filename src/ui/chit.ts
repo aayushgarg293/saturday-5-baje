@@ -21,7 +21,7 @@ function element(): HTMLDivElement {
     position: "fixed",
     top: "4%",
     right: "3%",
-    width: "min(340px, 40vw)",
+    width: "min(340px, 40cqw)",
     padding: "18px 18px 30px 30px",
     // ruled lines (blue), and the red margin line down the left
     background: "linear-gradient(90deg, transparent 22px, rgba(200, 60, 60, 0.45) 22px, rgba(200, 60, 60, 0.45) 23.5px, transparent 23.5px), " +

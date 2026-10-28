@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { quality } from "../core/quality";
 import type { Look } from "./daylight";
 
 /**
@@ -24,8 +25,8 @@ import type { Look } from "./daylight";
  * area and make every shadow blurry.
  */
 const SHADOW_HALF = 30;
-/** 4096 pixels across 60 m is ~1.5 cm per pixel: sharp enough that edges don't staircase. */
-const SHADOW_MAP_SIZE = 4096;
+/** 4096 pixels across 60 m is ~1.5 cm per pixel: sharp enough that edges don't staircase. (A phone: 2048, core/quality.ts.) */
+const SHADOW_MAP_SIZE = quality.shadowMapSize;
 
 export type Lights = {
   sun: THREE.DirectionalLight;

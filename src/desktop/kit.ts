@@ -35,4 +35,9 @@ export class Tasks {
   isDone(task: string): boolean {
     return this.done.has(task);
   }
+
+  /** Everything posted so far (for saving: core/save.ts). */
+  list(): string[] {
+    return [...this.done];
+  }
 }

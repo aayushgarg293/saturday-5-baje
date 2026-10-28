@@ -42,6 +42,20 @@ Baseline (2026-09-28, M4, Chrome, 1470×956): **~3.5 ms per frame at pixel
 ratio 1.5, ~5.3 ms at 2; 110–206 draw calls** depending on the view (shadow
 pass included). Budget for 60 fps: 16.7 ms.
 
+## Phones and tablets (from 2026-10-28)
+
+Touch screens play it too, always landscape (core/device.ts: a phone held
+upright gets the whole page turned a quarter turn; Android also goes
+fullscreen and locks sideways). Touch controls in ui/touchControls.ts feed
+the same Input as keys and mouse; the prompt's "[E] …" become buttons
+(ui/prompt.ts). Sizes in the page use `cqw`/`cqh`, never `vw`/`vh` (those
+measure the wrong way on a turned page). Per-device settings: core/quality.ts.
+Where you are is saved in the browser every few seconds (core/save.ts).
+On a phone the cafe computer's text types itself (desktop/typing.ts), and
+anything dragged turns a finger's movement back first (`toPage`). Fullscreen
+is asked for only once: Chrome's "to exit full screen" notice covers the
+prompt's buttons each time. `?touch` and `?quality=phone` try these on a laptop.
+
 ## How the world is organised
 
 - **`src/world/layout.ts` is the street plan, as data.** Everything is placed
@@ -75,6 +89,7 @@ pass included). Budget for 60 fps: 16.7 ms.
 ```bash
 npm install      # once, after cloning
 npm run dev      # dev server with dev tools: http://127.0.0.1:5180
+npm run dev:phone # the same, reachable from a phone on the same Wi-Fi (http://<the Mac's address>:5180)
 npm run build    # type-check, then production build into dist/
 npm run preview  # serve the production build: http://127.0.0.1:5181
                  # (add ?stats to the address for the speed overlay: the owner's speed check)

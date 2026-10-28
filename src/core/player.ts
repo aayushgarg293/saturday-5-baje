@@ -116,7 +116,14 @@ export class Player {
       if (input.isDown("KeyD", "ArrowRight")) side += 1;
       if (input.isDown("KeyA", "ArrowLeft")) side -= 1;
     }
-    const speed = input.isDown("ShiftLeft", "ShiftRight") ? FAST_SPEED : WALK_SPEED;
+    let speed = input.isDown("ShiftLeft", "ShiftRight") ? FAST_SPEED : WALK_SPEED;
+    // the touch joystick: its direction, and how far it's pushed is how fast (pulled well past its ring: walking fast)
+    const push = Math.hypot(input.stick.x, input.stick.y);
+    if (input.locked && push > 0.15) {
+      ahead = -input.stick.y;
+      side = input.stick.x;
+      speed = input.stick.fast ? FAST_SPEED : WALK_SPEED * Math.min(1, push / 0.7);
+    }
 
     // "Forward" and "right" along the ground, from the way he's facing.
     this.forward.set(-Math.sin(this.yaw), 0, -Math.cos(this.yaw));

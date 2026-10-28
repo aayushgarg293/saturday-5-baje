@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { quality } from "../core/quality";
 import { BAZAAR, STREET_LENGTH } from "./layout";
 import { HOME_AREAS } from "./homeLane";
 import { MOHALLA, inMohalla } from "./mohalla";
@@ -128,7 +129,8 @@ export function buildAreas(): Areas {
         // how far you are from the area's box (0 inside it)
         const dx = Math.max(a.box.x0 - player.x, 0, player.x - a.box.x1);
         const dz = Math.max(a.box.z0 - player.z, 0, player.z - a.box.z1);
-        const show = Math.hypot(dx, dz) < a.reach || (a.seenFrom ?? []).some((b) => inside(b, player.x, player.z));
+        // (on a phone, a little nearer: core/quality.ts)
+        const show = Math.hypot(dx, dz) < a.reach * quality.reach || (a.seenFrom ?? []).some((b) => inside(b, player.x, player.z));
         if (show === a.shown) continue;
         a.shown = show;
         for (const o of a.objects) o.visible = show;

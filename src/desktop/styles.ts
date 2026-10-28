@@ -21,10 +21,17 @@ export const CSS = /* css */ `
 /* hidden means gone: without this, the display above would win over [hidden], and the
    invisible desktop would still lie over the game, catching every click */
 .xp-overlay[hidden] { display: none; }
+/* on a phone: the way back out (no Esc there), and a word that this part is best on a computer, fading after a while */
+.xp-back { position: absolute; top: 10px; left: 12px; z-index: 2; padding: 8px 14px; border-radius: 20px;
+  background: rgba(20, 16, 12, 0.7); color: #fbf6ea; font: 600 15px "Helvetica Neue", Arial, sans-serif; cursor: pointer; }
+.xp-note { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); z-index: 2; padding: 6px 12px;
+  border-radius: 6px; background: rgba(20, 16, 12, 0.7); color: #fbf6ea; font: 13px "Helvetica Neue", Arial, sans-serif;
+  pointer-events: none; animation: xp-note-out 1s 6s forwards; }
+@keyframes xp-note-out { to { opacity: 0; } }
 /* the monitor's plastic round the glass */
-.xp-bezel { position: relative; padding: 1.2vh; border-radius: 1.2vh; background: linear-gradient(#ddd4bc, #c2b99f);
+.xp-bezel { position: relative; padding: 1.2cqh; border-radius: 1.2cqh; background: linear-gradient(#ddd4bc, #c2b99f);
   box-shadow: inset 0 0 0 2px #b4ab92, 0 0 60px rgba(0,0,0,0.35); }
-.xp-glass { position: relative; overflow: hidden; border-radius: 1.2vh; background: #000; }
+.xp-glass { position: relative; overflow: hidden; border-radius: 1.2cqh; background: #000; }
 .xp-screen { position: absolute; left: 0; top: 0; width: ${SCREEN.w}px; height: ${SCREEN.h}px; transform-origin: 0 0;
   font: 11px ${FONT}; color: #000; user-select: none; background-size: cover;
   cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='22'%3E%3Cpath d='M1 1 L1 17 L5 13 L8 20 L11 19 L8 12 L13 12 Z' fill='white' stroke='black' stroke-width='1'/%3E%3C/svg%3E") 1 1, default; }
