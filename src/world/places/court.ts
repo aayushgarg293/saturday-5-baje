@@ -123,6 +123,23 @@ export function buildCourt(): Court {
   pediment.computeVertexNormals();
   p.add(pediment, 0, top + 0.9, b.front + 0.61, WHITE);
   p.box(6.2, 0.18, 0.8, 0, top + 0.9, b.front + 0.3, PAL.stoneTrim);
+  // its entrance: double teak doors, shut (the court's closed on a Saturday evening), under a fanlight in a white arch
+  const face = b.front + 0.6, DOOR_TOP = 3.2, TEAK = 0x5a3620, PANEL = 0x6f4629, BRASS = 0xb8963e;
+  p.box(2.7, DOOR_TOP - 0.6, 0.1, 0, (DOOR_TOP + 0.6) / 2, face + 0.05, WHITE);
+  p.add(new THREE.CircleGeometry(1.35, 24, 0, Math.PI), 0, DOOR_TOP, face + 0.08, WHITE);
+  p.add(new THREE.CircleGeometry(1.15, 24, 0, Math.PI), 0, DOOR_TOP, face + 0.09, 0x3a3f4a);
+  for (const x of [-0.6, 0, 0.6]) p.box(0.05, 1.1, 0.02, x, DOOR_TOP + 0.5, face + 0.1, WHITE); // the fanlight's bars
+  p.box(2.3, 0.05, 0.02, 0, DOOR_TOP + 0.02, face + 0.1, WHITE);
+  for (const side of [-1, 1]) {
+    const x = side * 0.575;
+    p.box(1.12, DOOR_TOP - 0.6, 0.06, x, (DOOR_TOP + 0.6) / 2, face + 0.11, TEAK);
+    for (let k = 0; k < 3; k++) p.box(0.8, 0.62, 0.02, x, 1.02 + k * 0.82, face + 0.145, PANEL);
+    p.cylinder(0.05, 0.05, 0.03, side * 0.1, 1.75, face + 0.15, BRASS, { rx: Math.PI / 2, segments: 10 }); // the door's rings
+  }
+  p.box(3.4, 0.12, 0.7, 0, 4.72, face + 0.35, PAL.stoneTrim); // the sunshade over it
+  // and a window above that, as in the other bays
+  p.box(1.5, 1.7, 0.08, 0, F1 + 1.7, face + 0.04, WHITE);
+  p.box(1.2, 1.5, 0.08, 0, F1 + 1.7, face + 0.08, 0x3a3f4a);
   // the flag on top
   p.cylinder(0.04, 0.05, 4, 0, top + 2.3 + 2, b.front - 1.5, 0xe8e2d0, { segments: 6 });
   // (flying out to the east, its face to the street)

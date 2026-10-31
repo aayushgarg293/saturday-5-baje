@@ -3,6 +3,7 @@ import { type Errand, errands } from "../core/errands";
 import { makeRng } from "../core/rng";
 import { timeOfDay } from "../core/timeOfDay";
 import { townState } from "../core/townState";
+import { givers } from "../people/givers";
 import { buildShopkeeper } from "../people/shopkeepers";
 import { say } from "../ui/caption";
 import { SHOP_NAMES } from "../world/names";
@@ -12,14 +13,16 @@ import { parkOrigin } from "../world/places/park";
 import { TYPIST_TABLES } from "../world/places/court";
 import type { Street } from "../world/street";
 import { BUS_STAND, COURT, COURT_ROAD, inBusStand } from "../world/town";
+import { buildHandOver } from "./handOver";
 
 /**
  * Mummy's errands (her chit: core/errands.ts, ui/chit.ts). Walk up to the
  * one who has it, a prompt comes up ("[E] Mathur ji ke kapde?"), E, and a few
  * words go back and forth as captions. You can still move and look round
  * (nothing takes the camera, unlike the pani puri); walk off before it's
- * done and it's left undone, to try again. At the end, the chit's line is
- * ticked.
+ * done and it's left undone, to try again. On the words that go with it
+ * (`gives`) the thing is handed over (activities/handOver.ts), and the chit's
+ * line is ticked as it reaches you.
  *
  *   the dry cleaner   Modern Dry Cleaners, the bazaar's right side past the
  *                     temple: Papa's ironed clothes
@@ -38,7 +41,7 @@ import { BUS_STAND, COURT, COURT_ROAD, inBusStand } from "../world/town";
  * random numbers. No money changes hands (prices are only spoken).
  */
 
-type Line = { who: string; line: string; seconds: number };
+type Line = { who: string; line: string; seconds: number; gives?: boolean };
 type Stop = {
   errand: Errand;
   /** Where you stand to ask (world x/z), and how near you must be. */
@@ -47,13 +50,13 @@ type Stop = {
   prompt: () => string;
   /** What's said: the words, in turn, each for its seconds. */
   lines: () => Line[];
-  /** Is it there to be had yet? (If not, `lines` is what you're told instead, and nothing's ticked.) */
-  ready: () => boolean;
 };
 
 export type Errands = {
   /** The keepers out front of the dry cleaner's and the chemist's (main.ts adds them to the bazaar's area). */
   group: THREE.Group;
+  /** What's being handed over, if anything (in the scene, not an area: it moves between them). */
+  handed: THREE.Group;
   /** Where each errand is done (the sketch's marks: ui/townMap.ts). */
   places: { errand: Errand; at: THREE.Vector3 }[];
   canStart(): boolean;
@@ -102,42 +105,42 @@ export function buildErrands(street: Street, playerPos: THREE.Vector3): Errands 
 
   const STOPS: Stop[] = [
     {
-      errand: "kapde", at: dryCleaner.front, reach: 2.2, ready: () => true,
+      errand: "kapde", at: dryCleaner.front, reach: 2.2,
       prompt: () => "[E] Mathur ji ke kapde?",
       lines: () => [
         you("Bhaiya, Mathur ji ke kapde. Press wale."),
-        { who: "Dry cleaner", line: "Mathur ji… haan, ye rahe. Paanch kapde, gin lo.", seconds: 3.5 },
+        { who: "Dry cleaner", line: "Mathur ji… haan, ye rahe. Paanch kapde, gin lo.", seconds: 3.5, gives: true },
         { who: "Dry cleaner", line: "Papa ko bolna, starch zyada daala hai is baar. Pichhli baar shikayat ki thi.", seconds: 4.5 },
       ],
     },
     {
-      errand: "dawai", at: chemist.front, reach: 2.2, ready: () => true,
+      errand: "dawai", at: chemist.front, reach: 2.2,
       prompt: () => "[E] Dettal aur Krocin",
       lines: () => [
         you("Uncle, ek Dettal aur Krocin ka ek patta."),
-        { who: "Chemist", line: "Dettal aur Krocin? …ye lo. Bees rupaye.", seconds: 3.5 },
+        { who: "Chemist", line: "Dettal aur Krocin? …ye lo. Bees rupaye.", seconds: 3.5, gives: true },
         { who: "Chemist", line: "Mummy ko bolna, Krocin khaali pet mat lena.", seconds: 3.5 },
       ],
     },
     {
-      errand: "stampPaper", at: atTypist, reach: 1.8, ready: () => true,
+      errand: "stampPaper", at: atTypist, reach: 1.8,
       prompt: () => "[E] stamp paper type karwao",
       lines: () => [
         you("Bhaiya, ye stamp paper type karna hai. Papa ne likh ke diya hai.", 3.5),
         { who: "Typist", line: "Do minute, beta. Khade raho.", seconds: 3 },
         // (and he types: he was typing anyway, people/court.ts. Twenty seconds of it)
         { who: "Typist", line: "(khat-khat-khat… ting!… khat-khat…)", seconds: 20 },
-        { who: "Typist", line: "Ye lo. Dhyan se le jaana, mudna nahi chahiye.", seconds: 3.5 },
+        { who: "Typist", line: "Ye lo. Dhyan se le jaana, mudna nahi chahiye.", seconds: 3.5, gives: true },
       ],
     },
     {
-      errand: "parcel", at: atConductor, reach: 2.2, ready: () => townState.jaipurBusIn,
+      errand: "parcel", at: atConductor, reach: 2.2,
       prompt: () => (townState.jaipurBusIn ? "[E] Mama ka parcel?" : "[E] Jaipur wali bus kab aayegi?"),
       lines: () => townState.jaipurBusIn
         ? [
           you("Bhaiya, Mathur ji ka parcel? Jaipur se Mama ne bheja hai.", 3.5),
-          { who: "Conductor", line: "Kaun? Mathur? …accha haan, ye lo, Jaipur se aaya hai.", seconds: 3.5 },
-          { who: "Conductor", line: "Bhaari hai, sambhal ke le jaana.", seconds: 3 },
+          { who: "Conductor", line: "Kaun? Mathur? …accha haan, ye lo, Jaipur se aaya hai.", seconds: 3.5, gives: true },
+          { who: "Conductor", line: "Sambhal ke le jaana, gira mat dena.", seconds: 3 },
         ]
         : [
           you("Bhaiya, Jaipur wali bus kab aayegi?"),
@@ -148,19 +151,22 @@ export function buildErrands(street: Street, playerPos: THREE.Vector3): Errands 
         ],
     },
     {
-      errand: "sabzi", at: atSabziwali, reach: 1.8, ready: () => true,
+      errand: "sabzi", at: atSabziwali, reach: 1.8,
       prompt: () => "[E] aadha kilo tamatar",
       lines: () => [
         you("Aunty, aadha kilo tamatar dena."),
         { who: "Sabziwali", line: "Le lo beta, ekdum laal hai… das rupaye.", seconds: 3.5 },
         you("Aur thoda dhaniya-mirchi… free mein?"),
-        { who: "Sabziwali", line: "Haaye, aaj kal ke bachche! …chal, le ja. Mummy ko namaste bolna.", seconds: 4 },
+        { who: "Sabziwali", line: "Haaye, aaj kal ke bachche! …chal, le ja. Mummy ko namaste bolna.", seconds: 4, gives: true },
       ],
     },
   ];
 
   // --- what's happening: one at a time ----------------------------------------------------------
-  let current: { stop: Stop; lines: Line[]; next: number; wait: number; getsIt: boolean } | null = null;
+  let current: { stop: Stop; lines: Line[]; next: number; wait: number } | null = null;
+  const handOver = buildHandOver();
+  givers.set("kapde", dryCleaner.keeper.actor);
+  givers.set("dawai", chemist.keeper.actor);
   const near = (stop: Stop) => playerPos.distanceTo(_flat.copy(stop.at).setY(playerPos.y)) < stop.reach;
   const _flat = new THREE.Vector3();
   /** The stop you're at that you could ask now (not one already done). */
@@ -168,21 +174,24 @@ export function buildErrands(street: Street, playerPos: THREE.Vector3): Errands 
 
   return {
     group,
+    handed: handOver.group,
     places: STOPS.map(({ errand, at }) => ({ errand, at })),
     canStart: () => !current && playerPos.y < 0.5 && stopHere() !== null,
     start() {
       const stop = stopHere();
       if (!stop) return;
-      current = { stop, lines: stop.lines(), next: 0, wait: 0, getsIt: stop.ready() };
+      current = { stop, lines: stop.lines(), next: 0, wait: 0 };
       townState.talking = true;
     },
     prompt: () => (current ? null : stopHere()?.prompt() ?? null),
     update(t, dt, player) {
       // (the keepers: only while you're near enough to see them move)
       for (const { keeper, front } of [dryCleaner, chemist]) if (player.distanceTo(front) < KEEPERS_SEEN) keeper.update(t, dt, player);
+      handOver.update(dt, player);
       if (!current) return;
       // walked off before it's done: left undone (ask again)
       if (player.distanceTo(_flat.copy(current.stop.at).setY(player.y)) > WALK_OFF) {
+        handOver.cancel();
         current = null;
         townState.talking = false;
         return;
@@ -190,13 +199,15 @@ export function buildErrands(street: Street, playerPos: THREE.Vector3): Errands 
       current.wait -= dt;
       if (current.wait > 0) return;
       if (current.next < current.lines.length) {
-        const { who, line, seconds } = current.lines[current.next++];
+        const { who, line, seconds, gives } = current.lines[current.next++];
         say(who, line, seconds);
+        if (gives) {
+          const { errand } = current.stop;
+          handOver.give(errand, givers.get(errand)!, player, () => errands.markDone(errand));
+        }
         current.wait = seconds + 0.25;
         return;
       }
-      // all said: done (if it was there to be had)
-      if (current.getsIt) errands.markDone(current.stop.errand);
       current = null;
       townState.talking = false;
     },

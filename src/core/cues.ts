@@ -21,6 +21,8 @@ export type Cue =
   | "cycleBell" // the doodhwala's bicycle bell
   | "kidsBell" // a tuition kid's cycle bell, riding off (a recording)
   | "cooker" // a pressure cooker whistling in a house, at dinner time (a recording)
+  | "rustle" // something handed over: paper, polythene (activities/handOver.ts)
+  | "busHorn" // the Jaipur bus, coming in
   | "snip" // the barber's scissors closing
   | "keyClick" // a key pressed, in the cafe
   | "mouseClick" // a mouse button clicked, in the cafe

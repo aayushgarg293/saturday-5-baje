@@ -22,7 +22,7 @@ import { recipeFor } from "./recipes";
  * where that is.
  */
 
-export type Shopkeeper = { group: THREE.Group; update(t: number, dt: number, player: THREE.Vector3): void };
+export type Shopkeeper = { group: THREE.Group; actor: Actor; update(t: number, dt: number, player: THREE.Vector3): void };
 
 /** Seat heights: a tall stool behind a counter (to see over it), a low one outside. */
 const SEAT = { counter: 0.65, platform: 0.42 };
@@ -58,6 +58,7 @@ export function buildShopkeeper(spot: WorldPeopleSpot, rng: Rng): Shopkeeper {
 
   return {
     group,
+    actor,
     update(t, dt, player) {
       actor.update(t, dt, player);
       if (prop && work.place) work.place(prop, actor);

@@ -63,6 +63,8 @@ export class StreetSounds {
       case "ballBounce": return ballBounce(this.ctx, out(1.5, 0.1), t);
       case "glassClink": return glassClink(this.ctx, out(1.2, 0.1), t);
       case "cycleBell": return cycleBell(this.ctx, out(2, 0.15), t);
+      case "rustle": return rustle(this.ctx, out(1.5, 0.05), t);
+      case "busHorn": return busHorn(this.ctx, out(14, 0.4), t);
       case "kidsBell": return void playRecording(this.ctx, "cycleBell", out(2, 0.15), t, 0.25);
       case "cooker": {
         // (from inside, through a window: muffled, and carrying down the lane)
@@ -215,6 +217,38 @@ function cycleBell(ctx: Ctx, out: AudioNode, t0: number) {
       t += 0.055;
     }
     t += 0.18;
+  }
+}
+
+/** Something handed over: paper or thin polythene, a few quick crinkles of bright noise. */
+function rustle(ctx: Ctx, out: AudioNode, t0: number) {
+  let t = t0;
+  for (let k = 0; k < 6; k++) {
+    const src = noiseSource(ctx), level = gain(ctx, 0);
+    src.connect(filter(ctx, "bandpass", rand(2800, 6500), 1.2)).connect(level).connect(out);
+    const end = envelope(level.gain, t, rand(0.18, 0.4), 0.004, 0.012, rand(0.03, 0.07));
+    stopAt(end, src);
+    src.start(t);
+    t += rand(0.03, 0.075);
+  }
+}
+
+/** The bus's air horn: two fixed notes together, nasal, one long blast and a short one. */
+function busHorn(ctx: Ctx, out: AudioNode, t0: number) {
+  for (const [t, length] of [[t0, 0.75], [t0 + 0.95, 0.35]]) {
+    const level = gain(ctx, 0);
+    level.connect(out);
+    const sound = filter(ctx, "lowpass", 2200);
+    sound.connect(level);
+    const notes = [392, 494].map((f) => {
+      const o = ctx.createOscillator();
+      o.type = "sawtooth";
+      o.frequency.value = f;
+      o.connect(sound);
+      o.start(t);
+      return o;
+    });
+    stopAt(envelope(level.gain, t, 0.3, 0.02, length, 0.08), ...notes);
   }
 }
 

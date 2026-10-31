@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { type Box, boxAt } from "../core/colliders";
+import { cue } from "../core/cues";
 import { makeRng } from "../core/rng";
 import { timeOfDay } from "../core/timeOfDay";
 import { passersby } from "../core/passersby";
@@ -29,7 +30,8 @@ import { drive, pose } from "./traffic";
  *                 the yard and noses into the empty third bay; once it's in
  *                 (townState.jaipurBusIn) its passengers get down, a few, and
  *                 walk off, and Mama's parcel can be collected
- *                 (activities/errands.ts). Come later, and it's simply there.
+ *                 (activities/errands.ts). Its horn as it reaches the yard
+ *                 and as it stops. Come later, and it's simply there.
  *
  * FRAME: the yard's (world/places/busStand.ts): x east, z south, its middle
  * at the origin.
@@ -42,6 +44,8 @@ const SETS_OFF = 18 * 60 + 23;
 const CRUISE = 7;
 /** How far east the highway runs (yard x), and where the milestone stops you. */
 const FAR = 160, STOP = 46;
+/** Yard x: it sounds its horn here, coming in. */
+const HORN_AT = 45;
 const D = BUS_STAND.depth / 2;
 
 export function buildBusArrival(): BusArrival {
@@ -164,6 +168,7 @@ export function buildBusArrival(): BusArrival {
   passersby.register(() => strolls.filter((s) => s.person.root.visible).map((s) => s.person.root.getWorldPosition(new THREE.Vector3())));
 
   const _you = new THREE.Vector3();
+  let hornDone = false;
   return {
     group, colliders,
     update(t, dt, player) {
@@ -179,8 +184,14 @@ export function buildBusArrival(): BusArrival {
       }
       if (state === "coming") {
         const you = group.worldToLocal(_you.copy(player));
-        if (drive(coach, dt, [you], () => {}, 30)) parkIt();
-        else placeCollider();
+        if (!hornDone && bus.position.x < HORN_AT) {
+          hornDone = true;
+          cue("busHorn", toWorld(bus.position.x, 2, bus.position.z));
+        }
+        if (drive(coach, dt, [you], () => {}, 30)) {
+          parkIt();
+          cue("busHorn", toWorld(bus.position.x, 2, bus.position.z));
+        } else placeCollider();
       }
       // the passengers: walking off, gone once at the end of their way and you're not near
       const you = group.worldToLocal(_you.copy(player));

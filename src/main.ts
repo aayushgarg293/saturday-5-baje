@@ -196,7 +196,7 @@ const errandRun = buildErrands(street, player.pos);
 const townMap = buildTownMap(errandRun.places, street.homeDoor);
 // After 6:40, now and then a pressure cooker whistles in a house near you (world/dinnerTime.ts)
 const dinnerTime = buildDinnerTime(street.houseFronts);
-scene.add(errandRun.group);
+scene.add(errandRun.group, errandRun.handed);
 areas.add("bazaar", errandRun.group);
 seat.onSit = () => {
   // the first time you sit down, the computer dials up (and every time, it's connected after; not after logging off)

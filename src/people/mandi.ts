@@ -3,6 +3,7 @@ import { makeRng } from "../core/rng";
 import { townState } from "../core/townState";
 import { say } from "../ui/caption";
 import { AISLE, SABZIWALI, SELLERS } from "../world/places/mandi";
+import { givers } from "./givers";
 import { parkOrigin } from "../world/places/park";
 import { type Actor, makeActor, v } from "./actor";
 import { buildPerson } from "./body";
@@ -85,7 +86,7 @@ export function buildMandiPeople(): MandiPeople {
         }
       });
       const knees = { r: v(-0.13, 0.48, 0.32), l: v(0.13, 0.48, 0.32) };
-      actors.push(makeActor({
+      const seller = makeActor({
         person: p, at: s, seat: 0.28, notice: "greet", phase: k * 1.7,
         actions: [
           { name: "wait", duration: 5, pose: () => ({ right: knees.r, left: knees.l, look: v(0, 1.2, 4) }) },
@@ -94,7 +95,9 @@ export function buildMandiPeople(): MandiPeople {
           // calling out to the aisle, a hand raised
           { name: "call", duration: 2.5, pose: (u) => ({ right: v(-0.32, 1.05 + Math.sin(u * 6) * 0.05, 0.25), left: knees.l, look: v(-1, 1.3, 4) }) },
         ],
-      }));
+      });
+      actors.push(seller);
+      if (sabziwali) givers.set("sabzi", seller);
     } else {
       // standing behind the cart, hands on its rail; weighing on the scale; calling out
       const p = person(rng.next() < 0.5 ? "man" : "uncle", (r) => {

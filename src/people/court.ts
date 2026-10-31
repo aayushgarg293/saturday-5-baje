@@ -4,6 +4,7 @@ import { CLIENT, TYPIST_TABLES } from "../world/places/court";
 import { COURT, COURT_ROAD } from "../world/town";
 import { type Action, makeActor, seenFrom, track, v } from "./actor";
 import { buildPerson } from "./body";
+import { givers } from "./givers";
 import { recipeFor } from "./recipes";
 
 /**
@@ -84,7 +85,9 @@ export function buildCourtPeople(): CourtPeople {
         { name: "road", duration: 4, pose: () => ({ right: v(-0.15, 0.8, 0.35), left: v(0.15, 0.8, 0.35), look: ROAD.clone().setX(-3) }) },
       ]
       : typing(k === 1 ? 1.3 : 1);
-    actors.push(makeActor({ person: p, at, seat: SEAT, actions, notice: "glance", phase: rng.range(0, 8) }));
+    const actor = makeActor({ person: p, at, seat: SEAT, actions, notice: "glance", phase: rng.range(0, 8) });
+    actors.push(actor);
+    if (k === 2) givers.set("stampPaper", actor); // (the free one: activities/errands.ts)
   });
 
   // the client at the middle typist's table, watching his affidavit come off the machine

@@ -5,6 +5,7 @@ import { say } from "../ui/caption";
 import { BANANA_CART, BAYS, BENCH, CONDUCTOR, SHED } from "../world/places/busStand";
 import { BUS_STAND, inBusStand } from "../world/town";
 import { makeActor, seenFrom, track, v } from "./actor";
+import { givers } from "./givers";
 import { buildPerson } from "./body";
 import { newspaper } from "./props";
 import { type Role, recipeFor } from "./recipes";
@@ -79,7 +80,7 @@ export function buildBusStandPeople(): BusStandPeople {
     const at = CONDUCTOR;
     const door = seenFrom(at, BAYS[0].x - 1.3, 1.6, BAYS[0].z - 4);
     const mouth = v(-0.05, 1.5, 0.14);
-    actors.push(makeActor({
+    const conductor = makeActor({
       person: p, at, notice: "glance", phase: 0,
       actions: [
         // a hand cupped at his mouth, calling; the other waving toward the door
@@ -88,7 +89,9 @@ export function buildBusStandPeople(): BusStandPeople {
         { name: "tickets", duration: 4, pose: (u) => ({ right: v(-0.05 + Math.sin(u * 5) * 0.03, 1.02, 0.28), left: v(0.06, 1.0, 0.28), look: v(0, 0.95, 0.35), nod: 0.25 }) },
         { name: "door", duration: 2.5, pose: () => ({ right: v(-0.2, 0.95, 0.0), left: v(0.2, 0.95, 0.0), look: door }) },
       ],
-    }));
+    });
+    actors.push(conductor);
+    givers.set("parcel", conductor);
   }
 
   // --- the banana-wala, behind his cart (his own random numbers: the others' stay as they were) ---------
