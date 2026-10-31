@@ -1,3 +1,4 @@
+import { touchFirst } from "../core/device";
 import { CHIT, errands } from "../core/errands";
 
 /**
@@ -29,7 +30,9 @@ function element(): HTMLDivElement {
     backgroundColor: "#fbf7ea",
     color: INK,
     font: `17px/26px ${HAND}`,
-    transform: "rotate(-2.5deg)",
+    // (a phone's screen is short: the whole scrap smaller, from its top right corner)
+    transform: touchFirst ? "rotate(-2.5deg) scale(0.72)" : "rotate(-2.5deg)",
+    transformOrigin: "top right",
     boxShadow: "2px 4px 10px rgba(30, 20, 10, 0.35)",
     // the torn bottom edge
     clipPath: "polygon(0 0, 100% 0, 100% 94%, 92% 97%, 84% 93%, 75% 98%, 66% 94%, 57% 99%, 48% 94%, 38% 98%, 29% 93%, 19% 97%, 10% 94%, 0 98%)",
@@ -72,7 +75,7 @@ function draw() {
     box!.append(row);
   });
   const hint = document.createElement("div");
-  hint.textContent = "[Tab]";
+  hint.textContent = touchFirst ? "📝" : "[Tab]";
   Object.assign(hint.style, { font: '600 11px "Helvetica Neue", Arial, sans-serif', color: "#7a6e58", textAlign: "right", marginTop: "4px" });
   box.append(hint);
 }

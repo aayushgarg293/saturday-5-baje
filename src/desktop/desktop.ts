@@ -4,6 +4,7 @@ import { YOUR_BOOTH } from "../world/cafe/plan";
 import { ICONS, messageBox, openFolder, openMyComputer, openMyDocuments, openRecycleBin } from "./apps/basic";
 import { openMinesweeper } from "./apps/minesweeper";
 import { Xplorer } from "./apps/xplorer";
+import { StickyNote } from "./stickyNote";
 import { Yaaho } from "./apps/yaaho";
 import { CafeTimer } from "./cafeTimer";
 import { MATCH } from "./cricket";
@@ -40,6 +41,9 @@ export class Desktop {
   readonly kit: Kit;
   readonly yaaho: Yaaho;
   readonly xplorer: Xplorer;
+  /** The note beside the screen, when the player needs telling. */
+  private note = new StickyNote();
+  private used = 0;
   /** The cafe's timer strip, top right. */
   private timer = new CafeTimer(YOUR_BOOTH);
   /** Things moved on every frame while the desktop is up (downloads, pages loading, the chats). */
@@ -72,7 +76,7 @@ export class Desktop {
     this.screen.style.backgroundImage = `url(${wallpaperImage(SCREEN.w, SCREEN.h)})`;
     this.glass.append(this.screen, div("xp-crt"));
     bezel.append(this.glass);
-    this.overlay.append(bezel);
+    this.overlay.append(bezel, this.note.el);
     document.body.append(this.overlay);
     // a click on the bezel or round it (not on the screen) leans you back. (Checked by what was
     // clicked, not by "is it outside the screen": a link's page is gone by the time its click gets here.)
@@ -196,10 +200,12 @@ export class Desktop {
     this.yaaho.update(dt);
     MATCH.update(dt);
     for (const fn of this.tickers) fn(dt);
+    this.note.update(dt, (task) => this.kit.tasks.isDone(task), this.used);
   }
 
   /** Game minutes used since you first sat down (the cafe's timer). */
   setUsed(minutes: number) {
+    this.used = minutes;
     this.timer.set(minutes);
   }
 

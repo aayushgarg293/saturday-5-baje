@@ -9,7 +9,7 @@ export type Errand = "cafe" | "kapde" | "dawai" | "stampPaper" | "parcel" | "sab
 
 /** Her lines on the chit, in her order. */
 export const CHIT: { errand: Errand; line: string; where: string }[] = [
-  { errand: "cafe", line: "Cafe: 1 ghanta, 6 baje tak!", where: "" },
+  { errand: "cafe", line: "Cafe: 1 ghanta, 6 baje tak!", where: "bazaar ke aakhir mein, daayein haath pe, pehli manzil" },
   { errand: "kapde", line: "Papa ke press ke kapde", where: "Modern Dry Cleaners, mandir ke aage, cricket wali gali se pehle" },
   { errand: "dawai", line: "Dettal aur Krocin", where: "Reliable Medical, ghar se nikalte hi daayein haath pe" },
   { errand: "stampPaper", line: "Papa ka stamp paper", where: "court ke bahar typist se type karwana" },

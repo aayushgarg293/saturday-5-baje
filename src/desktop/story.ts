@@ -109,6 +109,7 @@ const priya: Thread = {
       { say: "rail gaadi wala? haan", then: [{ they: "haan wahi!!" }] },
     ] },
     { they: "songzpk pe sab milta hai" },
+    { mark: "songAsked" }, // (the sticky note beside the screen: stickyNote.ts)
     { waitFor: "songSent", nudges: ["??", "mila?", "hello"], giveUpAfter: 300,
       done: [{ they: "mil gaya!!! thanks :D" }, { they: "repeat pe sun rahi hu" }],
       notDone: [{ they: "koi nahi, tuition me pen drive me de dena :)" }] },
@@ -207,6 +208,7 @@ const rohan: Thread = {
     { they: "acha sun, wo team wali photo mail kar na" },
     { they: "yahan sab ko dikhani hai apni team" },
     { they: "rediffit pe, rohan_rockstar@rediffitmail.com" },
+    { mark: "photoAsked" },
     { you: [
       { say: "haan pen drive me hai, abhi bhejta hu" },
       { say: "ruk bhejta hu" },
@@ -215,6 +217,7 @@ const rohan: Thread = {
     { waitFor: "photoMailed", nudges: ["bheja?", "oye", "photo???"], giveUpAfter: 300,
       done: [{ they: "aa gaya!!!" }, { they: "sab kitne mast lag rahe hai" }, { they: "sunny ka haircut dekh lol" }],
       notDone: [{ they: "chal koi nahi, baad me bhej dena" }] },
+    { mark: "photoMoment" },
     { wait: 3 },
     { they: "kiske saath chat kar raha hai?? :P" },
     { they: "reply late de raha hai" },

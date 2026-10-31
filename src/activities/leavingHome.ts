@@ -1,3 +1,4 @@
+import { touchFirst } from "../core/device";
 import { say } from "../ui/caption";
 import { showChit } from "../ui/chit";
 
@@ -13,6 +14,8 @@ const LINES: { line: string; seconds: number }[] = [
 ];
 /** How long the chit stays up by itself, the first time. */
 const CHIT_SECONDS = 9;
+/** As it goes away, the once: how to bring it back. */
+const CHIT_REMINDER = touchFirst ? "📝 dabao, chit phir se dikhegi" : "Tab dabao, chit phir se dikhegi";
 
 let called = false;
 
@@ -31,4 +34,5 @@ export function mummyCallsAfterYou() {
     at += seconds + 0.3;
   }
   window.setTimeout(() => showChit(CHIT_SECONDS), (at - 1) * 1000);
+  window.setTimeout(() => say("", CHIT_REMINDER, 4), (at - 1 + CHIT_SECONDS) * 1000);
 }

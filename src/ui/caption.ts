@@ -1,7 +1,7 @@
 /**
  * A caption: a line of what someone says, at the bottom of the screen, for a
  * few seconds (people don't speak aloud in the game: no voices). Used for the
- * cafe owner's words.
+ * cafe owner's words; with no name, for a word of advice to the player.
  */
 
 import { touchFirst } from "../core/device";
@@ -37,10 +37,13 @@ function element(): HTMLDivElement {
 export function say(who: string, line: string, seconds = 4) {
   const el = element();
   el.innerHTML = "";
-  const name = document.createElement("span");
-  name.textContent = `${who}: `;
-  name.style.color = "#f2c542";
-  el.append(name, document.createTextNode(line));
+  if (who) {
+    const name = document.createElement("span");
+    name.textContent = `${who}: `;
+    name.style.color = "#f2c542";
+    el.append(name);
+  }
+  el.append(document.createTextNode(line));
   el.style.opacity = "1";
   hideAt = performance.now() + seconds * 1000;
   window.setTimeout(() => {
