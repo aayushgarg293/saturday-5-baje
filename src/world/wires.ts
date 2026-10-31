@@ -18,6 +18,9 @@ import type { WorldSign } from "./street";
  * the whole tangle costs two draw calls. Wires are drawn unlit, as dark
  * silhouettes against the sky, which is how you actually see them.
  *
+ * A few poles also carry the old telephone lines, lower down: flat iron arms
+ * of white ceramic insulators, a wire from each (`telephoneLines`).
+ *
  * The poles also carry posters: election candidates, birthday wishes for a
  * local leader (painted by world/signs.ts, words in names.ts).
  */
@@ -42,6 +45,16 @@ const WIRE_RADIUS = 0.013;
 /** Every other pole carries a street lamp: a bulb on a short arm reaching out over the street, this high. */
 const LAMP_HEIGHT = 6.2;
 const LAMP_REACH = 1.3;
+
+/** The stretches of poles that carry telephone lines (indexes into POLES): the line runs along each, then off to the houses. */
+const TELEPHONE_RUNS = [[1, 2], [5, 6]];
+/** Each pole's telephone arms, this high (below the crossarm, above the street lamp); on an arm, the insulators stand at these. */
+const PHONE_ARM_HEIGHTS = [6.75, 7.2, 7.65];
+const PHONE_ARM_SPOTS = [-0.62, -0.22, 0.22, 0.62];
+/** Only a few of the insulators are in use: this many lines run along a stretch, and this many leave each pole for the houses. */
+const PHONE_LINES = 4, PHONE_DROPS = 2;
+/** The arms' galvanised iron, and an old coat of green paint on the odd one; the insulators' glazed ceramic. */
+const PHONE_ARM = 0xb8b09c, PHONE_ARM_PAINTED = 0x6f8a5c, INSULATORS = [0xe4dcc8, 0xd6c9a8, 0xc9b78e];
 
 export function buildWires(): { group: THREE.Group; colliders: Box[]; signs: WorldSign[]; lamps: WorldLamp[] } {
   const rng = makeRng(99);
@@ -105,12 +118,72 @@ export function buildWires(): { group: THREE.Group; colliders: Box[]; signs: Wor
     }
   }
 
+  telephoneLines(parts, wires);
+
   group.add(parts.build("poles"));
   const wireMesh = new THREE.Mesh(mergeGeometries(wires)!, flat(PAL.wire));
   wireMesh.name = "wires";
   group.add(wireMesh);
   wires.forEach((w) => w.dispose());
   return { group, colliders, signs: polePosters(), lamps };
+}
+
+/**
+ * The telephone lines of those days, on some of the poles: iron arms across
+ * the pole, a row of ceramic insulators on each, and from a few of them (the
+ * rest stand idle) a wire to the same one on the next pole. At the ends of a
+ * run they leave for the houses. Not quite tidy: an arm has slipped and hangs crooked, a
+ * pin has lost its insulator.
+ */
+function telephoneLines(parts: Parts, wires: THREE.BufferGeometry[]) {
+  const rng = makeRng(73); // its own seed, so the wires don't change
+  for (const run of TELEPHONE_RUNS) {
+    const lines = run.map((index) => {
+      const pole = POLES[index];
+      const at = pointAt(pole.s, pole.side * POLE_OFFSET);
+      const heading = centreAt(pole.s).heading;
+      const across = new THREE.Vector3(Math.cos(heading), 0, Math.sin(heading));
+      const crooked = Math.floor(rng.next() * PHONE_ARM_HEIGHTS.length);
+      const painted = Math.floor(rng.next() * PHONE_ARM_HEIGHTS.length);
+      const spots: THREE.Vector3[] = [];
+      PHONE_ARM_HEIGHTS.forEach((y, arm) => {
+        const tilt = arm === crooked ? rng.range(0.08, 0.16) * (rng.next() < 0.5 ? -1 : 1) : 0; // (how far one end is up, per metre)
+        const point = (k: number) => new THREE.Vector3(at.x, y + k * tilt, at.z).addScaledVector(across, k);
+        parts.strut(point(-0.75), point(0.75), 0.035, arm === painted ? PHONE_ARM_PAINTED : PHONE_ARM, 4);
+        for (const k of PHONE_ARM_SPOTS) {
+          const p = point(k);
+          parts.cylinder(0.012, 0.012, 0.08, p.x, p.y + 0.06, p.z, PAL.metal, { segments: 4 }); // the pin
+          spots.push(p.clone().setY(p.y + 0.14));
+          if (rng.next() < 0.06) continue; // (broken off; the wire's tied to the pin)
+          const colour = INSULATORS[Math.floor(rng.next() * INSULATORS.length)];
+          parts.cylinder(0.05, 0.06, 0.1, p.x, p.y + 0.14, p.z, colour, { segments: 7 }); // the bell
+          parts.cylinder(0.032, 0.046, 0.05, p.x, p.y + 0.215, p.z, colour, { segments: 7 }); // its head
+        }
+      });
+      return spots;
+    });
+
+    // the insulators in use: the same ones on every pole of the run
+    const inUse = new Set<number>();
+    while (inUse.size < PHONE_LINES) inUse.add(Math.floor(rng.next() * lines[0].length));
+    const used = [...inUse];
+
+    for (let i = 0; i + 1 < lines.length; i++) {
+      for (const k of used) wires.push(wire(lines[i][k], lines[i + 1][k], rng.range(0.3, 0.7)));
+    }
+
+    // off to the houses, from either end of the run
+    run.forEach((index, i) => {
+      const pole = POLES[index];
+      for (let n = 0; n < PHONE_DROPS; n++) {
+        const s = pole.s + rng.range(-9, 9);
+        const side = rng.next() < 0.6 ? pole.side : -pole.side;
+        const wall = pointAt(s, side * 4.6);
+        const from = lines[i][used[n]];
+        wires.push(wire(from, new THREE.Vector3(wall.x, rng.range(4.6, 6), wall.z), rng.range(0.2, 0.5)));
+      }
+    });
+  }
 }
 
 /** A poster's size, metres: about A3, the size these were printed. */
