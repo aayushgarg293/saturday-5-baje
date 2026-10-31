@@ -1,3 +1,4 @@
+import * as THREE from "three";
 import type { Rng } from "../../core/rng";
 import { PAL } from "../../render/palette";
 import type { Parts } from "../kit";
@@ -200,6 +201,26 @@ export const FACADE = { shop: 1.1, house: 0.6 };
 /** The solid mass of a building: one big box from the facade to the back. */
 export function body(c: BuildContext, y0: number, y1: number, zFront: number) {
   c.parts.slab(-c.w / 2, c.w / 2, y0, y1, -PLOT_DEPTH, zFront, c.wall);
+}
+
+/**
+ * The kundi on a shut double door: the line where the two leaves meet (x, from
+ * y0 to y1), and at a hand's height the iron hasp across it, with the ring on
+ * one leaf and the short chain on the other. `z`: the door's front. Larger than
+ * life, to be seen from the street.
+ */
+export function kundi(c: BuildContext, x: number, y0: number, y1: number, z: number) {
+  const p = c.parts;
+  const y = y0 + 1.15;
+  p.slab(x - 0.008, x + 0.008, y0, y1, z, z + 0.004, PAL.windowDark);
+  p.slab(x - 0.17, x - 0.07, y - 0.05, y + 0.05, z, z + 0.008, PAL.ironBlack); // its plate
+  p.slab(x - 0.16, x + 0.08, y - 0.016, y + 0.016, z + 0.008, z + 0.022, PAL.ironBlack); // the hasp
+  p.slab(x + 0.05, x + 0.09, y - 0.035, y + 0.035, z, z + 0.03, PAL.ironBlack); // the staple it drops into
+  p.add(new THREE.TorusGeometry(0.05, 0.009, 4, 10), x - 0.12, y - 0.06, z + 0.02, PAL.ironBlack); // the ring
+  // the chain, its links turned each to the other
+  for (let k = 0; k < 4; k++) {
+    p.add(new THREE.TorusGeometry(0.018, 0.005, 4, 8), x + 0.07, y - 0.055 - k * 0.03, z + 0.03, PAL.ironBlack, { ry: k % 2 ? Math.PI / 2 : 0 });
+  }
 }
 
 /**

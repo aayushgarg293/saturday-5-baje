@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { PAL } from "../../render/palette";
-import { type BuildContext, type BuildResult, FACADE, body, ledge, roof, windowAt } from "./common";
+import { type BuildContext, type BuildResult, FACADE, body, kundi, ledge, roof, windowAt } from "./common";
 
 /**
  * A haveli: an older, taller townhouse. What makes it read as Rajasthani:
@@ -59,6 +59,7 @@ function archedDoor(c: BuildContext, x: number, face: number) {
   p.slab(x - dw / 2 - 0.25, x + dw / 2 + 0.25, 0.35, 0.35 + dh, face, face + 0.08, PAL.stoneTrim); // frame
   p.add(halfDisc(archR + 0.25), x, 0.35 + dh, face + 0.04, PAL.stoneTrim);
   p.slab(x - dw / 2, x + dw / 2, 0.35, 0.35 + dh, face + 0.08, face + 0.14, PAL.wood); // door leaves
+  kundi(c, x, 0.35, 0.35 + dh, face + 0.14);
   p.add(halfDisc(archR), x, 0.35 + dh, face + 0.11, PAL.windowDark); // the dark fanlight in the arch
 }
 
