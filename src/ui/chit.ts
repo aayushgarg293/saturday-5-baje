@@ -12,7 +12,7 @@ let box: HTMLDivElement | null = null;
 let hideTimer = 0;
 
 /** Ballpoint "handwriting": fonts every Mac has, and the nearest elsewhere. */
-const HAND = '"Noteworthy", "Bradley Hand", "Segoe Print", "Comic Sans MS", cursive';
+export const HAND = '"Noteworthy", "Bradley Hand", "Segoe Print", "Comic Sans MS", cursive';
 const INK = "#1f3a8a";
 
 function element(): HTMLDivElement {
@@ -20,6 +20,7 @@ function element(): HTMLDivElement {
   box = document.createElement("div");
   Object.assign(box.style, {
     position: "fixed",
+    zIndex: "6", // (over the clock: ui/townMap.ts)
     top: "4%",
     right: "3%",
     width: "min(340px, 40cqw)",
@@ -99,6 +100,8 @@ export function toggleChit() {
   window.clearTimeout(hideTimer);
   set(!open);
 }
+
+export const chitIsOut = () => open;
 
 export function hideChit() {
   window.clearTimeout(hideTimer);

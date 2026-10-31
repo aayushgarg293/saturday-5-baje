@@ -54,6 +54,8 @@ type Stop = {
 export type Errands = {
   /** The keepers out front of the dry cleaner's and the chemist's (main.ts adds them to the bazaar's area). */
   group: THREE.Group;
+  /** Where each errand is done (the sketch's marks: ui/townMap.ts). */
+  places: { errand: Errand; at: THREE.Vector3 }[];
   canStart(): boolean;
   start(): void;
   prompt(): string | null;
@@ -166,6 +168,7 @@ export function buildErrands(street: Street, playerPos: THREE.Vector3): Errands 
 
   return {
     group,
+    places: STOPS.map(({ errand, at }) => ({ errand, at })),
     canStart: () => !current && playerPos.y < 0.5 && stopHere() !== null,
     start() {
       const stop = stopHere();

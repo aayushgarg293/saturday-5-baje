@@ -134,9 +134,9 @@ export const CRICKET_ROWS: { road: Road; plan: RowPlan; seed: number }[] = [
 const PARK_WEST_X = SCHOOL.x - SCHOOL.setback - SCHOOL.park.depth;
 const PARK_SOUTH_Z = schoolZ(SCHOOL.park.s1);
 /** West side: along the railing, south, from just past the lane's houses; the houses on its right (west), facing the park. */
-const PARK_WEST = new Road({ name: "park-west", start: { x: PARK_WEST_X, z: CRICKET_Z_ + PLOT_DEPTH + 2 + 0.6 }, heading: Math.PI, length: PARK_SOUTH_Z - (CRICKET_Z_ + PLOT_DEPTH + 2.6) + 12 });
+export const PARK_WEST = new Road({ name: "park-west", start: { x: PARK_WEST_X, z: CRICKET_Z_ + PLOT_DEPTH + 2 + 0.6 }, heading: Math.PI, length: PARK_SOUTH_Z - (CRICKET_Z_ + PLOT_DEPTH + 2.6) + 12 });
 /** South side: along the railing, east, to school road's own houses; the houses on its right (south), facing the park. */
-const PARK_SOUTH = new Road({ name: "park-south", start: { x: PARK_WEST_X - 3, z: PARK_SOUTH_Z }, heading: Math.PI / 2, length: SCHOOL.x - SCHOOL.setback - PLOT_DEPTH - (PARK_WEST_X - 3) });
+export const PARK_SOUTH = new Road({ name: "park-south", start: { x: PARK_WEST_X - 3, z: PARK_SOUTH_Z }, heading: Math.PI / 2, length: SCHOOL.x - SCHOOL.setback - PLOT_DEPTH - (PARK_WEST_X - 3) });
 export const PARK_ROWS: { road: Road; plan: RowPlan; seed: number }[] = [
   { road: PARK_WEST, seed: 7721, plan: { length: PARK_WEST.length, sides: ["right"], fixed: [], pick: laneHouses, setback: { min: 3, max: 3 } } },
   { road: PARK_SOUTH, seed: 7722, plan: { length: PARK_SOUTH.length, sides: ["right"], fixed: [], pick: laneHouses, setback: { min: 3, max: 3 } } },

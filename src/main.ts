@@ -25,6 +25,7 @@ import { Pipeline } from "./render/post";
 import { createRenderer, fitToWindow } from "./render/renderer";
 import { playEnding } from "./ui/ending";
 import { frontIsUp, frontReady, frontResuming, openFront } from "./ui/front";
+import { buildTownMap } from "./ui/townMap";
 import { buildTouchControls } from "./ui/touchControls";
 import { touchFirst } from "./core/device";
 import { quality } from "./core/quality";
@@ -37,7 +38,7 @@ import { playRecordingSoon, prepareRecordings } from "./audio/recordings";
 import { buildDinnerTime } from "./world/dinnerTime";
 import { CHIT, type Errand, errands } from "./core/errands";
 import { passersby } from "./core/passersby";
-import { hideChit, toggleChit } from "./ui/chit";
+import { chitIsOut, hideChit, toggleChit } from "./ui/chit";
 import { mummyCallsAfterYou, mummyHasCalled } from "./activities/leavingHome";
 import { type Saved, clearSave, readSave, writeSave } from "./core/save";
 import { townState } from "./core/townState";
@@ -192,6 +193,7 @@ const haircut = new Haircut(camera, player, input, life.saloon.you);
 const cricket = new CricketGame(camera, player, input, life.cricket, scene);
 // Mummy's errands: the dry cleaner, the chemist, the typist, the conductor (activities/errands.ts)
 const errandRun = buildErrands(street, player.pos);
+const townMap = buildTownMap(errandRun.places, street.homeDoor);
 // After 6:40, now and then a pressure cooker whistles in a house near you (world/dinnerTime.ts)
 const dinnerTime = buildDinnerTime(street.houseFronts);
 scene.add(errandRun.group);
@@ -385,7 +387,10 @@ input.onLockChange = (locked) => {
   startScreen.hidden = locked || desktop.isOpen || ended || frontIsUp();
   // (paused, the game's frames stop: the touch controls and the prompt's buttons go now, not next frame)
   touchControls.setVisible(locked && !desktop.isOpen && !ended);
-  if (!locked) showPrompt(null);
+  if (!locked) {
+    showPrompt(null);
+    townMap.update(0, false, false, player.pos, player.yaw, "");
+  }
 };
 
 // --- saving where you are (core/save.ts) -------------------------------------------------
@@ -470,6 +475,7 @@ function update(dt: number) {
   if (connected && !loggedOff) desktop.setUsed(gameClock.minutes - sessionStart);
   ownerScreen.update(gameClock.minutes, { connected, loggedOff, paid, used: loggedOff ? visitMinutes : connected ? gameClock.minutes - sessionStart : 0 });
   showPrompt(prompt());
+  townMap.update(dt, input.locked && !player.frozen && !seat.seated && !desktop.isOpen && !ended, input.locked && !seat.seated && !desktop.isOpen && !ended && chitIsOut(), player.pos, player.yaw, gameClock.label());
   touchControls.setVisible(input.locked && !desktop.isOpen && !ended);
   cafePeople.update(time, dt, player.pos);
   lights.followPlayer(player.pos);

@@ -56,6 +56,15 @@ anything dragged turns a finger's movement back first (`toPage`). Fullscreen
 is asked for only once: Chrome's "to exit full screen" notice covers the
 prompt's buttons each time. `?touch` and `?quality=phone` try these on a laptop.
 
+## Helping a new player (from 2026-10-31)
+
+Mummy's sketch (ui/townMap.ts): the whole town on a scrap of the chit's paper,
+beside the chit whenever it's out; it stays still and your arrow turns, her
+landmarks in words, each undone chit line a red ring with that line's number.
+While walking the screen shows only the small clock. The sticky
+note beside the computer (desktop/stickyNote.ts) comes 15 seconds after a
+`mark` in story.ts and goes when the task is done.
+
 ## How the world is organised
 
 - **`src/world/layout.ts` is the street plan, as data.** Everything is placed
