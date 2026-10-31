@@ -2,8 +2,9 @@
 
 A short first-person walk into the cyber cafes of the 2000s.
 
-**▶ Play it in your browser: [aayushgarg2903gmailcom.itch.io/saturday-5-baje](https://aayushgarg2903gmailcom.itch.io/saturday-5-baje)**
-(on a laptop or desktop, in Chrome or Safari, with sound on)
+**▶ Play it in your browser: [play.aayushgarg.in/saturday-5-baje](https://play.aayushgarg.in/saturday-5-baje/)**
+(on a laptop, or a phone held sideways; Chrome or Safari; sound on). Also on
+[itch.io](https://aayushgarg2903gmailcom.itch.io/saturday-5-baje).
 
 ![The market street in the afternoon, by the chai tapri](docs/afternoon.jpg)
 

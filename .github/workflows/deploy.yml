@@ -1,6 +1,8 @@
 # Publishes the game to GitHub Pages: every push to main, GitHub builds it
 # (npm run build, as on the owner's Mac) and puts dist/ online at
-# https://aayushgarg293.github.io/saturday-5-baje/ (itch.io gets the same
+# https://play.aayushgarg.in/saturday-5-baje/ (on Aayush's Playground: the account's main Pages site,
+# repo aayushgarg293.github.io, has that domain, so this repo's site does too;
+# the old github.io address redirects there). itch.io gets the same
 # build as a zip, by hand: see the "itch-hosting" notes).
 name: Publish to GitHub Pages
 
