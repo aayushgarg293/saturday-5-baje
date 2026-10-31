@@ -143,6 +143,8 @@ export function buildTouchControls(input: Input, onTap: () => void): TouchContro
   }, { passive: false });
 
   const lift = (e: TouchEvent) => {
+    // (a finger lifting off a corner button: leave it be, or stopping it here would cancel the button's own tap)
+    if ((e.target as HTMLElement).closest("button")) return;
     e.preventDefault();
     for (const t of e.changedTouches) {
       const h = thumbs.get(t.identifier);

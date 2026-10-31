@@ -135,9 +135,9 @@ export function golgappaCrew(where: Placement, rng: Rng): GolgappaCrew {
 
   // --- serving you (activities/paniPuri.ts) ------------------------------------------------
   // you stand further along the cart's front (he faces along the cart: toward you), she's to
-  // your right; your leaf bowl held out over the cart's edge, in front of the matka
+  // your right; your leaf bowl held out just clear of the cart's edge (any nearer and the edge hides it), in front of the matka
   const you = { x: -0.05, z: 0.85 };
-  const bowl = [0.42, 1.0, 0.45] as const;
+  const bowl = [0.42, 1.08, 0.66] as const;
   const serveYou: Action = {
     name: "serveYou",
     duration: 4.2,

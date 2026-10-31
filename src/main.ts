@@ -499,6 +499,7 @@ function applyTimeOfDay() {
 function prompt(): string | null {
   if (ended) return null;
   if (desktop.isOpen || seat.leaned) return null;
+  if (seat.glancing) return seat.seated ? "[T] wapas computer pe" : "[T] wapas";
   if (paniPuri.active) return paniPuri.prompt();
   if (haircut.active || haircut.canStart()) return haircut.prompt();
   if (cricket.active || cricket.canStart()) return cricket.prompt();

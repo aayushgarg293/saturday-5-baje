@@ -41,9 +41,9 @@ const REACH = 1.0;
 /** Seated, how far the mouse can turn your head from the screen: sideways, and up/down (radians). */
 const TURN = { yaw: 1.0, up: 0.55, down: 0.5 };
 const MOUSE = 0.0022;
-/** Seconds: easing into and out of the chair; the glance at the clock (turn up, hold, turn back). */
+/** Seconds: easing into and out of the chair; the turn to the clock, and back (you stay on it until you say). */
 const SIT_TIME = 0.9;
-const GLANCE = { turn: 0.6, hold: 2.6 };
+const GLANCE = { turn: 0.6 };
 /** Looking at the clock, the view narrows onto it (a zoom), so its hands can be read from across the hall: field of view, degrees. */
 const GLANCE_FOV = 26;
 /** Leaning in, your eyes stop this far from the screen (metres): close enough that it fills the view. */
@@ -65,6 +65,7 @@ export class Seat {
   private baseYaw = 0;
   private basePitch = 0;
   private glance = -1; // seconds into a glance at the clock (−1: not glancing)
+  private glanceDone = false; // you've asked to look away again
   private eyes = new THREE.Vector3();
   private normalFov = 65;
 
@@ -127,9 +128,18 @@ export class Seat {
     this.start(this.spots.eye, [this.baseYaw, this.basePitch], () => {});
   }
 
-  /** Look up at the clock for a moment. */
+  /** Are you looking at the clock? */
+  get glancing(): boolean {
+    return this.glance >= 0;
+  }
+
+  /** Look up at the clock; asked again, look back. */
   lookAtClock() {
-    if (this.move || this.glance >= 0 || this.leaned) return;
+    if (this.glance >= 0) {
+      this.glanceDone = true;
+      return;
+    }
+    if (this.move || this.leaned) return;
     if (!this.seated) {
       // standing: take over from the player for the glance
       this.player.frozen = true;
@@ -171,8 +181,9 @@ export class Seat {
     if (this.glance >= 0) {
       this.input.takeMouseMovement(); // (ignore the mouse meanwhile)
       this.glance += dt;
-      const g = this.glance, total = GLANCE.turn * 2 + GLANCE.hold;
-      const w = g < GLANCE.turn ? g / GLANCE.turn : g < GLANCE.turn + GLANCE.hold ? 1 : Math.max(0, (total - g) / GLANCE.turn);
+      if (!this.glanceDone) this.glance = Math.min(this.glance, GLANCE.turn); // (stay on the clock until asked)
+      const g = this.glance, total = GLANCE.turn * 2;
+      const w = g < GLANCE.turn ? g / GLANCE.turn : Math.max(0, (total - g) / GLANCE.turn);
       const k = w * w * (3 - 2 * w);
       const [cy, cp] = look(this.seated ? this.spots.eye : this.eyes, this.spots.clock);
       yaw = lerpAngle(yaw, cy, k);
@@ -181,6 +192,7 @@ export class Seat {
       cam.updateProjectionMatrix();
       if (g >= total) {
         this.glance = -1;
+        this.glanceDone = false;
         cam.fov = this.normalFov;
         cam.updateProjectionMatrix();
         if (!this.seated) this.player.frozen = false;

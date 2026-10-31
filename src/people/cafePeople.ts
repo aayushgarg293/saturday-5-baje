@@ -301,7 +301,7 @@ export function buildCafePeople(frame: THREE.Matrix4, rng: Rng): CafePeople {
     pay(rupees) {
       owner.perform(takeAction);
       say("Owner", `${RUPEES[rupees] ?? rupees} rupaye.`, 2.4);
-      setTimeout(() => say("Owner", "Haan… theek hai. Phir aana!", 3.5), 2600);
+      setTimeout(() => say("Owner", "Theek hai. Phir aana!", 3.5), 2600);
     },
     callOut(words) {
       owner.perform(callAction);

@@ -88,7 +88,9 @@ export class PaniPuri {
     scene: THREE.Scene,
   ) {
     // your leaf bowl (a dona), and the puri in it
-    this.leaf = new THREE.Mesh(new THREE.CylinderGeometry(0.075, 0.05, 0.035, 12, 1, true), toon({ color: 0x5f7f3a }));
+    // (turned like a pot from this outline, from the middle of its floor out to the rim, so it has a bottom)
+    const outline = [[0, -0.022], [0.055, -0.022], [0.08, 0.008], [0.092, 0.024]].map(([r, y]) => new THREE.Vector2(r, y));
+    this.leaf = new THREE.Mesh(new THREE.LatheGeometry(outline, 14), toon({ color: 0x7c9a4c }));
     (this.leaf.material as THREE.Material).side = THREE.DoubleSide;
     this.leaf.position.copy(cart.you.bowl);
     this.leaf.visible = false;
@@ -147,7 +149,7 @@ export class PaniPuri {
     const ahead = new THREE.Vector3(-Math.sin(this.baseYaw), 0, -Math.cos(this.baseYaw));
     const shoulder = this.eye.clone().addScaledVector(right, 0.2).add(new THREE.Vector3(0, -0.3, 0));
     const elbow = this.eye.clone().addScaledVector(right, 0.24).addScaledVector(ahead, 0.18).add(new THREE.Vector3(0, -0.62, 0));
-    const hand = bowl.clone().add(new THREE.Vector3(0, -0.035, 0));
+    const hand = bowl.clone().add(new THREE.Vector3(0, -0.07, 0)); // (under the bowl: any higher and the palm and wrist come up through its floor)
     const span = (name: string, from: THREE.Vector3, to: THREE.Vector3) => {
       const m = this.arm.getObjectByName(name)!;
       m.position.copy(from);

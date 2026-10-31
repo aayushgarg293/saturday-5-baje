@@ -134,7 +134,7 @@ export function buildErrands(street: Street, playerPos: THREE.Vector3): Errands 
       lines: () => townState.jaipurBusIn
         ? [
           you("Bhaiya, Mathur ji ka parcel? Jaipur se Mama ne bheja hai.", 3.5),
-          { who: "Conductor", line: "Kaun? Mathur? …haan, ye lo, Jaipur se aaya hai.", seconds: 3.5 },
+          { who: "Conductor", line: "Kaun? Mathur? …accha haan, ye lo, Jaipur se aaya hai.", seconds: 3.5 },
           { who: "Conductor", line: "Bhaari hai, sambhal ke le jaana.", seconds: 3 },
         ]
         : [

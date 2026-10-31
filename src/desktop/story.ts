@@ -177,7 +177,7 @@ const rohan: Thread = {
     ] },
     { hesitate: 3 },
     { they: "pune bada hai yaar. sab english me baat karte hai school me" },
-    { they: "koi dost nahi bana abhi tak" },
+    { they: "itne dost bhi nahi bane abhi tak" },
     { you: [
       { say: "ban jayenge, tension mat le" },
       { say: "wahan bhi cricket khel", then: [{ they: "yahan sab football khelte hai lol" }] },
@@ -213,7 +213,7 @@ const rohan: Thread = {
       { say: "pehle ye bata school kaisa hai", then: [{ they: "bekaar. pehle photo :P" }] },
     ] },
     { waitFor: "photoMailed", nudges: ["bheja?", "oye", "photo???"], giveUpAfter: 300,
-      done: [{ they: "aa gaya!!!" }, { they: "sab kitne bade lag rahe hai" }, { they: "sunny ka haircut dekh lol" }],
+      done: [{ they: "aa gaya!!!" }, { they: "sab kitne mast lag rahe hai" }, { they: "sunny ka haircut dekh lol" }],
       notDone: [{ they: "chal koi nahi, baad me bhej dena" }] },
     { wait: 3 },
     { they: "kiske saath chat kar raha hai?? :P" },
