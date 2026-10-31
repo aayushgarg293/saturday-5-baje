@@ -88,6 +88,9 @@
       #start h1 { margin: 0 0 12px; font-size: 28px; letter-spacing: 0.04em; }
       #start p { margin: 0; opacity: 0.85; }
       #start[hidden] { display: none; }
+      #start .over { margin-top: 18px; padding: 8px 18px; border: 1px solid rgba(255, 248, 236, 0.5); border-radius: 22px;
+        background: rgba(20, 16, 12, 0.45); color: #fff8ec; font: 14px system-ui, sans-serif; cursor: pointer; }
+      #start .over.sure { border-color: #f2c542; color: #f2c542; }
       #start .title { margin: 0 0 18px; font: italic 20px Georgia, serif; opacity: 0.9; }
       #start .look { display: inline-flex; align-items: center; gap: 12px; margin-top: 18px; padding: 8px 16px;
         border-radius: 22px; background: rgba(20, 16, 12, 0.45); font-size: 14px; }
@@ -225,6 +228,7 @@
         <p class="for-mouse">Tab for Mummy's chit &middot; Esc to release the mouse &middot; M to mute the sound</p>
         <p class="for-touch">left thumb to walk (pull it far out to walk faster) &middot; right thumb to look around</p>
         <label class="for-touch look">look speed <input type="range" min="0.4" max="2.5" step="0.1" value="1" /></label>
+        <p><button class="over" type="button">naye sire se shuru karo</button></p>
       </div>
     </div>
     <script type="module" src="/src/main.ts"></script>

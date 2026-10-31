@@ -441,6 +441,23 @@ if (saved) {
   });
 }
 
+// the pause screen's "start over": the walk is lost, so a second press to be sure
+const startOver = startScreen.querySelector<HTMLButtonElement>(".over")!;
+for (const type of ["click", "touchstart", "pointerdown"]) startOver.addEventListener(type, (e) => e.stopPropagation());
+startOver.addEventListener("click", () => {
+  if (startOver.classList.contains("sure")) {
+    clearSave();
+    location.reload();
+    return;
+  }
+  startOver.classList.add("sure");
+  startOver.textContent = "pakka? ab tak ka sab chala jayega";
+  window.setTimeout(() => {
+    startOver.classList.remove("sure");
+    startOver.textContent = "naye sire se shuru karo";
+  }, 4000);
+});
+
 // --- game loop ---------------------------------------------------------------------
 /** Advance the game by `dt` seconds. */
 let time = 0;
