@@ -20,6 +20,8 @@ import type { BuildContext, BuildResult, LocalBox } from "./common";
  */
 
 const BRICK = 0xa4553c, BRICK_DARK = 0x8e4632, MORTAR = 0xb9ad9a, CONCRETE = 0xa8a39a, RUST = 0x6e3b26;
+/** The back of a painted board: bare, weathered tin. */
+const TIN = 0x6b675f;
 const DIRT = 0xb59a74, SAND = 0xd9b77a, GRAVEL = 0x8e8a84, BAMBOO = 0x9a7a4a, CEMENT_BAG = 0xd8d2c4;
 const WEEDS = [0x7a8a3e, 0x5f7a36, 0x8a8f48];
 
@@ -83,6 +85,7 @@ const BUILD: Record<VacantKind, Builder> = {
     // the board, on two posts just inside the wire, facing the road
     const bx = c.rng.range(-W + 1, W - 1);
     for (const dx of [-0.55, 0.55]) p.box(0.06, 1.7, 0.06, bx + dx, 0.85, front - 0.5, 0x6a5a44);
+    p.box(1.44, 0.66, 0.03, bx, 1.45, front - 0.47, TIN); // its back: bare tin, seen from inside the plot
     return [{ kind: "plotBoard", x: bx, y: 1.45, z: front - 0.45, w: 1.4, h: 0.62, label: "यह प्लॉट बिकाऊ है\nसंपर्क: गुप्ता प्रॉपर्टीज़" }];
   },
 
@@ -117,6 +120,7 @@ const BUILD: Record<VacantKind, Builder> = {
     p.add(new THREE.IcosahedronGeometry(0.28, 0), -W + 0.9, 2.3, -PLOT_DEPTH + 0.7, 0x5f7a36);
     // the board: why it's stood like this
     for (const dx of [-0.6, 0.6]) p.box(0.06, 1.6, 0.06, dx, 0.8, -0.4, 0x6a5a44);
+    p.box(1.54, 0.66, 0.03, 0, 1.35, -0.37, TIN); // its back
     return [{ kind: "plotBoard", x: 0, y: 1.35, z: -0.35, w: 1.5, h: 0.62, label: "विवादित संपत्ति\nमामला न्यायालय में विचाराधीन" }];
   },
 

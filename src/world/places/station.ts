@@ -172,6 +172,7 @@ export function buildStation(): StationPlace {
     { u: 70, z: STATION.half - 0.7, label: "रुकिए • देखिए • सुनिए\nफिर फाटक पार कीजिए" },
   ]) {
     for (const dz of [-0.55, 0.55]) p.box(0.06, 1.9, 0.06, at(u), 0.95, z + dz, 0x2a2622);
+    p.box(0.03, 0.74, 1.44, at(u) + 0.02, 1.6, z, 0x2a2622); // its back, for anyone coming the other way
     sign("railBoard", at(u) + 0.04, 1.6, z, FACE.east, 1.4, 0.7, label);
   }
   // (on the forecourt's south wall, facing the crossing)
@@ -241,6 +242,7 @@ export function buildStation(): StationPlace {
     p.box(0.6, 0.9, 1.4, t.x, H + 0.45, t.z, 0xd8dcd8);
     for (const dz of [-0.4, 0, 0.4]) p.box(0.15, 0.04, 0.04, t.x + 0.36, H + 0.75, t.z + dz, 0xb9bcc0);
     for (const dz of [-0.55, 0.55]) p.box(0.06, 1.0, 0.06, t.x - 0.2, H + 1.4, t.z + dz, 0x2a2622);
+    p.box(0.03, 0.44, 1.24, t.x - 0.18, H + 1.75, t.z, 0x2a2622); // its back
     sign("railBoard", t.x - 0.16, H + 1.75, t.z, FACE.east, 1.2, 0.4, "पीने का पानी");
     box(t.x - 0.3, t.x + 0.3, t.z - 0.7, t.z + 0.7);
   }
