@@ -40,6 +40,33 @@
           var zone = Intl.DateTimeFormat().resolvedOptions().timeZone || "";
           root.classList.toggle("abroad", /[?&]abroad\b/.test(location.search) || !/^Asia\/(Kolkata|Calcutta)$/.test(zone));
         } catch (e) {}
+
+        // A load that dies halfway. An iPhone closes a page that uses too much memory, and Safari opens it
+        // again, and again, blank each time. So on a touch screen a mark is left while the game loads, and
+        // the game removes it once the town is built (src/ui/front.ts, frontReady). A mark found here, from
+        // the last two minutes, means that load never finished: instead of trying again, the shutter says
+        // so (html.load-failed), with a button to try once more. An error while loading says so too, on
+        // any screen. (Leaving on purpose, or reloading, isn't a failure: the mark goes with the page.)
+        var LOADING = "saturday-5-baje:loading";
+        var failed = function () { root.classList.add("load-failed"); };
+        try {
+          if (touch) {
+            if (Date.now() - (Number(localStorage.getItem(LOADING)) || 0) < 120000) failed();
+            else localStorage.setItem(LOADING, String(Date.now()));
+            addEventListener("pagehide", function () { try { localStorage.removeItem(LOADING); } catch (e) {} });
+          }
+        } catch (e) {}
+        var whileLoading = function () {
+          var front = document.getElementById("front");
+          if (front && !front.classList.contains("ready")) failed();
+        };
+        addEventListener("error", whileLoading);
+        addEventListener("unhandledrejection", whileLoading);
+        document.addEventListener("click", function (e) {
+          if (!e.target.closest || !e.target.closest("#front .retry")) return;
+          try { localStorage.removeItem(LOADING); } catch (err) {}
+          location.reload();
+        });
       })();
     </script>
     <style>
@@ -162,6 +189,17 @@
       #front .go .click { font: italic clamp(22px, 3.4cqh, 32px) Georgia, serif; margin-bottom: 8px; }
       #front .go .keys { opacity: 0.85; font-size: 14px; }
       #front .go .over { display: inline-block; margin-top: 10px; color: #fff8ec; font-size: 13px; opacity: 0.8; }
+      /* the load died halfway (the script at the top): the shutter stays down and says so, on a dark panel in
+         its upper half, clear of the painted name */
+      #front .failed { display: none; position: absolute; left: 50%; top: 20cqh; transform: translateX(-50%); z-index: 3;
+        width: min(86cqw, 520px); box-sizing: border-box; padding: 16px 22px; border-radius: 12px;
+        background: rgba(20, 12, 8, 0.8); color: #fff8ec; text-align: center; font: 15px/1.5 system-ui, sans-serif; }
+      html.load-failed #front .wait { display: none; }
+      html.load-failed #front .failed { display: block; }
+      #front .failed p { margin: 0; }
+      #front .failed .what { font: italic clamp(20px, 3.4cqh, 28px) Georgia, serif; margin-bottom: 6px; }
+      #front .failed .retry { margin-top: 14px; padding: 8px 18px; border: 1px solid rgba(255, 248, 236, 0.6); border-radius: 22px;
+        background: rgba(20, 16, 12, 0.5); color: #fff8ec; font: 14px system-ui, sans-serif; cursor: pointer; }
 
       /* the chai. In India: a small painted tin sign in the corner, UPI (Razorpay), and under it a small link
          to Buy Me a Coffee. From elsewhere (html.abroad, above): Buy Me a Coffee's own yellow button, the one
@@ -214,6 +252,11 @@
           <p class="keys for-touch">left thumb to walk &middot; right thumb to look around</p>
           <p class="sound for-touch">&#128266; sound on karo (iPhone: silent switch bhi)</p>
         </div>
+      </div>
+      <div class="failed">
+        <p class="what">Arre! Aaj dukaan nahi khul paayi.</p>
+        <p class="for-touch">Ye phone thoda chhota pad gaya. Laptop ya computer pe kholo, wahan pakka chalega.</p>
+        <button type="button" class="retry">ek baar aur try karo</button>
       </div>
       <div class="chai">
         <a class="upi" href="https://rzp.io/rzp/aayushgarg2903" target="_blank" rel="noopener"><span class="sign">&#9749; Buy me a cutting chai</span><span class="small">India se ho? UPI se chai pilao</span></a>

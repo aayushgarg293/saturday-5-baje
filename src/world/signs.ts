@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { type Rng, makeRng, shuffled } from "../core/rng";
+import { canvasFor, paintedTexture } from "../render/memory";
 import { toon } from "../render/toon";
 import { CINEMA, FILMS, POLE_POSTERS, type PolePoster, SHOP_NAMES, WALL_ADS } from "./names";
 import type { WorldSign } from "./street";
@@ -438,19 +439,16 @@ function panel(sign: WorldSign, material: THREE.Material): THREE.Mesh {
   return mesh;
 }
 
-/** Draw a sign onto a canvas sized to its shape, and wrap it as a texture. */
+/**
+ * Draw a sign onto a canvas sized to its shape, and wrap it as a texture. (Painted at `ppm` pixels a
+ * metre; on a phone the canvas holds fewer, and the painting is shrunk to fit: render/memory.ts.)
+ */
 function paintTexture(sign: WorldSign, spec: PainterSpec, index: number, rng: Rng): THREE.CanvasTexture {
   const ppm = Math.min(spec.ppm, 2048 / sign.w, 2048 / sign.h);
-  const canvas = document.createElement("canvas");
-  canvas.width = Math.round(sign.w * ppm);
-  canvas.height = Math.round(sign.h * ppm);
-  const ctx = canvas.getContext("2d")!;
-  spec.paint(ctx, canvas.width, canvas.height, index, rng, sign);
-
-  const tex = new THREE.CanvasTexture(canvas);
-  tex.colorSpace = THREE.SRGBColorSpace; // the canvas colours are ordinary screen colours
-  tex.anisotropy = 8; // keeps lettering crisp when seen at a steep angle down the street
-  return tex;
+  const w = Math.round(sign.w * ppm), h = Math.round(sign.h * ppm);
+  const { canvas, ctx } = canvasFor(w, h);
+  spec.paint(ctx, w, h, index, rng, sign);
+  return paintedTexture(canvas, 8); // (8: lettering stays crisp seen at a steep angle down the street)
 }
 
 // --- painting helpers --------------------------------------------------------------

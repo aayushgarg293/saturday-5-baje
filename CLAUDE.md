@@ -56,6 +56,21 @@ anything dragged turns a finger's movement back first (`toPage`). Fullscreen
 is asked for only once: Chrome's "to exit full screen" notice covers the
 prompt's buttons each time. `?touch` and `?quality=phone` try these on a laptop.
 
+**Memory is the iPhone's limit (from 2026-11-19).** The game showed nothing at
+all on an iPhone: it held 681 MB of painted canvases (each person's face three
+times at 512², 430 MB) and 252 MB of shapes, every one kept twice (by the page
+and by the graphics chip). Safari refuses canvases past ~224–384 MB in all and
+closes a page that holds too much. Now (render/memory.ts, core/quality.ts): a
+phone paints at half the pixels (`canvasFor`: the painting code is unchanged),
+faces at 128², and lets go of the page's copy of every static picture
+(`paintedTexture`) and shape (`letGoOfShapes`) once it's on the chip; it reloads
+if the chip loses them. People share triangle corners (`Parts.geometry({
+shareCorners })`): 155 → 44 MB, on every device. A load that dies halfway on a
+touch screen shows a message on the shutter next time (index.html). New painted
+pictures go through `canvasFor` + `paintedTexture`; measure with `__memory()`
+under `?touch&quality=phone`. The owner has no iPhone: someone else's, or a
+cloud real-device service, for the real check.
+
 ## Helping a new player (from 2026-10-31)
 
 Mummy's sketch (ui/townMap.ts): the whole town on a scrap of the chit's paper,
@@ -111,6 +126,8 @@ Dev tools (dev server only), from the browser console:
 - `__walkCheck()`: flood-fills everywhere the player can stand; reports which
   key places are reachable and the narrowest walkable width. Run it after
   placing anything on the street.
+- `__memory()`: canvases still holding pictures, shapes the page still holds,
+  and what's on the graphics chip (try it with `?touch&quality=phone`).
 - `C` in the game: show your position as a ready-made `__shot` line.
 - The top-left overlay shows fps, frame time, draw calls and triangles.
 
@@ -247,4 +264,6 @@ Keep each entry short.)*
 | A louder sound crackled | Many short clicks starting together (every axle over a joint) added up past full scale. Check the peak and the clipped count in `__audioLab`, not only the average loudness. |
 | "Ghost" walkers: only a shirt and the top of the trousers sliding along, no head, arms or legs (the owner saw it on itch.io) | One bad frame (a number that wasn't a number, NaN) reached a walker's spine or chest; those are set fresh each frame and recovered, but the arms, legs and head were solved from their own last pose and stayed NaN for good. people/pose.ts now solves each joint only from the joints above it, and throws away a result that isn't a number: a bad frame is gone by the next. Check bones for NaN when someone looks half-drawn. |
 | The walk check said the level crossing was unreachable | A train was due: the barriers were down. Run the walk check between trains (`trainsAt` says when). |
+| Nothing at all on an iPhone, not even the shutter | Memory: 681 MB of canvases and 252 MB of shapes, each held twice. The town is built in one go before anything is drawn, so the page died blank. Fixes in render/memory.ts (see "Memory is the iPhone's limit"); measure with `__memory()`, not by looking. |
+| On a phone, everything would vanish once its shapes were let go | Whether a thing is in view is judged by a sphere worked out from its points the first time it's needed, and the warm-up frame draws everything with that check off: so it came after the points were gone. `letGoOfShapes` works out every sphere first. |
 

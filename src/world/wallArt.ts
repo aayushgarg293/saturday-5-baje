@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { canvasFor, paintedTexture } from "../render/memory";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 import { toon } from "../render/toon";
 
@@ -50,20 +51,14 @@ const CHALK = '"Chalkboard SE", "Comic Sans MS", "Marker Felt", cursive';
 const fontFor = (s: string, bold: string, size: number, latin = PLAIN) => `${bold} ${size}px ${/[ऀ-ॿ]/.test(s) ? DEVANAGARI : latin}`;
 
 function paintSheet(): THREE.CanvasTexture {
-  const canvas = document.createElement("canvas");
-  canvas.width = SHEET.w;
-  canvas.height = SHEET.h;
-  const ctx = canvas.getContext("2d")!;
+  const { canvas, ctx } = canvasFor(SHEET.w, SHEET.h); // (fewer pixels on a phone: render/memory.ts)
   MURALS.forEach((m, i) => {
     ctx.save();
     ctx.translate((i % SLOT.cols) * SLOT.w, Math.floor(i / SLOT.cols) * SLOT.h);
     paint(ctx, SLOT.w, SLOT.h, m, i);
     ctx.restore();
   });
-  const tex = new THREE.CanvasTexture(canvas);
-  tex.colorSpace = THREE.SRGBColorSpace;
-  tex.anisotropy = 4;
-  return tex;
+  return paintedTexture(canvas);
 }
 
 /** One piece. Only what's painted is drawn: the wall shows round it (the rest of the slot is see-through). */

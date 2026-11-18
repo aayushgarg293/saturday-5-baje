@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { canvasFor, paintedTexture } from "../render/memory";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 import { toon } from "../render/toon";
 
@@ -80,10 +81,7 @@ const SCRIPT = '"Snell Roundhand", "Apple Chancery", "Brush Script MT", "Segoe S
 const isDevanagari = (s: string) => /[ऀ-ॿ]/.test(s);
 
 function paintSheet(): THREE.CanvasTexture {
-  const canvas = document.createElement("canvas");
-  canvas.width = SHEET.w;
-  canvas.height = SHEET.h;
-  const ctx = canvas.getContext("2d")!;
+  const { canvas, ctx } = canvasFor(SHEET.w, SHEET.h); // (fewer pixels on a phone: render/memory.ts)
   [...NAMES, ...HAVELIS].forEach((plate, i) => {
     ctx.save();
     ctx.translate((i % SLOT.cols) * SLOT.w, Math.floor(i / SLOT.cols) * SLOT.h);
@@ -96,10 +94,7 @@ function paintSheet(): THREE.CanvasTexture {
     paint(ctx, LONG.w, LONG.h, plate);
     ctx.restore();
   });
-  const tex = new THREE.CanvasTexture(canvas);
-  tex.colorSpace = THREE.SRGBColorSpace;
-  tex.anisotropy = 4;
-  return tex;
+  return paintedTexture(canvas);
 }
 
 /** One plate, in its style. The canvas is left see-through wherever the plate isn't (a painted blessing is only letters). */

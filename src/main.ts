@@ -23,8 +23,9 @@ import { addLights } from "./render/lights";
 import { PAL } from "./render/palette";
 import { Pipeline } from "./render/post";
 import { createRenderer, fitToWindow } from "./render/renderer";
+import { letGoOfShapes, reloadIfChipForgets } from "./render/memory";
 import { playEnding } from "./ui/ending";
-import { frontIsUp, frontReady, frontResuming, openFront } from "./ui/front";
+import { frontDrawn, frontIsUp, frontReady, frontResuming, openFront } from "./ui/front";
 import { buildTownMap } from "./ui/townMap";
 import { buildTouchControls } from "./ui/touchControls";
 import { touchFirst } from "./core/device";
@@ -76,8 +77,18 @@ import { buildWires } from "./world/wires";
 const canvas = document.querySelector<HTMLCanvasElement>("#view")!;
 const startScreen = document.querySelector<HTMLDivElement>("#start")!;
 
+// The last load on this phone died halfway (index.html): the shutter says so, with a button to try again.
+// So nothing below runs: the game stops here, rather than die halfway again.
+if (document.documentElement.classList.contains("load-failed")) await new Promise(() => {});
+// (dev: count every canvas painted from here on, for `__memory()`: dev/memory.ts)
+if (import.meta.env.DEV) (await import("./dev/memory")).trackCanvases();
+// The front page, drawn before the town is built: building takes a few seconds and nothing can be drawn
+// meanwhile, so a phone showed a blank screen all that time.
+await frontDrawn();
+
 // --- the 3D world ------------------------------------------------------------
 const renderer = createRenderer(canvas);
+reloadIfChipForgets(canvas); // (a phone keeps no copies of its own to send again: render/memory.ts)
 const scene = new THREE.Scene();
 // Distance haze: things fade into the warm dusty air from 45 m to 240 m away (a little nearer on a phone:
 // core/quality.ts). Its colour matches the sky's horizon, so the far end of the street melts into it.
@@ -588,6 +599,7 @@ if (import.meta.env.DEV) {
   };
   afterFrame = (dt) => stats.update(dt);
   Object.assign(window, { __desktop: desktop }); // (to drive the desktop from the console)
+  (await import("./dev/memory")).installMemoryTool(scene, renderer); // (`__memory()`: what the game holds)
   if (new URLSearchParams(location.search).has("lineup")) {
     const { addLineup } = await import("./dev/lineup");
     addLineup(scene);
@@ -618,6 +630,8 @@ if (import.meta.env.DEV) {
 // a tenth of a second's stutter (the owner's speed check found one at the chowk, one at court road). So:
 // one full frame of everything, every pass (shadows, ink, grade) as the game draws them, nothing left out
 // for being off to the side; then back to drawing only what's near and in view.
+// (On a phone, each shape lets go of the page's copy as it's sent: render/memory.ts.)
+letGoOfShapes(scene);
 {
   areas.showAll();
   const culled: THREE.Object3D[] = [];

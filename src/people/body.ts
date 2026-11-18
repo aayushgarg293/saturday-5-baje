@@ -144,7 +144,7 @@ export function buildPerson(r: PersonRecipe): Person {
 
   // --- merge into one skinned mesh ----------------------------------------------------------------
   const material = toon({ color: 0xffffff, vertexColors: true, flatShading: false });
-  const mesh = new THREE.SkinnedMesh(p.geometry(), material);
+  const mesh = new THREE.SkinnedMesh(p.geometry({ shareCorners: true }), material); // (a quarter of the points: world/kit.ts)
   mesh.name = "person";
   mesh.castShadow = true;
   mesh.receiveShadow = true;

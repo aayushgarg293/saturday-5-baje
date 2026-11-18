@@ -1,4 +1,6 @@
 import * as THREE from "three";
+import { quality } from "../core/quality";
+import { canvasFor, paintedTexture } from "../render/memory";
 import { PAL } from "../render/palette";
 import { toon } from "../render/toon";
 
@@ -18,7 +20,7 @@ import { toon } from "../render/toon";
 const FACE_WIDTH = 1.8; // radians around the head (~100°)
 const THETA_TOP = 0.55; // where the shell starts, down from the top of the head
 const THETA_SPAN = 1.75; // how far down it reaches
-const SIZE = 512; // canvas pixels
+const SIZE = 512; // the painting's own pixels: everything below is drawn at this size (a phone's canvas is smaller: quality.faceSize)
 
 export type FaceRecipe = {
   /** Moustache style. */
@@ -93,9 +95,7 @@ function css(hex: number, alpha = 1): string {
 }
 
 function paintFace(r: FaceRecipe, expression: Expression): THREE.CanvasTexture {
-  const canvas = document.createElement("canvas");
-  canvas.width = canvas.height = SIZE;
-  const ctx = canvas.getContext("2d")!;
+  const { canvas, ctx } = canvasFor(SIZE, SIZE, quality.faceSize / SIZE);
   ctx.lineCap = "round";
   ctx.lineJoin = "round";
   const ink = "#2a1c16";
@@ -322,8 +322,5 @@ function paintFace(r: FaceRecipe, expression: Expression): THREE.CanvasTexture {
     }
   }
 
-  const tex = new THREE.CanvasTexture(canvas);
-  tex.colorSpace = THREE.SRGBColorSpace;
-  tex.anisotropy = 4;
-  return tex;
+  return paintedTexture(canvas);
 }

@@ -15,12 +15,30 @@
 
 const front = document.querySelector<HTMLDivElement>("#front");
 let opened = front === null;
+/** The mark index.html leaves while the game loads on a touch screen, to notice a load that died halfway. */
+const LOADING = "saturday-5-baje:loading";
 
 /** Is the front page still up? (The game stays paused while it is.) */
 export const frontIsUp = () => !opened;
 
+/**
+ * Waits until the browser has drawn the front page at least once, shutter down. Building the town takes
+ * a few seconds, and nothing on the page can be drawn while it goes on: without this, a phone could show
+ * a blank screen all that time. (A tab in the background never draws, so it waits a moment at most.)
+ */
+export function frontDrawn(): Promise<void> {
+  return new Promise((done) => {
+    requestAnimationFrame(() => setTimeout(done)); // (the page is drawn just after this frame's callbacks)
+    setTimeout(done, 300);
+  });
+}
+
 /** The town is built: up goes the shutter, half way; a click on it (not on the chai link) calls `onClick`. */
 export function frontReady(onClick: () => void) {
+  // (loading went through: index.html stops watching for a load that dies halfway)
+  try {
+    localStorage.removeItem(LOADING);
+  } catch {}
   if (!front) return;
   front.addEventListener("click", (e) => {
     if ((e.target as HTMLElement).closest("a")) return; // (the chai link opens its own tab)

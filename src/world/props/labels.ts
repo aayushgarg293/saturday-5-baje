@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { canvasFor, paintedTexture } from "../../render/memory";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 import { toon } from "../../render/toon";
 import type { LabelSpot } from "../buildings/common";
@@ -236,9 +237,7 @@ const PLAIN = '"Helvetica Neue", Arial, sans-serif';
 const DEVANAGARI = '"Kohinoor Devanagari", "Devanagari Sangam MN", "Noto Sans Devanagari", sans-serif';
 
 function paintSheet(): THREE.CanvasTexture {
-  const canvas = document.createElement("canvas");
-  canvas.width = canvas.height = SHEET;
-  const ctx = canvas.getContext("2d")!;
+  const { canvas, ctx } = canvasFor(SHEET, SHEET); // (fewer pixels on a phone: render/memory.ts)
   ALL.forEach((prod, i) => {
     const cx = (i % CELL.cols) * CELL.w, cy = Math.floor(i / CELL.cols) * CELL.h;
     for (const [x, w, h] of [[cx, TALL.w, TALL.h], [cx + TALL.w, WIDE.w, WIDE.h]] as const) {
@@ -251,10 +250,7 @@ function paintSheet(): THREE.CanvasTexture {
       ctx.restore();
     }
   });
-  const tex = new THREE.CanvasTexture(canvas);
-  tex.colorSpace = THREE.SRGBColorSpace;
-  tex.anisotropy = 4;
-  return tex;
+  return paintedTexture(canvas);
 }
 
 /** One pack's printed face. */

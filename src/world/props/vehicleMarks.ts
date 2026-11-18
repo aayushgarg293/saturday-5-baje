@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { canvasFor, paintedTexture } from "../../render/memory";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 import { makeRng } from "../../core/rng";
 import { toon } from "../../render/toon";
@@ -56,9 +57,7 @@ const DEVANAGARI = '"Kohinoor Devanagari", "Noto Sans Devanagari", "Devanagari S
 let sheet: THREE.CanvasTexture | null = null;
 function paintSheet(): THREE.CanvasTexture {
   if (sheet) return sheet;
-  const canvas = document.createElement("canvas");
-  canvas.width = canvas.height = SIZE;
-  const ctx = canvas.getContext("2d")!;
+  const { canvas, ctx } = canvasFor(SIZE, SIZE); // (fewer pixels on a phone: render/memory.ts)
   // (everything outside a painting is left see-through: the lettering sits straight on the paintwork)
   const rng = makeRng(4747); // its own numbers: the plates don't change the street
   for (let i = 0; i < 20; i++) {
@@ -84,9 +83,7 @@ function paintSheet(): THREE.CanvasTexture {
   at("jaiMataDi", (w, h) => rickshawPanel(ctx, w, h));
   at("autoBack", (w, h) => autoBack(ctx, w, h));
   at("maaKa", (w, h) => lettering(ctx, w, h, "माँ का आशीर्वाद", `bold ${h * 0.55}px ${DEVANAGARI}`, "#f2d24a"));
-  sheet = new THREE.CanvasTexture(canvas);
-  sheet.colorSpace = THREE.SRGBColorSpace;
-  sheet.anisotropy = 4;
+  sheet = paintedTexture(canvas);
   return sheet;
 }
 

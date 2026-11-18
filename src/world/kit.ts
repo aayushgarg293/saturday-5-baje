@@ -113,9 +113,14 @@ export class Parts {
     return this.geos.length;
   }
 
-  /** All the parts merged into one shape, without making a mesh from it. */
-  geometry(): THREE.BufferGeometry {
-    const merged = mergeGeometries(this.geos.map(normalise));
+  /**
+   * All the parts merged into one shape, without making a mesh from it. `shareCorners`: a corner where
+   * several triangles meet is stored once, not once for each of them, as the parts' own shapes (spheres,
+   * cylinders) come. It looks exactly the same. People use it: a body is all rounded parts, and stores a
+   * quarter of the points this way (137 people were 155 MB, too much for a phone: render/memory.ts).
+   */
+  geometry({ shareCorners = false } = {}): THREE.BufferGeometry {
+    const merged = mergeGeometries(this.geos.map((g) => normalise(g, shareCorners)));
     if (!merged) throw new Error("Parts: parts could not be merged");
     return merged;
   }
@@ -170,13 +175,18 @@ function attachToJoint(geo: THREE.BufferGeometry, joint: number) {
 /**
  * Merging needs every shape to have exactly the same set of data (position,
  * normal, colour) and the same index style, so strip anything extra (like
- * texture coordinates) and make all of them "non-indexed".
+ * texture coordinates) and make all of them "non-indexed" (every triangle
+ * its own three corners), or, sharing corners, all of them "indexed" (a list
+ * of corners, and the triangles as numbers into it).
  */
-function normalise(geo: THREE.BufferGeometry): THREE.BufferGeometry {
+function normalise(geo: THREE.BufferGeometry, shareCorners = false): THREE.BufferGeometry {
   for (const name of Object.keys(geo.attributes)) {
     if (!["position", "normal", "color", "skinIndex", "skinWeight"].includes(name)) geo.deleteAttribute(name);
   }
-  return geo.index ? geo.toNonIndexed() : geo;
+  if (!shareCorners) return geo.index ? geo.toNonIndexed() : geo;
+  // (a shape made triangle by triangle has no list yet: its corners in order are one)
+  if (!geo.index) geo.setIndex(Array.from({ length: geo.attributes.position.count }, (_, i) => i));
+  return geo;
 }
 
 /**

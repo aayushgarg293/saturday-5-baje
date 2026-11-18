@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { canvasFor, paintedTexture } from "../render/memory";
 import { makeRng } from "../core/rng";
 import { toon } from "../render/toon";
 import { Parts } from "./kit";
@@ -177,10 +178,7 @@ const sheet = () => (painted ??= paintSheet());
 const CLOTH = "#ffffff", FOLD = "rgba(0, 0, 0, 0.13)", SEAM = "rgba(0, 0, 0, 0.3)", PEG = "#8a6a45";
 
 function paintSheet(): THREE.CanvasTexture {
-  const canvas = document.createElement("canvas");
-  canvas.width = SHEET.w;
-  canvas.height = SHEET.h;
-  const ctx = canvas.getContext("2d")!;
+  const { canvas, ctx } = canvasFor(SHEET.w, SHEET.h); // (fewer pixels on a phone: render/memory.ts)
   const cw = SHEET.w / SHEET.cols, ch = SHEET.h / SHEET.rows;
   ORDER.forEach((kind, k) => {
     ctx.save();
@@ -189,10 +187,7 @@ function paintSheet(): THREE.CanvasTexture {
     PAINTERS[kind](ctx, cw, ch);
     ctx.restore();
   });
-  const tex = new THREE.CanvasTexture(canvas);
-  tex.colorSpace = THREE.SRGBColorSpace;
-  tex.anisotropy = 4;
-  return tex;
+  return paintedTexture(canvas);
 }
 
 type Painter = (ctx: CanvasRenderingContext2D, w: number, h: number) => void;
