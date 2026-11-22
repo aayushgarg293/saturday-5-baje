@@ -8,7 +8,8 @@
     "dev:phone": "vite --host 0.0.0.0",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "reel": "node tools/reel.mjs"
   },
   "dependencies": {
     "three": "^0.186.0"

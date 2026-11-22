@@ -72,10 +72,43 @@ function speedSaver(outDir: string): Plugin {
   };
 }
 
+/**
+ * The clip recorder (src/dev/recorder.ts) sends each finished recording here; this saves it as
+ * `.clips/<name>` for `npm run reel` (tools/reel.mjs). Under `npm run dev` and `npm run preview`;
+ * never part of the built game itself.
+ */
+function clipSaver(outDir: string): Plugin {
+  const save = (req: import("node:http").IncomingMessage, res: import("node:http").ServerResponse) => {
+    if (req.method !== "POST") {
+      res.statusCode = 405;
+      res.end("POST only");
+      return;
+    }
+    // keep the file name safe: letters, digits, dot, dash, underscore
+    const name = String(new URL(req.url ?? "", "http://x").searchParams.get("name") ?? "clip.webm").replace(/[^\w.-]/g, "_");
+    const chunks: Buffer[] = [];
+    req.on("data", (c: Buffer) => chunks.push(c));
+    req.on("end", () => {
+      fs.mkdirSync(outDir, { recursive: true });
+      fs.writeFileSync(path.join(outDir, name), Buffer.concat(chunks));
+      res.end("ok");
+    });
+  };
+  return {
+    name: "clip-saver",
+    configureServer: (server) => void server.middlewares.use("/__clip", save),
+    configurePreviewServer: (server) => void server.middlewares.use("/__clip", save),
+  };
+}
+
 export default defineConfig({
   // relative asset paths, so the build works from any folder or sub-path
   base: "./",
-  plugins: [shotSaver(path.resolve(process.cwd(), ".shots")), speedSaver(path.resolve(process.cwd(), ".shots"))],
+  plugins: [
+    shotSaver(path.resolve(process.cwd(), ".shots")),
+    speedSaver(path.resolve(process.cwd(), ".shots")),
+    clipSaver(path.resolve(process.cwd(), ".clips")),
+  ],
   server: { port: 5180, strictPort: true, host: "127.0.0.1", open: false },
   preview: { port: 5181, strictPort: true, host: "127.0.0.1", open: false },
   build: {

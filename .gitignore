@@ -2,6 +2,8 @@ node_modules/
 dist/
 # frames captured by the dev-only __shot tool
 .shots/
+# clips from the dev-only recorder (src/dev/recorder.ts) and npm run reel
+.clips/
 *.log
 .DS_Store
 release/

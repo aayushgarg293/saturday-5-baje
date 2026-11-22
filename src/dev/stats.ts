@@ -32,6 +32,10 @@ export function createStats(renderer: THREE.WebGLRenderer, player: Player) {
   let fpsText = "";
 
   return {
+    /** Hide or show the overlay (the clip recorder hides it while it records). */
+    setVisible(visible: boolean) {
+      el.hidden = !visible;
+    },
     togglePosition() {
       showPosition = !showPosition;
     },

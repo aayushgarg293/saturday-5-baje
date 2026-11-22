@@ -586,6 +586,12 @@ if (!import.meta.env.DEV && new URLSearchParams(location.search).has("stats")) {
     notes.update(dt);
   };
 }
+// The clip recorder in the built game, only when asked for, with `?record` on the address (dev/recorder.ts):
+// recording from `npm run preview` gives clips at the real walking speed, with no overlay.
+if (!import.meta.env.DEV && new URLSearchParams(location.search).has("record")) {
+  const { installRecorder } = await import("./dev/recorder");
+  installRecorder();
+}
 if (import.meta.env.DEV) {
   const { createStats } = await import("./dev/stats");
   const { installDevTools } = await import("./dev/shot");
@@ -598,6 +604,9 @@ if (import.meta.env.DEV) {
     if (code === "KeyG") pipeline.enabled.grade = !pipeline.enabled.grade;
   };
   afterFrame = (dt) => stats.update(dt);
+  // the clip recorder (` to start and stop): the overlay hides while it records, so clips stay clean
+  const { installRecorder } = await import("./dev/recorder");
+  installRecorder((recording) => stats.setVisible(!recording));
   Object.assign(window, { __desktop: desktop }); // (to drive the desktop from the console)
   (await import("./dev/memory")).installMemoryTool(scene, renderer); // (`__memory()`: what the game holds)
   if (new URLSearchParams(location.search).has("lineup")) {
