@@ -24,12 +24,12 @@ const CHAI = { upi: "https://rzp.io/rzp/aayushgarg2903", card: "https://www.buym
 
 /**
  * Passing it on: the phone's own share sheet (WhatsApp, LinkedIn…), or on a computer that has none, the link
- * copied. Always its home on Aayush's Playground (GitHub Pages, at play.aayushgarg.in): inside itch.io's frame, the page's own address isn't one to share.
+ * copied. Always its own address, saturday5baje.com (GitHub Pages): inside itch.io's frame, the page's own address isn't one to share.
  */
 const SHARE = {
   title: "Saturday, 5 Baje",
   text: "Yaad hai, Saturday shaam, ek ghanta cyber cafe? Ek baar phir jee lo 🖥️",
-  url: "https://play.aayushgarg.in/saturday-5-baje/",
+  url: "https://saturday5baje.com/",
 };
 async function share(button: HTMLButtonElement) {
   try {
