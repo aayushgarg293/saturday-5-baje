@@ -8,7 +8,8 @@ import { Parts } from "./kit";
 import { buildCrowd } from "../people/crowd";
 import type { Cricket } from "../people/cricket";
 import type { Saloon } from "../people/saloon";
-import type { GolgappaCrew } from "../people/sellers";
+import type { Chaiwala } from "../people/chaiwala";
+import type { GolgappaCrew, JalebiCrew, KachoriCrew } from "../people/sellers";
 import { planLanes } from "../people/lanes";
 import { type Walkers, buildWalkers } from "../people/walkers";
 import { ANIMALS, PARKED, SLOTS } from "./layout";
@@ -41,6 +42,10 @@ export type Life = {
   lamps: WorldLamp[];
   /** The golgappa cart, which can serve you (activities/paniPuri.ts). */
   golgappa: GolgappaCrew;
+  /** The kachori stall, the chai tapri and the jalebi stall, which can serve you (activities/kachori.ts, chai.ts, jalebi.ts). */
+  kachori: KachoriCrew;
+  chaiwala: Chaiwala;
+  jalebi: JalebiCrew;
   /** The saloon's chair, which can be yours (activities/haircut.ts). */
   saloon: Saloon;
   /** The kids' cricket in the gali, where you can bat (activities/cricket.ts). */
@@ -146,6 +151,9 @@ export function buildLife(people: WorldPeopleSpot[], solid: readonly Box[]): Lif
     traffic,
     walkers,
     golgappa: crowd.golgappa,
+    kachori: crowd.kachori,
+    chaiwala: crowd.chaiwala,
+    jalebi: crowd.jalebi,
     saloon: crowd.saloon,
     cricket: crowd.cricket,
     // the radio's speaker, in the world: the tapri's frame applied to its spot on the counter

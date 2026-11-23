@@ -122,9 +122,48 @@ const CLINKS = [{ at: 6 + 1.25, x: 0.2 }, { at: 6 + 1.9, x: 0.4 }, { at: 6 + 2.4
 /** How long one action takes to blend into the next, seconds. */
 const BLEND = 0.6;
 
+/**
+ * Pouring you a glass (activities/chai.ts): your glass stands at the front of the counter, left of the tray,
+ * where he can reach over it with the pan. He lifts the pan off the stove, pours, puts it back, and looks up
+ * at you. It interrupts his loop, blending in and out of it.
+ */
+const YOUR_GLASS = new THREE.Vector3(0.0, 0.98, 0.3); // (standing on the counter top, 0.94)
+const GRIP = PAN_REST.clone().add(v(0, 0.04, -HANDLE));
+const SERVE_T = [0, 0.7, 1.2, 1.6, 2.4, 3.0, 3.4, 4.0];
+const LIFTED = v(-0.15, 1.44, -0.22), OVER_YOURS = v(YOUR_GLASS.x, 1.24, YOUR_GLASS.z - 0.3); // (lower than over the tray: the pan would hang in your face)
+const SERVE_P = [GRIP, GRIP, LIFTED, OVER_YOURS, OVER_YOURS, LIFTED, GRIP, v(0.15, 0.97, -0.3)];
+/** When the chai runs into your glass (seconds into the serve). */
+const POURS = { from: 1.75, to: 2.3 };
+const SERVE = {
+  duration: 4.0,
+  pose: (u: number): Pose => {
+    const right = (() => {
+      let i = 0;
+      while (i < SERVE_T.length - 2 && u > SERVE_T[i + 1]) i++;
+      const k = smooth(THREE.MathUtils.clamp((u - SERVE_T[i]) / (SERVE_T[i + 1] - SERVE_T[i]), 0, 1));
+      return lerpV(SERVE_P[i], SERVE_P[i + 1], k);
+    })();
+    const pouring = u > 1.6 && u < 2.4 ? Math.min(1, (u - 1.6) / 0.3, (2.4 - u) / 0.3) : 0;
+    return {
+      right,
+      left: v(0.15, 0.97, -0.3), // resting on the counter
+      look: u < 2.6 ? YOUR_GLASS.clone() : v(YOUR_GLASS.x, 1.5, 1.0),
+      lean: 0.15 + (right.y - 1.2) * 0.4,
+      twist: THREE.MathUtils.clamp((right.x + 0.1) * 0.5, -0.25, 0.2),
+      rock: 0,
+      pan: { inHand: u > 0.7 && u < 3.4, tilt: pouring * 0.7 },
+      ladle: null,
+    };
+  },
+};
+
 export type Chaiwala = {
   group: THREE.Group;
   update(t: number, dt: number, player: THREE.Vector3): void;
+  /** Where you stand, where your glass stands on the counter, and what you watch, in the world. */
+  you: { stand: THREE.Vector3; glass: THREE.Vector3; looks: THREE.Vector3; pours: { from: number; to: number }; takes: number };
+  /** He pours you a glass. */
+  serveYou(): void;
 };
 
 export function buildChaiwala(where: Placement): Chaiwala {
@@ -159,14 +198,20 @@ export function buildChaiwala(where: Placement): Chaiwala {
   let before = 0; // where in the loop the last frame was (for the clinks)
   const playerHead = new THREE.Vector3();
   const local = new THREE.Vector3();
+  let serving = -1; // seconds into pouring you a glass (−1: he isn't)
+  group.updateMatrixWorld(true);
 
   return {
     group,
+    you: { stand: toWorld(v(YOUR_GLASS.x, 0, 0.95)), glass: toWorld(YOUR_GLASS), looks: toWorld(v(-0.2, 1.1, 0.1)), pours: POURS, takes: SERVE.duration },
+    serveYou() {
+      serving = 0;
+    },
     update(t, dt, player) {
       // which action, and how far into it; blend into the next near its end
       let u = t % LOOP;
       for (const c of CLINKS) {
-        if (passed(before, u, c.at)) cue("glassClink", group.localToWorld(v(c.x, GLASSES.y + 0.05, GLASSES.z)));
+        if (serving < 0 && passed(before, u, c.at)) cue("glassClink", group.localToWorld(v(c.x, GLASSES.y + 0.05, GLASSES.z)));
       }
       before = u;
       let i = 0;
@@ -174,10 +219,29 @@ export function buildChaiwala(where: Placement): Chaiwala {
       const now = ACTIONS[i].pose(u);
       const next = ACTIONS[(i + 1) % ACTIONS.length].pose(0);
       const k = smooth(THREE.MathUtils.clamp((u - (ACTIONS[i].duration - BLEND)) / BLEND, 0, 1));
-      const right = lerpV(now.right, next.right, k), left = lerpV(now.left, next.left, k);
-      const lean = THREE.MathUtils.lerp(now.lean, next.lean, k);
-      const twist = THREE.MathUtils.lerp(now.twist, next.twist, k);
-      const rock = THREE.MathUtils.lerp(now.rock, next.rock, k);
+      let right = lerpV(now.right, next.right, k), left = lerpV(now.left, next.left, k);
+      let lean = THREE.MathUtils.lerp(now.lean, next.lean, k);
+      let twist = THREE.MathUtils.lerp(now.twist, next.twist, k);
+      let rock = THREE.MathUtils.lerp(now.rock, next.rock, k);
+      let looking = lerpV(now.look, next.look, k);
+      let held = (k < 0.5 ? now : next).pan, stirring = (k < 0.5 ? now : next).ladle;
+      let panTilt = THREE.MathUtils.lerp(now.pan.tilt, next.pan.tilt, k);
+      // pouring yours: blended over his loop, in at the start and out at the end
+      if (serving >= 0) {
+        serving += dt;
+        if (serving >= SERVE.duration) serving = -1;
+        else {
+          const sv = SERVE.pose(serving);
+          const mix = smooth(THREE.MathUtils.clamp(Math.min(serving, SERVE.duration - serving) / BLEND, 0, 1));
+          right = lerpV(right, sv.right, mix);
+          left = lerpV(left, sv.left, mix);
+          lean = THREE.MathUtils.lerp(lean, sv.lean, mix);
+          twist = THREE.MathUtils.lerp(twist, sv.twist, mix);
+          rock = THREE.MathUtils.lerp(rock, sv.rock, mix);
+          looking = lerpV(looking, sv.look, mix);
+          if (mix > 0.5) [held, stirring, panTilt] = [sv.pan, sv.ladle, sv.pan.tilt];
+        }
+      }
 
       group.updateMatrixWorld(true);
       // The body is never still: breathing; weight shifting slowly from hip to
@@ -199,7 +263,7 @@ export function buildChaiwala(where: Placement): Chaiwala {
       const near = local.distanceTo(STANDS_AT) < 4.5 && local.z > STANDS_AT.z;
       attention += ((near ? 1 : 0) - attention) * (1 - Math.exp(-2.5 * dt));
       playerHead.copy(player).setY(1.5);
-      const workLook = toWorld(lerpV(now.look, next.look, k));
+      const workLook = toWorld(looking);
       lookAt(person, workLook.lerp(playerHead, attention), 1);
 
       // Noticing you: the first time he looks up at you, a smile and a nod.
@@ -218,8 +282,8 @@ export function buildChaiwala(where: Placement): Chaiwala {
       person.face.set(blinkIn < 0 ? "blink" : greeting > 0 ? "smile" : "neutral");
 
       // the pan: on the stove, or following his hand (tilting as he pours)
-      const inHand = (k < 0.5 ? now : next).pan.inHand;
-      const tilt = THREE.MathUtils.lerp(now.pan.tilt, next.pan.tilt, k);
+      const inHand = held.inHand;
+      const tilt = panTilt;
       if (inHand) {
         const hand = group.worldToLocal(person.bone("handR").getWorldPosition(new THREE.Vector3()));
         pan.position.copy(hand).add(v(0, -0.04, HANDLE));
@@ -228,7 +292,7 @@ export function buildChaiwala(where: Placement): Chaiwala {
       }
       pan.rotation.x = tilt;
       // the ladle: from his hand, pointing down to the spot it's stirring
-      const tip = (k < 0.5 ? now : next).ladle;
+      const tip = stirring;
       ladle.visible = tip !== null;
       if (tip) {
         const hand = group.worldToLocal(person.bone("handR").getWorldPosition(new THREE.Vector3()));

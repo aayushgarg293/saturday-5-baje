@@ -1,6 +1,9 @@
 import * as THREE from "three";
 import { CricketGame } from "./activities/cricket";
 import { Haircut } from "./activities/haircut";
+import { ChaiTapri } from "./activities/chai";
+import { JalebiStall } from "./activities/jalebi";
+import { KachoriStall } from "./activities/kachori";
 import { PaniPuri } from "./activities/paniPuri";
 import { Bed } from "./audio/bed";
 import { CafeSounds } from "./audio/cafe";
@@ -198,6 +201,12 @@ const gameClock = new GameClock();
 const seat = new Seat(camera, player, input, yourSeat(street.cafeFrame));
 // eating pani puri at the golgappa cart (activities/paniPuri.ts)
 const paniPuri = new PaniPuri(camera, player, input, life.golgappa, scene);
+// a kachori at the first stall, a chai at the tapri, jalebis weighed out hot (activities/kachori.ts, chai.ts, jalebi.ts)
+const stalls = [
+  new KachoriStall(camera, player, input, life.kachori, scene),
+  new ChaiTapri(camera, player, input, life.chaiwala, scene),
+  new JalebiStall(camera, player, input, life.jalebi, scene),
+];
 // a haircut at the saloon (activities/haircut.ts)
 const haircut = new Haircut(camera, player, input, life.saloon.you);
 // batting with the kids in the gali (activities/cricket.ts)
@@ -333,13 +342,14 @@ desktop.onLogOff = () => {
 /** A click in the game (a quick tap on a phone): eat, swing, or lean in to the computer. */
 function clickInGame() {
   if (input.locked && paniPuri.active) paniPuri.click();
+  for (const stall of stalls) if (input.locked && stall.active) stall.click();
   if (input.locked && cricket.active) cricket.click();
   if (input.locked && seat.seated && yourScreen.ready()) seat.leanIn();
 }
 if (!touchFirst) document.addEventListener("mousedown", clickInGame);
 // On a phone: the thumbs' controls (ui/touchControls.ts), and the prompt's buttons stand for keys (ui/prompt.ts)
 const touchControls = buildTouchControls(input, clickInGame);
-const KEY_CODES: Record<string, string> = { E: "KeyE", Q: "KeyQ", T: "KeyT", Space: "Space", Tab: "Tab", M: "KeyM" };
+const KEY_CODES: Record<string, string> = { E: "KeyE", F: "KeyF", Q: "KeyQ", T: "KeyT", Space: "Space", Tab: "Tab", M: "KeyM" };
 onPromptTap((key) => {
   if (key === "Click") return input.locked ? clickInGame() : input.lock();
   input.press(KEY_CODES[key] ?? (/^\d$/.test(key) ? `Digit${key}` : key));
@@ -359,11 +369,13 @@ window.addEventListener("keydown", (e) => {
   }
   if (!input.locked || e.repeat) return;
   if (paniPuri.key(e.code)) return; // (at the golgappa cart, the keys are for eating)
+  if (stalls.some((stall) => stall.key(e.code))) return; // (at a stall, the same)
   if (haircut.key(e.code)) return; // (in the barber's chair, the keys are for the barber)
   if (cricket.key(e.code)) return; // (at the crease, Space swings)
   // E: sit down at your computer, or get up; T: look up at the clock
   if (e.code === "KeyE") {
     if (paniPuri.canStart()) paniPuri.start();
+    else if (stalls.some((stall) => stall.canStart())) stalls.find((stall) => stall.canStart())!.start();
     else if (haircut.canStart()) haircut.start();
     else if (cricket.canStart()) cricket.start();
     else if (errandRun.canStart()) errandRun.start();
@@ -480,6 +492,7 @@ function update(dt: number) {
   stopAtTheStairs();
   seat.update(dt); // (after the player: when seated, the seat has the camera)
   paniPuri.update(dt); // (at the cart, it has the camera)
+  for (const stall of stalls) stall.update(dt); // (at a stall, it has the camera)
   haircut.update(dt); // (in the barber's chair, it has the camera)
   cricket.update(dt); // (at the crease, it has the camera)
   areas.update(player.pos); // (show the parts of the town you're near)
@@ -535,9 +548,13 @@ function prompt(): string | null {
   if (desktop.isOpen || seat.leaned) return null;
   if (seat.glancing) return seat.seated ? "[T] wapas computer pe" : "[T] wapas";
   if (paniPuri.active) return paniPuri.prompt();
+  const busy = stalls.find((stall) => stall.active);
+  if (busy) return busy.prompt();
   if (haircut.active || haircut.canStart()) return haircut.prompt();
   if (cricket.active || cricket.canStart()) return cricket.prompt();
   if (paniPuri.canStart()) return "[E] pani puri khao (₹10 mein 6)";
+  const near = stalls.find((stall) => stall.canStart());
+  if (near) return near.offer();
   if (errandRun.canStart()) return errandRun.prompt();
   if (!input.locked && seat.seated) return "[Click] to look around again";
   if (seat.seated && loggedOff) return paid ? "[E] get up" : `[E] get up    (₹${charge(visitMinutes)} to pay at the counter)`;
@@ -607,7 +624,7 @@ if (import.meta.env.DEV) {
   // the clip recorder (` to start and stop): the overlay hides while it records, so clips stay clean
   const { installRecorder } = await import("./dev/recorder");
   installRecorder((recording) => stats.setVisible(!recording));
-  Object.assign(window, { __desktop: desktop }); // (to drive the desktop from the console)
+  Object.assign(window, { __desktop: desktop, __stalls: stalls }); // (to drive the desktop and the stalls from the console)
   (await import("./dev/memory")).installMemoryTool(scene, renderer); // (`__memory()`: what the game holds)
   if (new URLSearchParams(location.search).has("lineup")) {
     const { addLineup } = await import("./dev/lineup");

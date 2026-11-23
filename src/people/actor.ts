@@ -161,7 +161,8 @@ export function makeActor(spec: ActorSpec): Actor {
       // --- the head: at the work, or at you if you're close and in front ---
       local.copy(player);
       root.worldToLocal(local);
-      const near = spec.notice !== "none" && local.z > 0 && Math.hypot(local.x, local.z) < 4.5;
+      // (busy with a one-off, like making your order, they watch their hands instead)
+      const near = !oneOff && spec.notice !== "none" && local.z > 0 && Math.hypot(local.x, local.z) < 4.5;
       attention += ((near ? 1 : 0) - attention) * (1 - Math.exp(-2.5 * dt));
       playerHead.copy(player).setY(1.5);
       lookAt(person, world(pose.look).lerp(playerHead, attention * (spec.notice === "glance" ? 0.7 : 1)), 1);

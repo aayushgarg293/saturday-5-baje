@@ -80,6 +80,16 @@ While walking the screen shows only the small clock. The sticky
 note beside the computer (desktop/stickyNote.ts) comes 15 seconds after a
 `mark` in story.ts and goes when the task is done.
 
+## Eating at the stalls (from 2026-11-23)
+
+Besides pani puri (activities/paniPuri.ts, the first), three stalls serve you:
+a kachori (activities/kachori.ts: E bites, F blows, too hot burns), a chai
+(chai.ts: cutting or full, look right round while you sip) and jalebis
+(jalebi.ts: weighed on the halwai's tarazu). What they share is in
+activities/atTheStall.ts (stepping up and back, your arm, steam). Each stall's
+seller has a `serveYou()` one-off (people/sellers.ts, chaiwala.ts), and a
+seller busy with a one-off watches his hands, not you (people/actor.ts).
+
 ## How the world is organised
 
 - **`src/world/layout.ts` is the street plan, as data.** Everything is placed

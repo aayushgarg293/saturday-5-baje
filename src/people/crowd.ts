@@ -5,7 +5,7 @@ import { SLOTS } from "../world/layout";
 import { StaticBatch, placeOnStreet } from "../world/props/batch";
 import type { WorldPeopleSpot } from "../world/street";
 import { buildChaiCorner } from "./chaiCorner";
-import { buildChaiwala } from "./chaiwala";
+import { type Chaiwala, buildChaiwala } from "./chaiwala";
 import { type Cricket, buildCricket } from "./cricket";
 import { buildDevotee } from "./devotee";
 import { buildBusStandPeople } from "./busStand";
@@ -20,7 +20,7 @@ import { buildHomeLanePeople } from "./homeLane";
 import { buildCourtPeople } from "./court";
 import { buildPco } from "./pco";
 import { type Saloon, buildSaloon } from "./saloon";
-import { type GolgappaCrew, golgappaCrew, iceGolaCrew, jalebiCrew, kachoriCrew } from "./sellers";
+import { type GolgappaCrew, type JalebiCrew, type KachoriCrew, golgappaCrew, iceGolaCrew, jalebiCrew, kachoriCrew } from "./sellers";
 import { buildShopkeeper } from "./shopkeepers";
 import { buildTailor } from "./tailor";
 
@@ -51,6 +51,10 @@ export type Crowd = {
   update(t: number, dt: number, player: THREE.Vector3): void;
   /** The golgappa cart, which can also serve you (activities/paniPuri.ts). */
   golgappa: GolgappaCrew;
+  /** The kachori stall, the chai tapri and the jalebi stall, which can serve you too (activities/kachori.ts, chai.ts, jalebi.ts). */
+  kachori: KachoriCrew;
+  chaiwala: Chaiwala;
+  jalebi: JalebiCrew;
   /** The saloon, whose chair can be yours (activities/haircut.ts). */
   saloon: Saloon;
   /** The gully cricket, where you can bat (activities/cricket.ts). */
@@ -66,7 +70,8 @@ export function buildCrowd(spots: WorldPeopleSpot[]): Crowd {
   const bodies = new StaticBatch(); // only its colliders are used
 
   const tapri = placeOnStreet(SLOTS.chaiTapri.s, SLOTS.chaiTapri.offset);
-  groups.push(buildChaiwala(tapri), buildChaiCorner(tapri, rng));
+  const chaiwala = buildChaiwala(tapri);
+  groups.push(chaiwala, buildChaiCorner(tapri, rng));
   const crews = [
     [golgappaCrew, SLOTS.golgappa],
     [kachoriCrew, SLOTS.kachoriSamosa],
@@ -74,10 +79,14 @@ export function buildCrowd(spots: WorldPeopleSpot[]): Crowd {
     [iceGolaCrew, SLOTS.iceGola],
   ] as const;
   let golgappa: GolgappaCrew | null = null;
+  let kachori: KachoriCrew | null = null;
+  let jalebi: JalebiCrew | null = null;
   for (const [build, spot] of crews) {
     const where = placeOnStreet(spot.s, spot.offset);
     const crew = build(where, rng);
     if (build === golgappaCrew) golgappa = crew as GolgappaCrew;
+    if (build === kachoriCrew) kachori = crew as KachoriCrew;
+    if (build === jalebiCrew) jalebi = crew as JalebiCrew;
     groups.push(crew);
     for (const p of crew.standing) bodies.collide(where, 0.5, 0.5, p.x, p.z);
   }
@@ -142,6 +151,9 @@ export function buildCrowd(spots: WorldPeopleSpot[]): Crowd {
   return {
     group,
     golgappa: golgappa!,
+    kachori: kachori!,
+    chaiwala,
+    jalebi: jalebi!,
     saloon: saloon!,
     cricket,
     colliders: [...bodies.colliders, ...extraColliders],

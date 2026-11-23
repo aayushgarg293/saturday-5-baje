@@ -31,6 +31,22 @@ export function puri(): THREE.Mesh {
   return mesh(p, "puri");
 }
 
+/** A kachori: a round, puffed, golden-brown pastry, flatter than a puri, with a darker crust on top. */
+export function kachori(): THREE.Mesh {
+  const p = new Parts();
+  p.add(new THREE.SphereGeometry(0.05, 10, 7).scale(1, 0.5, 1), 0, 0, 0, 0xc08033);
+  p.add(new THREE.SphereGeometry(0.03, 8, 5).scale(1, 0.35, 1), 0, 0.016, 0, 0x9c5f22);
+  return mesh(p, "kachori");
+}
+
+/** A jalebi: an orange coil, lying flat, with a smaller coil inside it. */
+export function jalebi(): THREE.Mesh {
+  const p = new Parts();
+  p.add(new THREE.TorusGeometry(0.04, 0.009, 5, 14).rotateX(Math.PI / 2), 0, 0, 0, PAL.jalebiOrange);
+  p.add(new THREE.TorusGeometry(0.02, 0.008, 5, 10).rotateX(Math.PI / 2), 0, 0, 0, PAL.jalebiOrange);
+  return mesh(p, "jalebi");
+}
+
 /** A jhara: the halwai's long slotted spoon, built pointing down from the hand; aimed each frame. */
 export function jhara(): THREE.Mesh {
   const p = new Parts();
