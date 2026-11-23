@@ -15,7 +15,8 @@ import { HAND } from "./chit";
  * the same blue ballpoint, shown beside the chit whenever the chit is out. It
  * doesn't turn: the town stays put and the little red arrow (you) turns. Each
  * thing still to do is ringed in red with its number on the chit, so 3 here
- * is line 3. Nothing on the screen while you walk but the small clock.
+ * is line 3. Nothing on the screen while you walk but the small clock (and,
+ * on a laptop, a tag under it: "[Tab] chit aur naksha").
  */
 
 /** The canvas's own size, px (it's shown at half this, or less on a phone). */
@@ -74,6 +75,15 @@ export function buildTownMap(places: Place[], home: { x: number; z: number }): T
     pointerEvents: "none", transition: "opacity 0.3s", opacity: "0",
   } satisfies Partial<CSSStyleDeclaration>);
 
+  // under the clock, on a laptop: Tab brings out the chit and this sketch (a phone has its 📝 button)
+  const tabHint = document.createElement("div");
+  tabHint.textContent = "[Tab] chit aur naksha";
+  Object.assign(tabHint.style, {
+    position: "fixed", top: "40px", right: "14px", zIndex: "5", padding: "0 7px", borderRadius: "3px", background: PAPER, color: INK,
+    font: `13px ${HAND}`, transform: "rotate(-1deg)", boxShadow: "1px 2px 4px rgba(30, 20, 10, 0.3)",
+    pointerEvents: "none", transition: "opacity 0.3s", opacity: "0",
+  } satisfies Partial<CSSStyleDeclaration>);
+
   const box = document.createElement("div");
   Object.assign(box.style, {
     // (just left of the chit, and as much smaller on a phone: ui/chit.ts)
@@ -90,6 +100,7 @@ export function buildTownMap(places: Place[], home: { x: number; z: number }): T
   });
   box.append(canvas);
   document.body.append(clock, box);
+  if (!touchFirst) document.body.append(tabHint);
 
   const turned = (x: number, z: number) => ({ x: x * Math.cos(TURN) - z * Math.sin(TURN), y: x * Math.sin(TURN) + z * Math.cos(TURN) });
   const roadPoints = (road: Road) => {
@@ -214,6 +225,7 @@ export function buildTownMap(places: Place[], home: { x: number; z: number }): T
       if (walking !== clockSeen) {
         clockSeen = walking;
         clock.style.opacity = walking ? "1" : "0";
+        tabHint.style.opacity = walking ? "0.85" : "0";
       }
       if (walking && clock.textContent !== time) clock.textContent = time;
       if (sketch !== sketchSeen) {
